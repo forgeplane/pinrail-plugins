@@ -4,6 +4,8 @@ An agent proposes a few takes on an animation (a loading state, a button's
 feedback, a page transition), and you judge them the way motion is judged:
 by playing them, slowing them down and stopping on the frame that is wrong.
 
+![The Motion review plugin, showing its sample review](screenshot.png)
+
 - Every variant is in the rail, held at a frame from its middle. Hover one to
   play it.
 - The chosen variant plays on a stage, with a timeline under it: play and
@@ -119,7 +121,6 @@ range · `c` comment · `j` / `k` next and previous variant · `f` favourite ·
 `npm ci && npm run build` bundles lottie-web into `view/vendor/`. Pinrail
 installs a plugin as it is and runs nothing, so build it before you install
 or link the folder. `node scripts/fixture.mjs` writes the fixtures and the
-small sample again, and `node scripts/screenshots.mjs` retakes the
-screenshots in `screenshots/`. `pinrail plugins check motion` says what the
+small sample again. `pinrail plugins check motion` says what the
 app would make of the folder, and `pnpm test` runs its tests with the
 others.

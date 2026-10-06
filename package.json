@@ -6,6 +6,7 @@
   "packageManager": "pnpm@10.26.2",
   "scripts": {
     "test": "node --test */tests/*.test.cjs scripts/*.test.mjs && NODE_PATH=node_modules playwright test",
+    "screenshot": "node scripts/screenshot.mjs",
     "format": "git ls-files -z '*.html' '*.js' '*.mjs' '*.cjs' '*.ts' '*.css' | xargs -0 prettier --write",
     "format:check": "git ls-files -z '*.html' '*.js' '*.mjs' '*.cjs' '*.ts' '*.css' | xargs -0 prettier --check"
   },

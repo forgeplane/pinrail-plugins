@@ -6,6 +6,8 @@ side. The person pans and zooms, pins comments to any point of a frame,
 marks each frame approved or in need of changes, and approves the set or
 asks for changes.
 
+![The Design canvas plugin, showing its sample review](screenshot.png)
+
 - Frames are laid out in rows, one row per `group`, in the order sent.
   With `flow: true`, an arrow joins each frame to the next in its row.
 - **Move** (V) drags the canvas. A trackpad or the scroll wheel pans,

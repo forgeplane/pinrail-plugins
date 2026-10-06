@@ -9,6 +9,8 @@ actually live, in the brand's own colours, light and dark:
   menu bar in one colour, the way template images are drawn;
 - beside the wordmark, with the tagline.
 
+![The Logo review plugin, showing its sample review](screenshot.png)
+
 For each mark you say **favourite**, **keep** or **drop**, with a note. There
 is one favourite at most: choosing another moves the old one to *keep*.
 

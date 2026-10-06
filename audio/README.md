@@ -12,6 +12,8 @@ variants, podcast cuts. You listen to each one the way you would in an editor:
   place, by the same word when both takes carry word timings, and <kbd>b</kbd>
   jumps back to the take you came from, so an A/B is one key.
 
+![The Audio review plugin, showing its sample review](screenshot.png)
+
 On a take you can **comment at a moment** (<kbd>c</kbd> at the playhead) or
 **over a stretch** (select it, then <kbd>c</kbd>), and **mark a stretch to
 cut** (select it, then <kbd>⌫</kbd>). Overlapping cuts join into one.
@@ -109,5 +111,4 @@ each take and a canvas draws its waveform.
   decided round beside it.
 - `pnpm exec pinrail-sdk dev audio` opens the view on the samples and the
   fixtures, without the app.
-- `npx playwright test audio` runs the tests; `SCREENSHOTS=1 npx playwright
-  test audio/tests/screenshots` takes the pictures in `screenshots/`.
+- `npx playwright test audio` runs the tests.

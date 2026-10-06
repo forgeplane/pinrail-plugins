@@ -4,6 +4,8 @@ An agent brings a video: a promo cut, a screen recording, a rendered
 animation, a generated clip. You watch it and say what to change, and every
 comment goes back with the moment it is about.
 
+![The Video review plugin, showing its sample review](screenshot.png)
+
 - The video plays on a stage, as large as the window allows.
 - A timeline under it shows the scenes the agent named, the picture as a
   strip of the video's frames with the comments on it, and the sound as a

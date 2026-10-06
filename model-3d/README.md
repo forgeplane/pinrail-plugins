@@ -11,6 +11,8 @@ would look at the real thing:
   turntable, or as a wireframe;
 - with its size in real units, its triangles, parts and materials.
 
+![The 3D model review plugin, showing its sample review](screenshot.png)
+
 For each model you say **favourite**, **keep** or **drop**, with a note. There
 is one favourite at most: choosing another moves the old one to *keep*. Click
 a part of the model, or pick it in the list of parts, to ask for a change to

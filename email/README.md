@@ -6,6 +6,8 @@ that need them, and says send, revise or discard. Provider-agnostic: the
 requester maps its mailbox into the payload and the decision back out; nothing
 here knows what a mail server is.
 
+![The Draft emails plugin, showing its sample review](screenshot.png)
+
 ## Payload
 
 ```json

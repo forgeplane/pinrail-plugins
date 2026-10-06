@@ -50,6 +50,7 @@ email/
   manifest.json           # name, version, title and the plugin's declarations
   README.md
   icon.svg                # the plugin's icon
+  screenshot.png          # the image in the README, taken by pnpm screenshot
   view/index.html         # the page the app serves, with the files it loads
   schemas/                # payload.schema.json and decision.schema.json
   templates/              # decision.md.j2, when the plugin writes its own Markdown
@@ -79,7 +80,13 @@ pnpm test                                  # every plugin's tests
 pnpm format                                # format the views, scripts, tests and styles
 pinrail plugins check email                # what the app would say of a plugin
 pnpm exec pinrail-sdk dev email            # its view in a browser, with its fixtures
+pnpm screenshot email                      # retake its screenshot.png
 ```
+
+`pnpm screenshot` without a name retakes every plugin's screenshot. It
+mounts the view under the SDK's harness with the plugin's own sample, in
+the light theme, so build a plugin that has a build step first. A
+screenshot is not part of the plugin when it is installed.
 
 CI checks that the HTML, JavaScript, TypeScript and CSS files are formatted
 with Prettier. `pnpm format` formats them. The recorded reviews in each

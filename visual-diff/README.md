@@ -13,13 +13,13 @@ claims to address. You check each one against the images:
   changed areas boxed, and the areas outside every request listed apart:
   those are the changes nobody asked for.
 
+![The Before and after plugin, showing its sample review](screenshot.png)
+
 For each request you mark **fixed**, **partly** or **not fixed**, with a
 note. Drag on the image to mark a region of the after image that broke, or
 click for a point. Each pair gets a verdict: **accept**, or **another pass**.
 Without one, a pair with anything not fixed or anything new goes back for
 another pass, and one whose every request is fixed is accepted.
-
-![The difference, with the one change nobody asked for listed apart](screenshots/diff-light.png)
 
 ## Asking
 
@@ -110,6 +110,5 @@ and previous request · `f` fixed · `p` partly · `x` not fixed · `a` accept �
 
 `node visual-diff/scripts/fixture.mjs` draws the Acme pages again, before
 and after, as PNGs in `fixtures/acme/` with the fixtures that name them.
-`node visual-diff/scripts/screenshots.mjs` takes the screenshots in
-`screenshots/`. `pnpm exec pinrail-sdk dev visual-diff` opens the view on the
-samples and the fixtures, and `pnpm test` runs its tests with the others.
+`pnpm exec pinrail-sdk dev visual-diff` opens the view on the samples and
+the fixtures, and `pnpm test` runs its tests with the others.

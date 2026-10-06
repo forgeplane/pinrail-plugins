@@ -13,6 +13,8 @@ would look in use:
   button's text, links, badges, input outlines, the focus ring and the four
   status messages, plus any pairs the agent adds.
 
+![The Palette review plugin, showing its sample review](screenshot.png)
+
 For each palette you say **favourite**, **keep** or **drop**, with a note.
 There is one favourite at most: choosing another moves the old one to *keep*.
 
@@ -112,4 +114,3 @@ tests with the others.
 `fixtures/fernway.json` is four palettes for a trail-planning app, one of them
 failing on purpose; `fixtures/fernway.decided.json` is the same round decided,
 with `fernway.decided.md` the markdown an agent reads for it.
-`screenshots/` shows the view in both app themes.

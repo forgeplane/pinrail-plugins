@@ -7,6 +7,8 @@ the entry, the multiple of the risk that each target makes, and the loss
 at the stop. The person can drag the stop and the targets on the chart to
 move them, and then approves or rejects the trade, with an optional note.
 
+![The Trade approval plugin, showing its sample review](screenshot.png)
+
 ```sh
 pinrail plugins install ./trade --link
 pinrail submit trade --sample

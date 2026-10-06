@@ -7,6 +7,8 @@ aside, and come back when it is cleared. An item none of whose times work can
 be sent back for **another time**, with a note on when would suit, or
 **declined** altogether, with a reason if you like.
 
+![The Calendar plugin, showing its sample review](screenshot.png)
+
 Three views: **Day** shows one day at full width, with the week's days above
 it and how many suggestions each has; **Week** shows up to seven days and pages
 through a longer range; **List** shows every suggestion by item. A one-day

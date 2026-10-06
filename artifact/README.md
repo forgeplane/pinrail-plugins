@@ -5,6 +5,8 @@ template, a dashboard — reviewed the way you would review it in DevTools:
 pick an element, say what should change, and the agent gets back a
 selector it can act on, not a paragraph it has to interpret.
 
+![The HTML artifact plugin, showing its sample review](screenshot.png)
+
 The reviewer turns on **Select**, hovers to see the element outlined with its
 tag, clicks to comment. Each comment is pinned to its element, listed in the
 panel, and can be edited or removed. Comments are *change*, *question* or
