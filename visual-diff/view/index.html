@@ -1,0 +1,2070 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Before and after</title>
+    <link rel="stylesheet" href="/sdk/v1/pinrail-plugin.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      :root {
+        /* marks drawn over the images: the same in both themes, since they sit on the content, with a halo that shows on light and dark pixels */
+        --mark-req: #5b5bd6;
+        --mark-new: #e5484d;
+        --mark-diff: #d6409f;
+        --mark-fixed: #2f9e6b;
+        --mark-partly: #c98a12;
+        --mark-not: #e5484d;
+        --halo: 0 0 0 1px rgba(255, 255, 255, 0.85), 0 0 0 2px rgba(0, 0, 0, 0.25);
+      }
+      .shell {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100%;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+      }
+      .top h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .tally {
+        margin-left: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .tally b {
+        color: var(--pinrail-text);
+        font-variant-numeric: tabular-nums;
+      }
+      .tally .sep {
+        width: 1px;
+        background: var(--pinrail-border);
+      }
+      .work {
+        display: grid;
+        grid-template-columns: 232px 1fr;
+        min-height: 0;
+      }
+
+      /* the rail: every pair, by its after image */
+      .rail {
+        overflow-y: auto;
+        border-right: 1px solid var(--pinrail-border);
+        padding: 12px;
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        background: var(--pinrail-bg-panel);
+      }
+      .label {
+        margin: 0 0 8px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+      .rail .label {
+        margin: 4px 6px 6px;
+      }
+      .pick {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 6px 8px;
+        width: 100%;
+        padding: 8px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: none;
+        color: var(--pinrail-text);
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+      }
+      .pick:hover {
+        background: var(--pinrail-bg-hover);
+      }
+      .pick[aria-current="true"] {
+        background: var(--pinrail-bg-raised);
+        border-color: var(--pinrail-border-strong);
+      }
+      .thumb {
+        grid-column: 1 / -1;
+        height: 112px;
+        border-radius: 7px;
+        background: var(--pinrail-bg-raised);
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+      }
+      .thumb img {
+        max-width: 100%;
+        max-height: 100%;
+        display: block;
+      }
+      .thumb .wait {
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .pick-name {
+        font-size: 13px;
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-left: 2px;
+      }
+      .pick-meta {
+        grid-column: 1 / -1;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        padding-left: 2px;
+        margin-top: -2px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 7px;
+        border-radius: 99px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .c-accept,
+      .c-fixed {
+        background: color-mix(in oklab, var(--pinrail-success) 18%, transparent);
+        color: var(--pinrail-success);
+      }
+      .c-revise,
+      .c-not_fixed {
+        background: color-mix(in oklab, var(--pinrail-danger) 16%, transparent);
+        color: var(--pinrail-danger);
+      }
+      .c-partly {
+        background: color-mix(in oklab, var(--pinrail-warning) 18%, transparent);
+        color: var(--pinrail-warning);
+      }
+      .c-undecided,
+      .c-none {
+        color: var(--pinrail-faint);
+        background: none;
+        padding-inline: 0;
+      }
+
+      .sheet {
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .sheet-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 20px 26px 28px;
+        display: grid;
+        gap: 16px;
+      }
+      .notes {
+        color: var(--pinrail-dim);
+        font-size: 13px;
+        line-height: 1.6;
+        padding: 12px 14px;
+        border: 1px dashed var(--pinrail-border);
+        border-radius: 10px;
+      }
+      .notes p,
+      .summary p {
+        margin: 0 0 6px;
+      }
+      .notes p:last-child,
+      .summary p:last-child {
+        margin: 0;
+      }
+      .pair-head {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+      }
+      .pair-head h2 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: -0.02em;
+      }
+      .pair-id {
+        font: 12px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .previous {
+        flex-basis: 100%;
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .summary {
+        color: var(--pinrail-dim);
+        font-size: 13.5px;
+        line-height: 1.6;
+        max-width: 76ch;
+        margin-top: -6px;
+      }
+
+      /* the toolbar over the stage */
+      .tools {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+      }
+      .seg {
+        display: inline-flex;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 10px;
+        background: var(--pinrail-bg-raised);
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+      }
+      .seg button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border: 0;
+        border-radius: 7px;
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 12px var(--pinrail-sans);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .seg button:hover {
+        color: var(--pinrail-text);
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        box-shadow: 0 0 0 1px var(--pinrail-border-strong);
+      }
+      .seg kbd,
+      .kbd {
+        font: 10.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .amount {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .amount input {
+        width: 160px;
+        accent-color: var(--pinrail-accent);
+      }
+      .amount output {
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-text);
+        min-width: 4ch;
+      }
+      .tools .facts {
+        margin-left: auto;
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+
+      /* the stage: one frame, or two side by side, each the after image's shape */
+      .stage-wrap {
+        position: relative;
+      }
+      .stage {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 14px;
+        background: var(--pinrail-bg-raised);
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+        min-height: 220px;
+        align-items: flex-start;
+      }
+      .pane {
+        display: grid;
+        gap: 6px;
+        justify-items: center;
+      }
+      .pane-label {
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+      .frame {
+        position: relative;
+        overflow: hidden;
+        border-radius: 4px;
+        box-shadow:
+          0 0 0 1px var(--pinrail-border),
+          0 8px 24px -14px rgba(0, 0, 0, 0.4);
+        background: repeating-conic-gradient(var(--pinrail-bg-hover) 0 25%, var(--pinrail-bg) 0 50%) 0 0 / 16px 16px;
+        user-select: none;
+        touch-action: none;
+      }
+      .frame canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .layer {
+        position: absolute;
+        inset: 0;
+      }
+      .mode-wipe .layer.before {
+        clip-path: inset(0 calc(100% - var(--wipe)) 0 0);
+      }
+      .mode-wipe.dir-v .layer.before {
+        clip-path: inset(0 0 calc(100% - var(--wipe)) 0);
+      }
+      .mode-onion .layer.after {
+        opacity: var(--fade);
+      }
+      .tag {
+        position: absolute;
+        padding: 2px 7px;
+        border-radius: 5px;
+        background: rgba(20, 22, 28, 0.72);
+        color: #fff;
+        font: 600 10px var(--pinrail-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        pointer-events: none;
+        z-index: 4;
+      }
+      .tag.t-before {
+        left: 8px;
+        top: 8px;
+      }
+      .tag.t-after {
+        right: 8px;
+        top: 8px;
+      }
+      .dir-v .tag.t-after {
+        right: auto;
+        left: 8px;
+        top: auto;
+        bottom: 8px;
+      }
+
+      .handle {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: var(--wipe);
+        width: 28px;
+        margin-left: -14px;
+        cursor: ew-resize;
+        z-index: 5;
+        display: grid;
+        place-items: center;
+        outline: none;
+      }
+      .handle::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 13px;
+        width: 2px;
+        background: #fff;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+      }
+      .handle .grip {
+        position: relative;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.3),
+          0 2px 8px rgba(0, 0, 0, 0.3);
+        display: grid;
+        place-items: center;
+        color: #333;
+        font-size: 13px;
+      }
+      .handle:focus-visible .grip {
+        box-shadow:
+          0 0 0 3px var(--pinrail-accent),
+          0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      .dir-v .handle {
+        top: var(--wipe);
+        bottom: auto;
+        left: 0;
+        right: 0;
+        width: auto;
+        height: 28px;
+        margin: -14px 0 0;
+        cursor: ns-resize;
+      }
+      .dir-v .handle::before {
+        top: 13px;
+        bottom: auto;
+        left: 0;
+        right: 0;
+        width: auto;
+        height: 2px;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+      }
+      .overlay.drawable {
+        cursor: crosshair;
+      }
+      .mark {
+        position: absolute;
+        border-radius: 3px;
+        pointer-events: none;
+      }
+      .mark-label {
+        position: absolute;
+        left: -1px;
+        top: -18px;
+        padding: 0 5px;
+        border-radius: 4px;
+        font: 700 10px/16px var(--pinrail-mono);
+        color: #fff;
+        white-space: nowrap;
+      }
+      .mark.req {
+        border: 1.5px dashed var(--mark-req);
+        box-shadow: var(--halo);
+      }
+      .mark.req .mark-label {
+        background: var(--mark-req);
+      }
+      .mark.req.o-fixed {
+        border-color: var(--mark-fixed);
+      }
+      .mark.req.o-fixed .mark-label {
+        background: var(--mark-fixed);
+      }
+      .mark.req.o-partly {
+        border-color: var(--mark-partly);
+      }
+      .mark.req.o-partly .mark-label {
+        background: var(--mark-partly);
+      }
+      .mark.req.o-not_fixed {
+        border-color: var(--mark-not);
+      }
+      .mark.req.o-not_fixed .mark-label {
+        background: var(--mark-not);
+      }
+      .mark.req.current {
+        border-style: solid;
+        border-width: 2px;
+        background: color-mix(in oklab, var(--mark-req) 10%, transparent);
+      }
+      .mark.req.dim {
+        opacity: 0.45;
+      }
+      .mark.new {
+        border: 2px solid var(--mark-new);
+        box-shadow: var(--halo);
+        background: color-mix(in oklab, var(--mark-new) 10%, transparent);
+        pointer-events: auto;
+        cursor: pointer;
+      }
+      .mark.new .mark-label {
+        background: var(--mark-new);
+      }
+      .mark.point {
+        width: 22px !important;
+        height: 22px !important;
+        margin: -11px 0 0 -11px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--mark-new);
+        border: 0;
+      }
+      .mark.point .mark-label {
+        position: static;
+        background: none;
+      }
+      .mark.band,
+      .mark.pending {
+        border: 2px dashed var(--mark-new);
+        box-shadow: var(--halo);
+        background: color-mix(in oklab, var(--mark-new) 8%, transparent);
+      }
+      .mark.pending.point {
+        background: var(--mark-new);
+      }
+      button.mark.change {
+        border: 1.5px solid var(--mark-diff);
+        box-shadow: var(--halo);
+        background: none;
+        pointer-events: auto;
+        cursor: pointer;
+        padding: 0;
+      }
+      button.mark.change:hover,
+      button.mark.change:focus-visible {
+        background: color-mix(in oklab, var(--mark-diff) 12%, transparent);
+        outline: none;
+      }
+      button.mark.change .mark-label {
+        background: var(--mark-diff);
+        left: auto;
+        right: -1px;
+      }
+      button.mark.change.asked {
+        border-style: dotted;
+        opacity: 0.7;
+      }
+      .broken,
+      .reading {
+        display: grid;
+        place-items: center;
+        min-height: 200px;
+        padding: 20px;
+        text-align: center;
+        color: var(--pinrail-dim);
+        font-size: 13px;
+      }
+      .broken {
+        color: var(--pinrail-danger);
+      }
+
+      .pop {
+        position: absolute;
+        width: 300px;
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--pinrail-bg-raised);
+        box-shadow:
+          0 0 0 1px var(--pinrail-border-strong),
+          0 14px 34px -12px rgba(0, 0, 0, 0.45);
+        z-index: 10;
+      }
+      .pop-head {
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .pop-head b {
+        color: var(--pinrail-text);
+      }
+      .pop textarea {
+        width: 100%;
+        min-height: 64px;
+        resize: vertical;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 13px/1.5 var(--pinrail-sans);
+      }
+      .pop textarea:focus {
+        outline: none;
+        border-color: var(--pinrail-accent);
+      }
+      .pop-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        align-items: center;
+      }
+      .pop-actions .kbd {
+        margin-right: auto;
+      }
+      .pinrail-btn {
+        padding: 5px 11px;
+        border-radius: 7px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .pinrail-btn-primary {
+        background: var(--pinrail-button-bg);
+        border-color: var(--pinrail-button-bg);
+        color: #fff;
+      }
+      .pinrail-btn.quiet {
+        border-color: transparent;
+        background: none;
+        color: var(--pinrail-dim);
+        font-weight: 500;
+      }
+      .pinrail-btn.quiet:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+
+      .diff-facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+        margin-top: 8px;
+      }
+      .diff-facts b {
+        color: var(--pinrail-text);
+        font-variant-numeric: tabular-nums;
+      }
+      .diff-facts .swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        background: var(--mark-diff);
+        margin-right: 5px;
+        vertical-align: -1px;
+      }
+
+      /* below the stage: the requests, and what was found */
+      .below {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 20px;
+        align-items: start;
+      }
+      .reqs,
+      .found,
+      .extra {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .ask {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+        cursor: pointer;
+      }
+      .ask:hover {
+        border-color: var(--pinrail-border-strong);
+      }
+      .ask[aria-current="true"] {
+        border-color: var(--pinrail-accent);
+        box-shadow: 0 0 0 1px var(--pinrail-accent);
+        background: var(--pinrail-bg-raised);
+      }
+      .rid {
+        font: 700 11px/20px var(--pinrail-mono);
+        color: var(--mark-req);
+        min-width: 22px;
+      }
+      .rtext {
+        font-size: 13.5px;
+        line-height: 1.5;
+      }
+      .claim {
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+        margin-top: 2px;
+      }
+      .claim b {
+        font-weight: 600;
+        color: var(--pinrail-dim);
+      }
+      .rmeta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 10px;
+        align-items: center;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .seen {
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .seen.no {
+        color: var(--pinrail-warning);
+      }
+      .outcomes {
+        grid-column: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .out {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .out:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+      .out[aria-pressed="true"]:disabled {
+        opacity: 1;
+      }
+      .out[aria-pressed="true"][data-outcome="fixed"] {
+        background: color-mix(in oklab, var(--pinrail-success) 16%, var(--pinrail-bg));
+        border-color: var(--pinrail-success);
+        color: var(--pinrail-success);
+      }
+      .out[aria-pressed="true"][data-outcome="partly"] {
+        background: color-mix(in oklab, var(--pinrail-warning) 16%, var(--pinrail-bg));
+        border-color: var(--pinrail-warning);
+        color: var(--pinrail-warning);
+      }
+      .out[aria-pressed="true"][data-outcome="not_fixed"] {
+        background: color-mix(in oklab, var(--pinrail-danger) 14%, var(--pinrail-bg));
+        border-color: var(--pinrail-danger);
+        color: var(--pinrail-danger);
+      }
+      .rnote {
+        grid-column: 2;
+        width: 100%;
+        margin-top: 6px;
+        padding: 6px 9px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font: 13px/1.45 var(--pinrail-sans);
+      }
+      .rnote:focus {
+        outline: none;
+        border-color: var(--pinrail-accent);
+      }
+      .readnote {
+        grid-column: 2;
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--pinrail-dim);
+        border-left: 2px solid var(--pinrail-border-strong);
+        padding-left: 8px;
+      }
+      .found li,
+      .extra li {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: start;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: var(--pinrail-bg-raised);
+        border: 1px solid var(--pinrail-border);
+        font-size: 13.5px;
+      }
+      .found .num {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--mark-new);
+        color: #fff;
+        font: 700 11px var(--pinrail-mono);
+      }
+      .extra .num {
+        display: grid;
+        place-items: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 4px;
+        border-radius: 5px;
+        background: var(--mark-diff);
+        color: #fff;
+        font: 700 10.5px var(--pinrail-mono);
+      }
+      .found .what,
+      .extra .what {
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .acts {
+        display: flex;
+        gap: 2px;
+      }
+      .pinrail-empty {
+        color: var(--pinrail-faint);
+        font-size: 13px;
+        padding: 6px 2px;
+        margin: 0;
+      }
+      .col {
+        display: grid;
+        gap: 14px;
+        align-content: start;
+      }
+
+      .decide {
+        display: grid;
+        gap: 10px;
+        padding-top: 4px;
+        border-top: 1px solid var(--pinrail-border);
+        padding-top: 16px;
+      }
+      .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .choice {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 13px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .choice[aria-pressed="true"][data-action="accept"] {
+        background: color-mix(in oklab, var(--pinrail-success) 16%, var(--pinrail-bg));
+        border-color: var(--pinrail-success);
+        color: var(--pinrail-success);
+      }
+      .choice[aria-pressed="true"][data-action="revise"] {
+        background: color-mix(in oklab, var(--pinrail-danger) 14%, var(--pinrail-bg));
+        border-color: var(--pinrail-danger);
+        color: var(--pinrail-danger);
+      }
+      .choice.derived[aria-pressed="true"] {
+        border-style: dashed;
+      }
+      .choice:disabled {
+        cursor: default;
+      }
+      .choice:disabled:not([aria-pressed="true"]) {
+        opacity: 0.55;
+      }
+      .derived-hint {
+        font-size: 12px;
+        color: var(--pinrail-faint);
+      }
+      .choices .nav {
+        margin-left: auto;
+        display: flex;
+        gap: 6px;
+      }
+      .choices .nav button {
+        padding: 7px 11px;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        font: 12px var(--pinrail-mono);
+        cursor: pointer;
+      }
+      #note {
+        width: 100%;
+        min-height: 60px;
+        resize: vertical;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font: 13.5px/1.5 var(--pinrail-sans);
+      }
+      .errors-box {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--pinrail-danger);
+        color: var(--pinrail-danger);
+        font-size: 12.5px;
+      }
+
+      @media (max-width: 860px) {
+        .work {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
+        .rail {
+          grid-auto-flow: column;
+          grid-auto-columns: 170px;
+          overflow-x: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--pinrail-border);
+        }
+        .rail .label {
+          display: none;
+        }
+        .thumb {
+          height: 80px;
+        }
+        .below {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="/sdk/v1/pinrail-plugin.js"></script>
+    <script src="/sdk/v1/markdown.js"></script>
+    <div class="shell" id="app">
+      <div class="top"><h1>Loading…</h1></div>
+    </div>
+    <script>
+      "use strict";
+      const esc = Pinrail.escape;
+      const MODES = [
+        ["wipe", "Wipe"],
+        ["side", "Side by side"],
+        ["onion", "Onion skin"],
+        ["diff", "Difference"],
+      ];
+      const OUTCOMES = { fixed: ["Fixed", "f"], partly: ["Partly", "p"], not_fixed: ["Not fixed", "x"] };
+      const ACTIONS = { accept: ["Accept", "a"], revise: ["Another pass", "r"] };
+      const CHIP = {
+        accept: "Accepted",
+        revise: "Another pass",
+        undecided: "Undecided",
+        fixed: "Fixed",
+        partly: "Partly",
+        not_fixed: "Not fixed",
+      };
+
+      const S = {
+        sel: 0,
+        req: 0,
+        mode: "wipe",
+        dir: "h",
+        wipe: 50,
+        fade: 50,
+        sens: 85,
+        marks: {},
+        armed: false,
+        picking: null,
+        errors: null,
+        keepScroll: false,
+      };
+      let P = null;
+      const imgs = []; // per pair: { status, error, W, H, cv: {before, after, diff}, data, diff, thumb, fit }
+
+      /* ---------- reading the images ---------- */
+
+      async function decode(name) {
+        const bytes = await plugin.attachment(name);
+        const type = plugin.attachments.find((a) => a.name === name)?.media_type || "";
+        const blob = new Blob([bytes], { type });
+        if (!/svg/.test(type) && !/\.svg$/i.test(name)) return await createImageBitmap(blob);
+        // an SVG has no bitmap until it is drawn; the frame may load blob: images
+        const url = URL.createObjectURL(blob);
+        try {
+          const img = new Image();
+          img.src = url;
+          await img.decode();
+          if (!img.naturalWidth) {
+            img.width = 1024;
+            img.height = 768;
+          }
+          return img;
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      }
+      const sizeOf = (im) => ({ w: im.naturalWidth || im.width, h: im.naturalHeight || im.height });
+
+      /* The two images on one grid: the after image's own pixels. The before
+   image is scaled to the same width; when their shapes match it is scaled
+   to the same height too, and otherwise both are compared from the top. */
+      async function load(pair) {
+        const [before, after] = await Promise.allSettled([
+          decode(Pinrail.attachmentName(pair.before)),
+          decode(Pinrail.attachmentName(pair.after)),
+        ]);
+        if (before.status === "rejected" || after.status === "rejected") {
+          const which = before.status === "rejected" ? "before" : "after";
+          const why = (before.status === "rejected" ? before : after).reason;
+          return { status: "error", error: `The ${which} image could not be read: ${why?.message || why}` };
+        }
+        const a = sizeOf(after.value),
+          b = sizeOf(before.value);
+        const W = a.w,
+          H = a.h;
+        const sx = W / b.w;
+        const sameShape = Math.abs(b.w / b.h - W / H) < 0.01 * (W / H);
+        const sy = sameShape ? H / b.h : sx;
+        const canvas = (draw) => {
+          const c = document.createElement("canvas");
+          c.width = W;
+          c.height = H;
+          const ctx = c.getContext("2d", { willReadFrequently: true });
+          draw(ctx);
+          return c;
+        };
+        const cvAfter = canvas((ctx) => ctx.drawImage(after.value, 0, 0, W, H));
+        const cvBefore = canvas((ctx) => ctx.drawImage(before.value, 0, 0, b.w * sx, b.h * sy));
+        const cvDiff = canvas(() => {});
+        const beforeH = Math.round(b.h * sy);
+        const facts = [];
+        if (b.w !== a.w || b.h !== a.h) facts.push(`before ${b.w}×${b.h}, after ${a.w}×${a.h}`);
+        if (!sameShape && beforeH < H) facts.push(`after is ${H - beforeH} px taller; compared from the top`);
+        if (!sameShape && beforeH > H) facts.push(`before is ${beforeH - H} px taller; its bottom is cut`);
+        const e = {
+          status: "ready",
+          W,
+          H,
+          sy: (b.h * sy) / H,
+          beforeH,
+          cv: { before: cvBefore, after: cvAfter, diff: cvDiff },
+          data: {
+            before: cvBefore.getContext("2d").getImageData(0, 0, W, H).data,
+            after: cvAfter.getContext("2d").getImageData(0, 0, W, H).data,
+          },
+          facts,
+        };
+        const t = document.createElement("canvas");
+        const k = Math.min(1, 400 / W, 224 / H);
+        t.width = Math.round(W * k);
+        t.height = Math.round(H * k);
+        t.getContext("2d").drawImage(cvAfter, 0, 0, t.width, t.height);
+        e.thumb = t.toDataURL("image/png");
+        computeDiff(e);
+        return e;
+      }
+
+      /* ---------- the difference ---------- */
+
+      const threshold = () => Math.round(4 + (100 - S.sens) * 2.4);
+
+      /* Which pixels changed, and the areas they make: changed pixels are
+   gathered into cells, and cells near each other into one area. */
+      function computeDiff(e) {
+        const { W, H } = e;
+        const a = e.data.after,
+          b = e.data.before;
+        const t = threshold();
+        const mask = new Uint8Array(W * H);
+        let count = 0;
+        for (let i = 0, j = 0; i < mask.length; i++, j += 4) {
+          const d =
+            b[j + 3] < 8
+              ? a[j + 3] < 8
+                ? 0
+                : 255
+              : Math.max(
+                  Math.abs(a[j] - b[j]),
+                  Math.abs(a[j + 1] - b[j + 1]),
+                  Math.abs(a[j + 2] - b[j + 2]),
+                  Math.abs(a[j + 3] - b[j + 3]),
+                );
+          if (d > t) {
+            mask[i] = 1;
+            count++;
+          }
+        }
+        const C = Math.max(4, Math.round(Math.max(W, H) / 160));
+        const gw = Math.ceil(W / C),
+          gh = Math.ceil(H / C);
+        const cells = new Uint16Array(gw * gh);
+        for (let y = 0; y < H; y++)
+          for (let x = 0; x < W; x++) if (mask[y * W + x]) cells[((y / C) | 0) * gw + ((x / C) | 0)]++;
+        const seen = new Uint8Array(gw * gh);
+        const boxes = [];
+        const R = 2; // cells this close belong to one area
+        for (let c = 0; c < cells.length; c++) {
+          if (cells[c] < 2 || seen[c]) continue;
+          const stack = [c];
+          seen[c] = 1;
+          let x0 = Infinity,
+            y0 = Infinity,
+            x1 = -1,
+            y1 = -1,
+            px = 0;
+          while (stack.length) {
+            const k = stack.pop();
+            const cx = k % gw,
+              cy = (k / gw) | 0;
+            x0 = Math.min(x0, cx);
+            y0 = Math.min(y0, cy);
+            x1 = Math.max(x1, cx);
+            y1 = Math.max(y1, cy);
+            px += cells[k];
+            for (let dy = -R; dy <= R; dy++)
+              for (let dx = -R; dx <= R; dx++) {
+                const nx = cx + dx,
+                  ny = cy + dy;
+                if (nx < 0 || ny < 0 || nx >= gw || ny >= gh) continue;
+                const n = ny * gw + nx;
+                if (!seen[n] && cells[n] >= 2) {
+                  seen[n] = 1;
+                  stack.push(n);
+                }
+              }
+          }
+          if (px < 8) continue;
+          const X0 = x0 * C,
+            Y0 = y0 * C,
+            X1 = Math.min(W, (x1 + 1) * C),
+            Y1 = Math.min(H, (y1 + 1) * C);
+          boxes.push({ x: X0 / W, y: Y0 / H, w: (X1 - X0) / W, h: (Y1 - Y0) / H, px });
+        }
+        boxes.sort((p, q) => p.y - q.y || p.x - q.x);
+        e.diff = { mask, count, boxes, share: count / (W * H) };
+        paintDiff(e);
+      }
+
+      /* The after image faded toward the stage, with every changed pixel lit. */
+      function paintDiff(e) {
+        const { W, H } = e;
+        const ctx = e.cv.diff.getContext("2d");
+        const out = ctx.createImageData(W, H);
+        const o = out.data,
+          a = e.data.after,
+          m = e.diff.mask;
+        const dark = document.documentElement.dataset.theme !== "light";
+        const bg = dark ? 28 : 250,
+          keep = dark ? 0.28 : 0.3;
+        for (let i = 0, j = 0; i < m.length; i++, j += 4) {
+          const l = 0.2126 * a[j] + 0.7152 * a[j + 1] + 0.0722 * a[j + 2];
+          if (m[i]) {
+            // the after image's own shapes, in the highlight: dark pixels full, light ones pale
+            const k = 0.35 + 0.65 * (1 - l / 255);
+            o[j] = bg + (214 - bg) * k;
+            o[j + 1] = bg + (64 - bg) * k;
+            o[j + 2] = bg + (159 - bg) * k;
+            o[j + 3] = 255;
+            continue;
+          }
+          const v = bg + (l - bg) * keep;
+          o[j] = o[j + 1] = o[j + 2] = v;
+          o[j + 3] = 255;
+        }
+        ctx.putImageData(out, 0, 0);
+      }
+
+      /* ---------- regions ---------- */
+
+      const clamp = (v, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+      const r4 = (v) => Math.round(v * 10000) / 10000;
+      // a request's region, asked on the before image, on the shared grid
+      function beforeOnGrid(e, r) {
+        return { x: r.x, y: r.y * e.sy, w: r.w, h: r.h * e.sy };
+      }
+      function requestOnAfter(e, q) {
+        return q.after_region || (q.region ? beforeOnGrid(e, q.region) : null);
+      }
+      const overlaps = (p, q, m = 0.01) =>
+        p.x < q.x + q.w + m && q.x < p.x + p.w + m && p.y < q.y + q.h + m && q.y < p.y + p.h + m;
+      function changedIn(e, r) {
+        const { W, H } = e;
+        const x0 = Math.floor(r.x * W),
+          y0 = Math.floor(r.y * H),
+          x1 = Math.ceil((r.x + r.w) * W),
+          y1 = Math.ceil((r.y + r.h) * H);
+        let n = 0;
+        for (let y = Math.max(0, y0); y < Math.min(H, y1); y++)
+          for (let x = Math.max(0, x0); x < Math.min(W, x1); x++) n += e.diff.mask[y * W + x];
+        return n;
+      }
+      function unasked(e, pair) {
+        // where each request was asked, and where its change is said to be
+        const asked = (pair.requests || [])
+          .flatMap((q) => [q.region && beforeOnGrid(e, q.region), requestOnAfter(e, q)])
+          .filter(Boolean);
+        return e.diff.boxes.map((b, i) => ({ ...b, n: i + 1, asked: asked.some((r) => overlaps(b, r)) }));
+      }
+      const pixelsOf = (e, r) => ({
+        x: Math.round(r.x * e.W),
+        y: Math.round(r.y * e.H),
+        w: Math.round(r.w * e.W),
+        h: Math.round(r.h * e.H),
+      });
+
+      /* ---------- the decision ---------- */
+
+      const pairAt = () => P.pairs[S.sel];
+      const markOf = (id) => S.marks[id] || null;
+      function ensure(id) {
+        if (!S.marks[id]) S.marks[id] = { action: null, note: "", requests: {}, comments: [] };
+        return S.marks[id];
+      }
+
+      /* An explicit verdict wins. Without one, a pair with anything left to do
+   goes back for another pass, and one whose every request is fixed with
+   nothing new found is accepted. A pair checked only part way, all fixed
+   so far, waits for the rest; handed over like that, it goes back for
+   another pass with the rest listed as unchecked. */
+      function actionOf(pair, final = false) {
+        const m = markOf(pair.id);
+        if (!m) return null;
+        if (m.action) return m.action;
+        const reqs = pair.requests || [];
+        const outs = reqs.map((q) => m.requests[q.id]?.outcome).filter(Boolean);
+        if ((m.comments || []).length || outs.some((o) => o !== "fixed")) return "revise";
+        if (reqs.length && outs.length === reqs.length) return "accept";
+        if (outs.length && final) return "revise";
+        return null;
+      }
+
+      function decisionData() {
+        const decisions = [],
+          undecided = [];
+        for (const pair of P.pairs) {
+          const action = actionOf(pair, true);
+          if (!action) {
+            undecided.push(pair.id);
+            continue;
+          }
+          const m = markOf(pair.id);
+          const d = { id: pair.id, action };
+          const note = (m.note || "").trim();
+          if (note) d.note = note;
+          d.requests = [];
+          const unchecked = [];
+          for (const q of pair.requests || []) {
+            const r = m.requests[q.id];
+            if (!r?.outcome) {
+              unchecked.push(q.id);
+              continue;
+            }
+            const out = { id: q.id, outcome: r.outcome };
+            if ((r.note || "").trim()) out.note = r.note.trim();
+            d.requests.push(out);
+          }
+          if (unchecked.length) d.unchecked = unchecked;
+          if ((m.comments || []).length)
+            d.comments = m.comments.map(({ note, region, pixels }) => ({ note, region, pixels }));
+          decisions.push(d);
+        }
+        return { decisions, undecided };
+      }
+
+      function counts() {
+        const c = { accept: 0, revise: 0, undecided: 0, fixed: 0, partly: 0, not_fixed: 0, unchecked: 0 };
+        for (const pair of P.pairs) {
+          c[actionOf(pair) || "undecided"]++;
+          const m = markOf(pair.id);
+          for (const q of pair.requests || []) c[m?.requests[q.id]?.outcome || "unchecked"]++;
+        }
+        return c;
+      }
+
+      function status() {
+        if (plugin.readonly) return;
+        const c = counts();
+        const parts = [];
+        if (c.accept) parts.push(`${c.accept} accepted`);
+        if (c.revise) parts.push(`${c.revise} for another pass`);
+        let label = parts.length ? `Hand over: ${parts.join(", ")}` : "Hand over";
+        if (S.armed) {
+          const left = [];
+          if (c.undecided) left.push(`${c.undecided} pair${c.undecided === 1 ? "" : "s"} undecided`);
+          if (c.unchecked) left.push(`${c.unchecked} request${c.unchecked === 1 ? "" : "s"} unchecked`);
+          label = `Hand over with ${left.join(" and ")}`;
+        }
+        plugin.handOverLabel(label);
+      }
+
+      // the draft keeps the marks, and where the person was looking
+      const draft = () => plugin.draft({ marks: S.marks, ui: { sel: S.sel, mode: S.mode, dir: S.dir } });
+      function save() {
+        S.armed = false;
+        S.errors = null;
+        draft();
+      }
+
+      /* ---------- rendering ---------- */
+
+      const chip = (k) => (k ? `<span class="chip c-${k}">${CHIP[k]}</span>` : `<span class="chip c-none">—</span>`);
+
+      function previousOf(pair) {
+        const prev = previousVerdict(plugin.previous, pair.id);
+        const data = plugin.previous?.decision?.data;
+        const d = (data?.decisions || []).find((x) => x.id === pair.id);
+        const reqs = {};
+        for (const r of d?.requests || []) reqs[r.id] = r;
+        return { verdict: prev, reqs };
+      }
+
+      function renderTop() {
+        const c = counts();
+        return `<div class="top">
+      <h1>${esc(plugin.review.title || "Before and after")}</h1>
+      <div class="tally" aria-live="polite">
+        <span><b>${c.fixed}</b> fixed</span><span><b>${c.partly}</b> partly</span><span><b>${c.not_fixed}</b> not fixed</span><span><b>${c.unchecked}</b> unchecked</span>
+        <span class="sep"></span>
+        <span><b>${c.accept}</b> accepted</span><span><b>${c.revise}</b> another pass</span><span><b>${c.undecided}</b> undecided</span>
+      </div>
+    </div>`;
+      }
+
+      function renderPick(pair, i) {
+        const e = imgs[i];
+        const m = markOf(pair.id);
+        const reqs = pair.requests || [];
+        const fixed = reqs.filter((q) => m?.requests[q.id]?.outcome === "fixed").length;
+        const comments = m?.comments?.length || 0;
+        return `<button type="button" class="pick" data-pick="${i}" aria-current="${i === S.sel}">
+      <span class="thumb">${e?.thumb ? `<img src="${e.thumb}" alt="">` : `<span class="wait">${e?.status === "error" ? "can't read it" : "…"}</span>`}</span>
+      <span class="pick-name">${esc(pair.name)}</span>${chip(actionOf(pair))}
+      <span class="pick-meta">${reqs.length ? `${fixed} of ${reqs.length} fixed` : "no requests"}${comments ? ` · ${comments} found` : ""}</span>
+    </button>`;
+      }
+
+      function renderRail() {
+        return `<nav class="rail" aria-label="Pairs"><p class="label">${P.pairs.length} pair${P.pairs.length === 1 ? "" : "s"}</p>${P.pairs.map(renderPick).join("")}</nav>`;
+      }
+
+      function markBox(r, cls, label, attrs = "") {
+        const point = r.w === 0 && r.h === 0;
+        return `<div class="mark ${cls}${point ? " point" : ""}" style="left:${r.x * 100}%;top:${r.y * 100}%;width:${r.w * 100}%;height:${r.h * 100}%" ${attrs}>${label ? `<span class="mark-label">${esc(label)}</span>` : ""}</div>`;
+      }
+
+      function overlayHTML(e, pair, side) {
+        const m = markOf(pair.id);
+        const reqs = pair.requests || [];
+        const cur = reqs[S.req];
+        const out = [];
+        reqs.forEach((q, i) => {
+          const r = side === "before" ? (q.region ? beforeOnGrid(e, q.region) : null) : requestOnAfter(e, q);
+          if (!r) return;
+          const o = m?.requests[q.id]?.outcome;
+          out.push(
+            markBox(
+              r,
+              `req${o ? ` o-${o}` : ""}${q === cur ? " current" : cur ? " dim" : ""}`,
+              q.id,
+              `data-req-mark="${i}"`,
+            ),
+          );
+        });
+        if (side === "before") return out.join("");
+        if (S.mode === "diff") {
+          for (const b of unasked(e, pair)) {
+            out.push(
+              `<button type="button" class="mark change${b.asked ? " asked" : ""}" data-change="${b.n - 1}" style="left:${b.x * 100}%;top:${b.y * 100}%;width:${b.w * 100}%;height:${b.h * 100}%" aria-label="Changed area ${b.n}${b.asked ? "" : ", not asked for"}: comment on it"${plugin.readonly ? " disabled" : ""}><span class="mark-label">Δ${b.n}</span></button>`,
+            );
+          }
+        }
+        (m?.comments || []).forEach((c, i) =>
+          out.push(markBox(c.region, "new", String(i + 1), `data-comment="${i}" title="${esc(c.note)}"`)),
+        );
+        if (S.picking) out.push(markBox(S.picking.region, "pending", "+"));
+        return out.join("");
+      }
+
+      function frameHTML(e, pair, side) {
+        const slots =
+          side === "before"
+            ? ["before"]
+            : side === "after"
+              ? ["after"]
+              : S.mode === "diff"
+                ? ["diff"]
+                : S.mode === "onion"
+                  ? ["before", "after"]
+                  : ["after", "before"];
+        const draw = side !== "before" && !plugin.readonly;
+        const tags =
+          side === "single" && (S.mode === "wipe" || S.mode === "onion")
+            ? S.mode === "wipe"
+              ? `<span class="tag t-before">Before</span><span class="tag t-after">After</span>`
+              : ""
+            : "";
+        const handle =
+          side === "single" && S.mode === "wipe"
+            ? `<div class="handle" id="handle" tabindex="0" role="slider" aria-label="Wipe between before and after" aria-orientation="${S.dir === "v" ? "vertical" : "horizontal"}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(S.wipe)}" aria-valuetext="${Math.round(S.wipe)}% before"><span class="grip">${S.dir === "v" ? "↕" : "↔"}</span></div>`
+            : "";
+        return `<div class="frame" data-frame="${side}">
+      ${slots.map((s) => `<div class="layer ${s}" data-slot="${s}"></div>`).join("")}
+      <div class="overlay${draw ? " drawable" : ""}" ${side !== "before" ? "data-draw" : ""}>${overlayHTML(e, pair, side)}</div>
+      ${tags}${handle}
+    </div>`;
+      }
+
+      function amountHTML() {
+        const [label, value, text] =
+          S.mode === "wipe"
+            ? ["Wipe", S.wipe, `${Math.round(S.wipe)}%`]
+            : S.mode === "onion"
+              ? ["After", S.fade, `${Math.round(S.fade)}%`]
+              : S.mode === "diff"
+                ? ["Sensitivity", S.sens, `${Math.round(S.sens)}`]
+                : [null];
+        if (!label) return "";
+        return `<label class="amount">${label}<input type="range" id="amount" min="0" max="100" step="1" value="${value}" aria-label="${label === "After" ? "After opacity" : label}"><output id="amount-out">${text}</output></label>`;
+      }
+
+      function renderStage(e, pair) {
+        if (!e) return `<div class="stage"><div class="reading">Reading the images…</div></div>`;
+        if (e.status === "error")
+          return `<div class="stage"><div class="broken" role="alert">${esc(e.error)}</div></div>`;
+        const body =
+          S.mode === "side"
+            ? `<div class="pane"><span class="pane-label">Before</span>${frameHTML(e, pair, "before")}</div><div class="pane"><span class="pane-label">After</span>${frameHTML(e, pair, "after")}</div>`
+            : frameHTML(e, pair, "single");
+        return `<div class="stage mode-${S.mode} dir-${S.dir}" id="stage" style="--wipe:${S.wipe}%;--fade:${S.fade / 100}">${body}</div>`;
+      }
+
+      function renderDiffFacts(e, pair) {
+        if (!e || e.status !== "ready") return "";
+        const all = unasked(e, pair);
+        const extra = all.filter((b) => !b.asked).length;
+        const pct = e.diff.share * 100;
+        return `<div class="diff-facts" id="diff-facts" aria-live="polite">
+      <span><span class="swatch"></span><b>${all.length}</b> changed area${all.length === 1 ? "" : "s"}</span>
+      <span><b>${pct < 0.1 && pct > 0 ? "<0.1" : pct.toFixed(1)}%</b> of pixels</span>
+      <span><b>${extra}</b> outside every request</span>
+    </div>`;
+      }
+
+      function renderRequests(e, pair) {
+        const m = markOf(pair.id);
+        const prev = previousOf(pair);
+        const reqs = pair.requests || [];
+        const ro = plugin.readonly;
+        if (!reqs.length)
+          return `<p class="pinrail-empty">No requests came with this pair. Look for anything that broke, and give a verdict.</p>`;
+        return `<ol class="reqs" aria-label="Requests">${reqs
+          .map((q, i) => {
+            const mine = m?.requests[q.id] || {};
+            const r = e?.status === "ready" ? requestOnAfter(e, q) : null;
+            const seen = r ? changedIn(e, r) : null;
+            const last = prev.reqs[q.id];
+            return `<li class="ask" data-req="${i}" aria-current="${i === S.req}">
+        <span class="rid">${esc(q.id)}</span>
+        <div>
+          <div class="rtext">${esc(q.text)}</div>
+          ${q.claim ? `<div class="claim"><b>Changed:</b> ${esc(q.claim)}</div>` : ""}
+          <div class="rmeta">
+            ${seen === null ? "" : seen > 0 ? `<span class="seen">pixels changed here</span>` : `<span class="seen no">no change found here</span>`}
+            ${last ? `<span>Last round: ${chip(last.outcome)}${last.note ? ` ${esc(last.note)}` : ""}</span>` : ""}
+          </div>
+        </div>
+        <div class="outcomes" role="group" aria-label="Outcome of ${esc(q.id)}">
+          ${Object.entries(OUTCOMES)
+            .map(
+              ([k, [label, key]]) =>
+                `<button type="button" class="out" data-outcome="${k}" data-for="${i}" aria-pressed="${mine.outcome === k}" ${ro ? "disabled" : ""}>${label}${i === S.req && !ro ? ` <span class="kbd">${key}</span>` : ""}</button>`,
+            )
+            .join("")}
+        </div>
+        ${
+          ro
+            ? mine.note
+              ? `<div class="readnote">${esc(mine.note)}</div>`
+              : ""
+            : mine.outcome
+              ? `<input class="rnote" data-note-for="${i}" value="${esc(mine.note || "")}" aria-label="Note on ${esc(q.id)}" placeholder="${mine.outcome === "fixed" ? "A note (optional)" : "What is still wrong, or what to do instead"}">`
+              : ""
+        }
+      </li>`;
+          })
+          .join("")}</ol>`;
+      }
+
+      function renderFound(e, pair) {
+        const m = markOf(pair.id);
+        const comments = m?.comments || [];
+        const ro = plugin.readonly;
+        const list = comments.length
+          ? `<ol class="found" aria-label="Found on the after image">${comments
+              .map(
+                (c, i) => `
+        <li><span class="num">${i + 1}</span><span>${esc(c.note)}<br><span class="what">${c.region.w || c.region.h ? `${c.pixels.w}×${c.pixels.h} at ${c.pixels.x}, ${c.pixels.y}` : `point at ${c.pixels.x}, ${c.pixels.y}`} px</span></span>
+          <span class="acts">${ro ? "" : `<button type="button" class="pinrail-btn quiet" data-remove="${i}">Remove</button>`}</span></li>`,
+              )
+              .join("")}</ol>`
+          : `<p class="pinrail-empty">${ro ? "Nothing." : "Drag on the image to mark something that broke, or click for a point. Comments go on the after image."}</p>`;
+        let extra = "";
+        if (e?.status === "ready") {
+          const boxes = unasked(e, pair).filter((b) => !b.asked);
+          if (boxes.length)
+            extra = `<div><p class="label">Changed outside every request</p><ol class="extra">${boxes
+              .map((b) => {
+                const px = pixelsOf(e, b);
+                const said = comments.findIndex((c) => overlaps(b, c.region, 0));
+                return `<li><span class="num">Δ${b.n}</span><span class="what">${px.w}×${px.h} at ${px.x}, ${px.y} px${said >= 0 ? `<br>see comment ${said + 1}` : ""}</span>
+        <span class="acts"><button type="button" class="pinrail-btn quiet" data-show-change="${b.n - 1}">Show</button>${ro || said >= 0 ? "" : `<button type="button" class="pinrail-btn quiet" data-change="${b.n - 1}">Comment</button>`}</span></li>`;
+              })
+              .join("")}</ol></div>`;
+        }
+        return `<div><p class="label">Found on the after image</p>${list}</div>${extra}`;
+      }
+
+      function renderSheet() {
+        const pair = pairAt();
+        const e = imgs[S.sel];
+        const m = markOf(pair.id) || {};
+        const prev = previousOf(pair).verdict;
+        const ro = plugin.readonly;
+        const action = actionOf(pair);
+        const derived = action && !m.action;
+        return `<main class="sheet" id="sheet" aria-labelledby="pair-name"><div class="sheet-inner">
+      ${S.errors ? `<div class="errors-box" role="alert">${S.errors.map((x) => `${esc(x.path)}: ${esc(x.message)}`).join("<br>")}</div>` : ""}
+      ${P.notes ? `<div class="notes">${Pinrail.markdown(P.notes)}</div>` : ""}
+      <header class="pair-head">
+        <h2 id="pair-name">${esc(pair.name)}</h2>
+        <span class="pair-id">${esc(pair.id)} · ${S.sel + 1} of ${P.pairs.length}</span>
+        ${prev ? `<div class="previous">Last round: ${chip(prev.action)}${prev.note ? ` ${esc(prev.note)}` : ""}</div>` : ""}
+      </header>
+      ${pair.summary ? `<div class="summary">${Pinrail.markdown(pair.summary)}</div>` : ""}
+
+      <section aria-label="Compare">
+        <div class="tools">
+          <div class="seg" role="group" aria-label="Compare mode">
+            ${MODES.map(([k, label], i) => `<button type="button" data-mode="${k}" aria-pressed="${S.mode === k}">${label} <kbd>${i + 1}</kbd></button>`).join("")}
+          </div>
+          ${S.mode === "wipe" ? `<div class="seg" role="group" aria-label="Wipe direction"><button type="button" data-dir="h" aria-pressed="${S.dir === "h"}">Across</button><button type="button" data-dir="v" aria-pressed="${S.dir === "v"}">Down <kbd>v</kbd></button></div>` : ""}
+          ${e?.status === "ready" ? amountHTML() : ""}
+          ${e?.status === "ready" && e.facts.length ? `<span class="facts">${esc(e.facts.join(" · "))}</span>` : ""}
+        </div>
+      </section>
+      <div class="stage-wrap" id="stage-wrap">
+        ${renderStage(e, pair)}
+        ${
+          S.picking
+            ? `<div class="pop" id="pop" role="dialog" aria-label="Comment on the after image">
+            <div class="pop-head"><b>${S.picking.region.w || S.picking.region.h ? "This area" : "This point"}</b> of the after image</div>
+            <textarea id="pick-note" aria-label="What is wrong here" placeholder="What broke, or what should change here?">${esc(S.picking.note || "")}</textarea>
+            <div class="pop-actions"><span class="kbd">↵ add · esc</span><button type="button" class="pinrail-btn quiet" data-pop="cancel">Cancel</button><button type="button" class="pinrail-btn pinrail-btn-primary" data-pop="add">Comment</button></div>
+          </div>`
+            : ""
+        }
+        ${S.mode === "diff" ? renderDiffFacts(e, pair) : ""}
+      </div>
+
+      <section class="below">
+        <div class="col"><div><p class="label">What was asked</p>${renderRequests(e, pair)}</div></div>
+        <div class="col">${renderFound(e, pair)}</div>
+      </section>
+
+      <section class="decide" aria-label="Your verdict on ${esc(pair.name)}">
+        <div class="choices" role="group" aria-label="Verdict">
+          ${Object.entries(ACTIONS)
+            .map(
+              ([k, [label, key]]) =>
+                `<button type="button" class="choice${derived && action === k ? " derived" : ""}" data-action="${k}" aria-pressed="${action === k}" ${ro ? "disabled" : ""}>${label}${ro ? "" : ` <kbd class="kbd">${key}</kbd>`}</button>`,
+            )
+            .join("")}
+          ${derived && !ro ? `<span class="derived-hint">from your marks; choose to confirm</span>` : ""}
+          <span class="nav"><button type="button" data-step="-1" aria-label="Previous pair">← k</button><button type="button" data-step="1" aria-label="Next pair">j →</button></span>
+        </div>
+        <textarea id="note" aria-label="Note on ${esc(pair.name)}" placeholder="${action === "accept" ? "Anything to add (optional)" : "What the next pass should do (optional)"}" ${ro ? "readonly" : ""}>${esc(m.note || "")}</textarea>
+      </section>
+    </div></main>`;
+      }
+
+      function render() {
+        const sheet = document.getElementById("sheet");
+        const scroll = sheet ? sheet.scrollTop : 0;
+        const rail = document.querySelector(".rail");
+        const railScroll = rail ? rail.scrollTop : 0;
+        const focus = document.activeElement;
+        const refocus =
+          focus?.id === "note"
+            ? "#note"
+            : focus?.id === "handle"
+              ? "#handle"
+              : focus?.id === "amount"
+                ? "#amount"
+                : null;
+        document.getElementById("app").innerHTML =
+          `${renderTop()}<div class="work">${renderRail()}${renderSheet()}</div>`;
+        if (S.keepScroll) document.getElementById("sheet").scrollTop = scroll;
+        document.querySelector(".rail").scrollTop = railScroll;
+        S.keepScroll = false;
+        mount();
+        if (refocus) document.querySelector(refocus)?.focus({ preventScroll: true });
+        if (S.picking)
+          requestAnimationFrame(() => {
+            placePop();
+            document.getElementById("pick-note")?.focus({ preventScroll: true });
+          });
+        status();
+      }
+
+      /* The canvases live on between renders; each render puts them in its slots. */
+      function mount() {
+        const e = imgs[S.sel];
+        if (e?.status !== "ready") return;
+        document.querySelectorAll("[data-slot]").forEach((slot) => slot.appendChild(e.cv[slot.dataset.slot]));
+        fit();
+      }
+
+      /* Each frame as large as the stage allows, never past the image's own size. */
+      function fit() {
+        const e = imgs[S.sel];
+        const stage = document.getElementById("stage");
+        if (!stage || e?.status !== "ready") return;
+        const ratio = pairAt().pixel_ratio || 1;
+        const side = S.mode === "side";
+        const cs = getComputedStyle(stage);
+        const inner = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        const aw = side ? (inner - 12) / 2 : inner;
+        const mh = Math.max(300, window.innerHeight * 0.66);
+        const cw = e.W / ratio,
+          ch = e.H / ratio;
+        const k = Math.min(1, aw / cw, mh / ch);
+        stage.querySelectorAll(".frame").forEach((f) => {
+          f.style.width = `${Math.floor(cw * k)}px`;
+          f.style.height = `${Math.floor(ch * k)}px`;
+        });
+      }
+
+      function placePop() {
+        const pop = document.getElementById("pop");
+        const wrap = document.getElementById("stage-wrap");
+        const frame = document.querySelector('[data-frame="single"], [data-frame="after"]');
+        if (!pop || !wrap || !frame || !S.picking) return;
+        const W = wrap.getBoundingClientRect(),
+          F = frame.getBoundingClientRect();
+        const r = S.picking.region;
+        let x = F.left - W.left + (r.x + r.w) * F.width + 14;
+        if (x + pop.offsetWidth > W.width - 8) x = F.left - W.left + r.x * F.width - pop.offsetWidth - 14;
+        let y = F.top - W.top + r.y * F.height;
+        y = Math.max(8, Math.min(y, W.height - pop.offsetHeight - 8));
+        pop.style.left = `${Math.max(8, x)}px`;
+        pop.style.top = `${y}px`;
+      }
+
+      /* The stage's values change without a render, so a drag stays smooth. */
+      function updateAmount() {
+        const stage = document.getElementById("stage");
+        if (stage) {
+          stage.style.setProperty("--wipe", `${S.wipe}%`);
+          stage.style.setProperty("--fade", String(S.fade / 100));
+        }
+        const h = document.getElementById("handle");
+        if (h) {
+          h.setAttribute("aria-valuenow", String(Math.round(S.wipe)));
+          h.setAttribute("aria-valuetext", `${Math.round(S.wipe)}% before`);
+        }
+        const v = S.mode === "wipe" ? S.wipe : S.mode === "onion" ? S.fade : S.sens;
+        const input = document.getElementById("amount");
+        if (input && Number(input.value) !== Math.round(v)) input.value = String(Math.round(v));
+        const out = document.getElementById("amount-out");
+        if (out) out.textContent = S.mode === "diff" ? String(Math.round(v)) : `${Math.round(v)}%`;
+      }
+
+      let diffTimer = null;
+      function setAmount(v) {
+        v = clamp(v, 0, 100);
+        if (S.mode === "wipe") S.wipe = v;
+        else if (S.mode === "onion") S.fade = v;
+        else if (S.mode === "diff") {
+          S.sens = v;
+          clearTimeout(diffTimer);
+          diffTimer = setTimeout(() => {
+            imgs.forEach((e) => {
+              if (e?.status === "ready") computeDiff(e);
+            });
+            S.keepScroll = true;
+            render();
+          }, 60);
+        }
+        updateAmount();
+      }
+
+      /* ---------- actions ---------- */
+
+      function selectPair(i) {
+        S.sel = (i + P.pairs.length) % P.pairs.length;
+        S.req = 0;
+        S.picking = null;
+        draft();
+        render();
+        document.querySelector(`[data-pick="${S.sel}"]`)?.scrollIntoView({ block: "nearest" });
+      }
+      function selectRequest(i) {
+        const n = (pairAt().requests || []).length;
+        if (!n) return;
+        S.req = (i + n) % n;
+        S.keepScroll = true;
+        render();
+        document.querySelector(`[data-req="${S.req}"]`)?.scrollIntoView({ block: "nearest" });
+      }
+      function setMode(mode) {
+        S.mode = mode;
+        draft();
+        S.keepScroll = true;
+        render();
+      }
+      function setOutcome(i, outcome) {
+        if (plugin.readonly) return;
+        const pair = pairAt();
+        const q = (pair.requests || [])[i];
+        if (!q) return;
+        const m = ensure(pair.id);
+        const cur = m.requests[q.id] || {};
+        m.requests[q.id] = cur.outcome === outcome ? { ...cur, outcome: null } : { ...cur, outcome };
+        S.req = i;
+        S.keepScroll = true;
+        save();
+        render();
+      }
+      function setAction(action) {
+        if (plugin.readonly) return;
+        const m = ensure(pairAt().id);
+        m.action = m.action === action ? null : action;
+        S.keepScroll = true;
+        save();
+        render();
+      }
+      function startComment(region, note) {
+        if (plugin.readonly) return;
+        S.picking = { region, note: note || "" };
+        S.keepScroll = true;
+        render();
+      }
+      function addComment() {
+        const note = document.getElementById("pick-note")?.value.trim();
+        const e = imgs[S.sel];
+        if (!note || !S.picking || e?.status !== "ready") return;
+        const r = S.picking.region;
+        const region = { x: r4(r.x), y: r4(r.y), w: r4(r.w), h: r4(r.h) };
+        ensure(pairAt().id).comments.push({ note, region, pixels: pixelsOf(e, region) });
+        S.picking = null;
+        S.keepScroll = true;
+        save();
+        render();
+      }
+      function cancelComment() {
+        S.picking = null;
+        S.keepScroll = true;
+        render();
+      }
+      function commentOnChange(k) {
+        const e = imgs[S.sel];
+        const b = e?.diff?.boxes[k];
+        if (b) startComment({ x: b.x, y: b.y, w: b.w, h: b.h });
+      }
+      function handOver() {
+        const c = counts();
+        if ((c.undecided || c.unchecked) && !S.armed) {
+          S.armed = true;
+          status();
+          return;
+        }
+        const data = decisionData();
+        return data;
+      }
+
+      /* ---------- pointer: the wipe, and marking the after image ---------- */
+
+      let drag = null;
+      function point(ev, el) {
+        const r = el.getBoundingClientRect();
+        return { x: clamp((ev.clientX - r.left) / r.width), y: clamp((ev.clientY - r.top) / r.height), r };
+      }
+      document.addEventListener("pointerdown", (ev) => {
+        if (ev.button !== 0 || !P) return;
+        const handle = ev.target.closest?.("#handle");
+        if (handle) {
+          const frame = handle.closest(".frame");
+          drag = { kind: "wipe", frame };
+          handle.setPointerCapture(ev.pointerId);
+          ev.preventDefault();
+          return;
+        }
+        const overlay = ev.target.closest?.(".overlay[data-draw]");
+        if (!overlay || plugin.readonly || ev.target.closest("button")) return;
+        const p = point(ev, overlay);
+        drag = {
+          kind: "draw",
+          overlay,
+          x0: p.x,
+          y0: p.y,
+          cx: ev.clientX,
+          cy: ev.clientY,
+          band: null,
+          on: ev.target.closest("[data-comment]"),
+        };
+        overlay.setPointerCapture(ev.pointerId);
+        ev.preventDefault();
+      });
+      document.addEventListener("pointermove", (ev) => {
+        if (!drag) return;
+        if (drag.kind === "wipe") {
+          const p = point(ev, drag.frame);
+          setAmount((S.dir === "v" ? p.y : p.x) * 100);
+          return;
+        }
+        const p = point(ev, drag.overlay);
+        if (!drag.band) {
+          if (Math.hypot(ev.clientX - drag.cx, ev.clientY - drag.cy) < 4) return;
+          drag.band = document.createElement("div");
+          drag.band.className = "mark band";
+          drag.overlay.appendChild(drag.band);
+        }
+        const x = Math.min(drag.x0, p.x),
+          y = Math.min(drag.y0, p.y);
+        Object.assign(drag.band.style, {
+          left: `${x * 100}%`,
+          top: `${y * 100}%`,
+          width: `${Math.abs(p.x - drag.x0) * 100}%`,
+          height: `${Math.abs(p.y - drag.y0) * 100}%`,
+        });
+      });
+      document.addEventListener("pointerup", (ev) => {
+        const d = drag;
+        drag = null;
+        if (!d || d.kind !== "draw") return;
+        const p = point(ev, d.overlay);
+        const moved = Math.hypot(ev.clientX - d.cx, ev.clientY - d.cy) >= 4;
+        const region = moved
+          ? { x: Math.min(d.x0, p.x), y: Math.min(d.y0, p.y), w: Math.abs(p.x - d.x0), h: Math.abs(p.y - d.y0) }
+          : { x: d.x0, y: d.y0, w: 0, h: 0 };
+        const hit = !moved && d.on;
+        if (hit) {
+          document
+            .querySelectorAll(".found li")
+            [Number(hit.dataset.comment)]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          return;
+        }
+        startComment(region);
+      });
+
+      /* ---------- the protocol ---------- */
+
+      let rounds = 0;
+      const plugin = Pinrail.connect({
+        async onInit({ review, draft }) {
+          P = review.payload;
+          S.marks = {};
+          S.sel = 0;
+          S.req = 0;
+          S.picking = null;
+          S.armed = false;
+          S.errors = null;
+          const decided = review.decision?.data;
+          if (decided) {
+            for (const d of decided.decisions || []) {
+              S.marks[d.id] = {
+                action: d.action,
+                note: d.note || "",
+                comments: d.comments || [],
+                requests: Object.fromEntries(
+                  (d.requests || []).map((r) => [r.id, { outcome: r.outcome, note: r.note || "" }]),
+                ),
+              };
+            }
+          } else if (draft && typeof draft === "object" && draft.marks) {
+            S.marks = draft.marks;
+            const ui = draft.ui || {};
+            if (Number.isInteger(ui.sel) && ui.sel < P.pairs.length) S.sel = ui.sel;
+            if (MODES.some(([k]) => k === ui.mode)) S.mode = ui.mode;
+            if (ui.dir === "v" || ui.dir === "h") S.dir = ui.dir;
+          }
+          imgs.length = 0;
+          render();
+          // the view is up at once; each pair fills in as its images are read
+          const round = ++rounds;
+          await Promise.all(
+            P.pairs.map(async (pair, i) => {
+              let e;
+              try {
+                e = await load(pair);
+              } catch (err) {
+                e = { status: "error", error: `The images could not be read: ${err?.message || err}` };
+              }
+              if (round !== rounds) return;
+              imgs[i] = e;
+              if (i === S.sel) {
+                S.keepScroll = true;
+                render();
+              } else document.querySelector(`[data-pick="${i}"]`)?.replaceWith(pickFor(pair, i));
+            }),
+          );
+        },
+        onCollect() {
+          return handOver();
+        },
+        onSubmitted() {
+          S.picking = null;
+          render();
+        },
+        onViolations(errors) {
+          S.errors = errors;
+          S.keepScroll = true;
+          render();
+          plugin.handOverLabel(`Check: ${errors[0]?.message ?? "the decision"}`);
+        },
+        onAppearance() {
+          imgs.forEach((e) => {
+            if (e?.status === "ready") paintDiff(e);
+          });
+        },
+      });
+
+      function pickFor(pair, i) {
+        const t = document.createElement("template");
+        t.innerHTML = renderPick(pair, i).trim();
+        return t.content.firstChild;
+      }
+
+      window.addEventListener("resize", () => {
+        fit();
+        placePop();
+      });
+
+      document.addEventListener("click", (ev) => {
+        if (!P) return;
+        const t = ev.target.closest ? ev.target : null;
+        if (!t) return;
+        const pop = t.closest("[data-pop]");
+        if (pop) return pop.dataset.pop === "add" ? addComment() : cancelComment();
+        const mode = t.closest("[data-mode]");
+        if (mode) return setMode(mode.dataset.mode);
+        const dir = t.closest("[data-dir]");
+        if (dir) {
+          S.dir = dir.dataset.dir;
+          S.keepScroll = true;
+          draft();
+          return render();
+        }
+        const change = t.closest("[data-change]");
+        if (change) return commentOnChange(Number(change.dataset.change));
+        const show = t.closest("[data-show-change]");
+        if (show) {
+          if (S.mode !== "diff") setMode("diff");
+          const box = document.querySelector(`button.mark.change[data-change="${show.dataset.showChange}"]`);
+          box?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          box?.focus({ preventScroll: true });
+          return;
+        }
+        const remove = t.closest("[data-remove]");
+        if (remove) {
+          const m = markOf(pairAt().id);
+          m.comments = m.comments.filter((_, i) => i !== Number(remove.dataset.remove));
+          S.keepScroll = true;
+          save();
+          return render();
+        }
+        const out = t.closest("[data-outcome]");
+        if (out) return setOutcome(Number(out.dataset.for), out.dataset.outcome);
+        const choice = t.closest("[data-action]");
+        if (choice) return setAction(choice.dataset.action);
+        const pick = t.closest("[data-pick]");
+        if (pick) return selectPair(Number(pick.dataset.pick));
+        const step = t.closest("[data-step]");
+        if (step) return selectPair(S.sel + Number(step.dataset.step));
+        const req = t.closest("[data-req]");
+        if (req && !t.closest("input") && Number(req.dataset.req) !== S.req)
+          return selectRequest(Number(req.dataset.req));
+      });
+
+      document.addEventListener("input", (ev) => {
+        const t = ev.target;
+        if (t.id === "amount") return setAmount(Number(t.value));
+        if (plugin.readonly || !P) return;
+        if (t.id === "note") {
+          ensure(pairAt().id).note = t.value;
+          S.armed = false;
+          draft();
+        } else if (t.dataset.noteFor !== undefined) {
+          const q = pairAt().requests[Number(t.dataset.noteFor)];
+          const m = ensure(pairAt().id);
+          m.requests[q.id] = { ...(m.requests[q.id] || {}), note: t.value };
+          S.armed = false;
+          draft();
+        }
+      });
+
+      document.addEventListener("keydown", (ev) => {
+        if (ev.target.id === "pick-note") {
+          if (ev.key === "Enter" && !ev.shiftKey && !ev.metaKey && !ev.ctrlKey) {
+            ev.preventDefault();
+            addComment();
+          }
+          if (ev.key === "Escape") {
+            ev.preventDefault();
+            cancelComment();
+          }
+          return;
+        }
+        if (!P || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+        if (ev.target.closest && ev.target.closest("textarea, input:not([type=range])")) return;
+        const key = ev.key;
+        const arrows = {
+          ArrowLeft: -1,
+          ArrowDown: S.dir === "v" && S.mode === "wipe" ? 1 : null,
+          ArrowRight: 1,
+          ArrowUp: S.dir === "v" && S.mode === "wipe" ? -1 : null,
+        };
+        if (key in arrows && arrows[key] !== null) {
+          if (ev.target.id === "amount" || S.mode === "side") return;
+          const v = S.mode === "wipe" ? S.wipe : S.mode === "onion" ? S.fade : S.sens;
+          setAmount(Math.round(v) + arrows[key] * (ev.shiftKey ? 10 : 2));
+        } else if (key === "j") selectPair(S.sel + 1);
+        else if (key === "k") selectPair(S.sel - 1);
+        else if (/^[1-4]$/.test(key)) setMode(MODES[Number(key) - 1][0]);
+        else if (key === "v" && S.mode === "wipe") {
+          S.dir = S.dir === "v" ? "h" : "v";
+          S.keepScroll = true;
+          draft();
+          render();
+        } else if (key === "n") selectRequest(S.req + 1);
+        else if (key === "N") selectRequest(S.req - 1);
+        else if (key === "f") setOutcome(S.req, "fixed");
+        else if (key === "p") setOutcome(S.req, "partly");
+        else if (key === "x") setOutcome(S.req, "not_fixed");
+        else if (key === "a") setAction("accept");
+        else if (key === "r") setAction("revise");
+        else if (key === "Escape" && S.picking) cancelComment();
+        else return;
+        ev.preventDefault();
+      });
+
+      /* What the previous round decided for an item: its decision's
+   `decisions: [{ id, action, note }]` and `undecided: [id]`. The previous
+   round may come from an earlier release, so its shape is checked. */
+      function previousVerdict(previous, id) {
+        const data = previous && previous.decision && previous.decision.data;
+        if (!data || typeof data !== "object") return null;
+        const d = (Array.isArray(data.decisions) ? data.decisions : []).find((x) => x && x.id === id);
+        if (d) return { action: d.action, note: d.note || "" };
+        if (Array.isArray(data.undecided) && data.undecided.includes(id)) return { action: "undecided", note: "" };
+        return null;
+      }
+    </script>
+  </body>
+</html>

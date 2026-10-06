@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Before and after comparison decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decisions", "undecided"],
+  "$defs": {
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "w": { "type": "number", "minimum": 0, "maximum": 1 },
+        "h": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "pixels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "w": { "type": "integer", "minimum": 0 },
+        "h": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "properties": {
+    "decisions": {
+      "type": "array",
+      "description": "A verdict per pair the reviewer looked at, with what they found.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "action", "requests"],
+        "properties": {
+          "id": { "type": "string", "description": "The pair's id." },
+          "action": {
+            "enum": ["accept", "revise"],
+            "description": "accept: this revision is done. revise: it needs another pass; the requests not fixed and the comments say what is left."
+          },
+          "note": { "type": "string", "maxLength": 4000, "description": "The reviewer's word on the pair as a whole." },
+          "requests": {
+            "type": "array",
+            "description": "The outcome of each request the reviewer checked.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "outcome"],
+              "properties": {
+                "id": { "type": "string", "description": "The request's id, as the payload gave it." },
+                "outcome": {
+                  "enum": ["fixed", "partly", "not_fixed"],
+                  "description": "fixed: done. partly: better, not there yet. not_fixed: the change did not address it."
+                },
+                "note": { "type": "string", "maxLength": 2000, "description": "What is still wrong, or what to do instead." }
+              }
+            }
+          },
+          "unchecked": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Requests the reviewer gave no outcome. Treat them as not confirmed."
+          },
+          "comments": {
+            "type": "array",
+            "description": "New things the reviewer found, each on a region of the after image: something that broke, or a change nobody asked for.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["note", "region", "pixels"],
+              "properties": {
+                "note": { "type": "string", "minLength": 1, "maxLength": 2000 },
+                "region": { "$ref": "#/$defs/region", "description": "On the after image, as fractions of its width and height. w and h are 0 for a point." },
+                "pixels": { "$ref": "#/$defs/pixels", "description": "The same region in the after image's own pixels." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "undecided": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Pairs left without a verdict or any outcome."
+    }
+  }
+}

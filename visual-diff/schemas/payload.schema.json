@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Before and after comparison request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pairs"],
+  "$defs": {
+    "attachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$attachment"],
+      "properties": {
+        "$attachment": { "type": "string", "minLength": 1, "maxLength": 120 }
+      },
+      "description": "An image sent beside the payload with --attach, by its name: PNG, JPEG, WebP, GIF or SVG."
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "w", "h"],
+      "description": "A rectangle on an image, as fractions of its width and height from the top left: 0 to 1.",
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "w": { "type": "number", "minimum": 0, "maximum": 1 },
+        "h": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  },
+  "properties": {
+    "notes": {
+      "type": "string",
+      "maxLength": 10000,
+      "description": "Markdown: what this round is, and what to look at."
+    },
+    "pairs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "description": "Each thing that changed, as a before and an after image of the same view.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "before", "after"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 80, "description": "What the images show, e.g. Pricing page, desktop." },
+          "before": { "$ref": "#/$defs/attachment", "description": "The image as it was." },
+          "after": { "$ref": "#/$defs/attachment", "description": "The image as it is now. New comments are placed on this one." },
+          "pixel_ratio": { "type": "number", "minimum": 1, "maximum": 4, "description": "How many image pixels make one screen pixel, e.g. 2 for a retina screenshot, so the images show at their real size. Default 1." },
+          "summary": { "type": "string", "maxLength": 4000, "description": "Markdown: what changed between the two." },
+          "requests": {
+            "type": "array",
+            "maxItems": 40,
+            "description": "What this revision claims to address: the requests from the round before, each one checked by the reviewer.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "text"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1, "maxLength": 40, "description": "Keep the same id across rounds, so the reviewer sees what they said last time." },
+                "text": { "type": "string", "minLength": 1, "maxLength": 2000, "description": "What was asked, in the reviewer's words where you have them." },
+                "region": { "$ref": "#/$defs/region", "description": "Where it was asked, on the before image." },
+                "after_region": { "$ref": "#/$defs/region", "description": "Where the change for it is, on the after image. Default: the same place as region." },
+                "claim": { "type": "string", "maxLength": 2000, "description": "What you changed to address it." }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

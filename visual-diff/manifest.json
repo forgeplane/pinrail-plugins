@@ -1,0 +1,100 @@
+{
+  "name": "visual-diff",
+  "version": "1.0.0",
+  "title": "Before and after",
+  "description": "Before and after images of a revision, compared with a wipe slider, side by side, an onion-skin fade or a difference highlight. Each request the revision claims to address is marked fixed, partly or not fixed, new problems are marked on the after image, and each pair is accepted or sent back for another pass.",
+  "use_when": "You revised a page, screen, image or render after a person's feedback and need them to check, against before and after images, that each thing they asked for was fixed and nothing else broke.",
+  "attachments": {
+    "accept": [
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".webp",
+      ".gif",
+      ".svg",
+      "image/*"
+    ],
+    "max_size": 20971520,
+    "max_count": 24
+  },
+  "shortcuts": [
+    {
+      "keys": "j",
+      "does": "Next pair"
+    },
+    {
+      "keys": "k",
+      "does": "Previous pair"
+    },
+    {
+      "keys": "1",
+      "does": "Wipe slider",
+      "group": "Compare"
+    },
+    {
+      "keys": "2",
+      "does": "Side by side",
+      "group": "Compare"
+    },
+    {
+      "keys": "3",
+      "does": "Onion skin",
+      "group": "Compare"
+    },
+    {
+      "keys": "4",
+      "does": "Difference",
+      "group": "Compare"
+    },
+    {
+      "keys": "v",
+      "does": "Wipe across or down",
+      "group": "Compare"
+    },
+    {
+      "keys": "arrowleft",
+      "does": "Move the wipe, the fade or the sensitivity back; shift for bigger steps",
+      "group": "Compare"
+    },
+    {
+      "keys": "arrowright",
+      "does": "Move the wipe, the fade or the sensitivity on; shift for bigger steps",
+      "group": "Compare"
+    },
+    {
+      "keys": "n",
+      "does": "Next request",
+      "group": "Requests"
+    },
+    {
+      "keys": "shift+n",
+      "does": "Previous request",
+      "group": "Requests"
+    },
+    {
+      "keys": "f",
+      "does": "Mark the request fixed",
+      "group": "Requests"
+    },
+    {
+      "keys": "p",
+      "does": "Mark the request partly fixed",
+      "group": "Requests"
+    },
+    {
+      "keys": "x",
+      "does": "Mark the request not fixed",
+      "group": "Requests"
+    },
+    {
+      "keys": "a",
+      "does": "Accept this pair",
+      "group": "Verdicts"
+    },
+    {
+      "keys": "r",
+      "does": "Send this pair back for another pass",
+      "group": "Verdicts"
+    }
+  ]
+}

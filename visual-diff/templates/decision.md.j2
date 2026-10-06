@@ -1,0 +1,54 @@
+{#- The decision as an agent reads it back: the pairs that need another pass
+    first, each with what is still wrong (requests not fixed or partly fixed,
+    requests nobody checked, new comments on the after image), then what
+    was fixed; then the pairs accepted. Requests are named by their text
+    from the payload. -#}
+{%- macro asked(item, id) -%}
+{%- for q in (item.payload.requests if item.payload and item.payload.requests else []) -%}
+{%- if q.id == id %} {{ q.text }}{% endif -%}
+{%- endfor -%}
+{%- endmacro -%}
+{%- macro pair(item) -%}
+### {{ item.payload.name if item.payload else item.id }} (`{{ item.id }}`)
+{%- if item.note %}
+
+> {{ item.note }}
+{%- endif %}
+{%- set left = item.requests | rejectattr("outcome", "equalto", "fixed") | list %}
+{%- set fixed = item.requests | selectattr("outcome", "equalto", "fixed") | list %}
+{%- if left or item.unchecked or item.comments %}{{ "\n" }}
+{%- for r in left %}
+- **{{ "not fixed" if r.outcome == "not_fixed" else "partly fixed" }}** `{{ r.id }}`:{{ asked(item, r.id) }}
+{%- if r.note %}
+  > {{ r.note }}
+{%- endif %}
+{%- endfor %}
+{%- for id in item.unchecked or [] %}
+- **unchecked** `{{ id }}`:{{ asked(item, id) }}
+{%- endfor %}
+{%- for c in item.comments or [] %}
+- **new** on the after image, {% if c.pixels.w or c.pixels.h %}{{ c.pixels.w }}×{{ c.pixels.h }} px at ({{ c.pixels.x }}, {{ c.pixels.y }}){% else %}at ({{ c.pixels.x }}, {{ c.pixels.y }}) px{% endif %}: {{ c.note }}
+{%- endfor %}
+{%- endif %}
+{%- if fixed %}
+
+Fixed: {% for r in fixed %}`{{ r.id }}`{% if r.note %} ({{ r.note }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+{%- endif %}
+{%- endmacro -%}
+{%- set again = items | selectattr("action", "equalto", "revise") | list -%}
+{%- set accepted = items | selectattr("action", "equalto", "accept") | list -%}
+{%- if again %}
+## Another pass
+{% for item in again %}
+{{ pair(item) | trim }}
+{% endfor -%}
+{% endif -%}
+{%- if accepted %}
+## Accepted
+{% for item in accepted %}
+{{ pair(item) | trim }}
+{% endfor -%}
+{% endif -%}
+{%- if data.undecided %}
+Undecided: {% for id in data.undecided %}`{{ id }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif -%}
