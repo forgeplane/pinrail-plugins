@@ -191,16 +191,17 @@ test("an area dragged on the frame is a comment on that frame, in fractions and 
   await f.locator(".top").click();
   await press(f, "Shift+ArrowRight", "Shift+ArrowRight");
   await drag(page, f.locator("#overlay"), [0.1, 0.2], [0.4, 0.45]);
-  await expect(f.locator("#composing-area")).toContainText("area");
+  await expect(f.locator("#composing-area")).toContainText(/area \d+,\d+/);
   await expect(f.locator("#overlay .area.drawing")).toHaveCount(1);
   await comment(f, "This corner is too busy");
   await expect(f.locator("#overlay .area .tag")).toHaveText("1");
 
-  // a second comment, on a spot: clicked while it is being written
+  // a second comment, on a spot: clicked while it is being written, high on
+  // the picture, clear of the comment's dialog over the foot of the video
   await press(f, "Shift+ArrowRight", "c");
   const box = await f.locator("#overlay").boundingBox();
-  await page.mouse.click(box.x + box.width * 0.75, box.y + box.height * 0.5);
-  await expect(f.locator("#composing-area")).toContainText("spot");
+  await page.mouse.click(box.x + box.width * 0.75, box.y + box.height * 0.15);
+  await expect(f.locator("#composing-area")).toContainText(/spot \d+,\d+/);
   await comment(f, "A stray pixel");
 
   await plugin.collect();
@@ -227,6 +228,7 @@ test("an area dragged on the frame is a comment on that frame, in fractions and 
   expect(Math.abs(area.region.px.width - 192)).toBeLessThan(6);
   expect(spot.region.shape).toBe("point");
   expect(Math.abs(spot.region.x - 0.75)).toBeLessThan(0.01);
+  expect(Math.abs(spot.region.y - 0.15)).toBeLessThan(0.01);
   expect(spot.region.width).toBeUndefined();
   expect(Math.abs(spot.region.px.x - 480)).toBeLessThan(6);
 
