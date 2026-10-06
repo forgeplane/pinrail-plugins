@@ -1,7 +1,8 @@
 // One screenshot of each plugin, for its README: the view under the SDK's
 // harness, as the tests mount it, with no app. It shows the sample named
 // after the plugin, samples/<name>.json, or the first sample when there is
-// none of that name, in the light theme, and writes <plugin>/screenshot.png.
+// none of that name, in the light theme, and writes
+// plugins/<name>/screenshot.png.
 // Build a plugin that has a build before you take its screenshot.
 //
 //   node scripts/screenshot.mjs              # every plugin
@@ -19,6 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const folder = path.join(root, "plugins");
 const require = createRequire(import.meta.url);
 const { chromium } = require("@playwright/test");
 const { fixture, mountPlugin } = require("pinrail-sdk/testing");
@@ -40,8 +42,8 @@ const STEPS = {
   },
 };
 
-const plugins = (process.argv.length > 2 ? process.argv.slice(2) : fs.readdirSync(root))
-  .filter((name) => fs.existsSync(path.join(root, name, "manifest.json")))
+const plugins = (process.argv.length > 2 ? process.argv.slice(2) : fs.readdirSync(folder))
+  .filter((name) => fs.existsSync(path.join(folder, name, "manifest.json")))
   .sort();
 
 /** The sample to show: the one named after the plugin, or the first by name. */
@@ -60,7 +62,7 @@ function sampleOf(dir, name) {
 const browser = await chromium.launch();
 let failed = false;
 for (const name of plugins) {
-  const dir = path.join(root, name);
+  const dir = path.join(folder, name);
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 });
     const plugin = await mountPlugin(page, dir, { review: fixture(sampleOf(dir, name)), theme: "light" });
@@ -84,14 +86,14 @@ for (const name of plugins) {
  *  and title, on one image. */
 async function collage(browser) {
   const all = fs
-    .readdirSync(root)
-    .filter((name) => fs.existsSync(path.join(root, name, "screenshot.png")))
+    .readdirSync(folder)
+    .filter((name) => fs.existsSync(path.join(folder, name, "screenshot.png")))
     .map((name) => {
-      const manifest = JSON.parse(fs.readFileSync(path.join(root, name, "manifest.json"), "utf8"));
-      const icon = path.join(root, name, "icon.svg");
+      const manifest = JSON.parse(fs.readFileSync(path.join(folder, name, "manifest.json"), "utf8"));
+      const icon = path.join(folder, name, "icon.svg");
       return {
         title: manifest.title,
-        image: fs.readFileSync(path.join(root, name, "screenshot.png")).toString("base64"),
+        image: fs.readFileSync(path.join(folder, name, "screenshot.png")).toString("base64"),
         icon: fs.existsSync(icon) ? fs.readFileSync(icon, "utf8").replace(/<!--.*?-->/gs, "") : "",
       };
     })

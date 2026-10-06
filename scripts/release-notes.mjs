@@ -1,6 +1,6 @@
 // A plugin's changelog section for one version, as the release notes.
 //
-//   node scripts/release-notes.mjs review 1.2.0
+//   node scripts/release-notes.mjs plugins/email 1.2.0
 //
 // Exits 1 when the plugin's CHANGELOG.md says nothing about that version, so
 // a release stops before it is published rather than going out with no

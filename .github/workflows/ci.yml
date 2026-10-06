@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: "*/package-lock.json"
+          cache-dependency-path: "plugins/*/package-lock.json"
       # pnpm, at the version package.json names
       - name: pnpm
         run: corepack enable
@@ -90,8 +90,8 @@ jobs:
       # each plugin with a build step, whose package.json has a build script
       - name: Build the plugins that have a build
         run: |
-          for dir in */; do
-            [ -f "$dir/manifest.json" ] && [ -f "$dir/package.json" ] || continue
+          for dir in plugins/*/; do
+            [ -f "$dir/package.json" ] || continue
             node -e 'process.exit(require(process.argv[1]).scripts?.build ? 0 : 1)' "$PWD/$dir/package.json" || continue
             (cd "$dir" && npm ci && npm run build)
           done
@@ -101,8 +101,7 @@ jobs:
       # official plugin must also have nothing dropped.
       - name: Check the plugins
         run: |
-          for dir in */; do
-            [ -f "$dir/manifest.json" ] || continue
+          for dir in plugins/*/; do
             pinrail plugins check "$dir" --json > verdict.json || { cat verdict.json; exit 1; }
             jq -e '.warnings == []' verdict.json > /dev/null || { echo "$dir: features dropped:"; jq '.warnings' verdict.json; exit 1; }
           done

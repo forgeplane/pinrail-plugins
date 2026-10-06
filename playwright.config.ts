@@ -4,7 +4,7 @@ import { defineConfig } from "@playwright/test";
 // No server, no CLI.
 export default defineConfig({
   testDir: __dirname,
-  testMatch: /[^/]+\/tests\/.*\.spec\.ts$/,
+  testMatch: /plugins\/[^/]+\/tests\/.*\.spec\.ts$/,
   // .pinrail is CI's checkout of the app's repository, for the CLI
   testIgnore: ["**/node_modules/**", "**/target/**", "**/.pinrail/**"],
   timeout: 30_000,

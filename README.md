@@ -13,18 +13,18 @@ holds the other official plugins.
 
 | Plugin | For |
 |---|---|
-| [`artifact`](artifact/README.md) | an HTML page an agent designed, commented on element by element |
-| [`audio`](audio/README.md) | audio takes, such as voices reading one script, played and compared with their waveforms and transcripts |
-| [`calendar`](calendar/README.md) | times to arrange around what is already booked |
-| [`canvas`](canvas/README.md) | a set of designs on a canvas, the steps of a flow or variants of a screen, commented and approved frame by frame |
-| [`email`](email/README.md) | emails an agent wants to send, to edit, send, revise or discard |
-| [`logo`](logo/README.md) | candidate logo marks and icons, shown at every size |
-| [`model-3d`](model-3d/README.md) | candidate 3D models, viewed on a stage, with changes requested on their parts |
-| [`motion`](motion/README.md) | candidate animations, in CSS or Lottie, played frame by frame and side by side |
-| [`palette`](palette/README.md) | colour palettes or design tokens, light and dark, checked for contrast on the parts of a product |
-| [`trade`](trade/README.md) | a trade an agent proposes, on its candlestick chart with the entry, stop and targets to adjust |
-| [`video`](video/README.md) | a video, such as a promo cut or a screen recording, commented at a moment or over a stretch, on its picture or its sound |
-| [`visual-diff`](visual-diff/README.md) | before and after images of a revision, compared with a wipe, side by side, a fade or a difference highlight |
+| [`artifact`](plugins/artifact/README.md) | an HTML page an agent designed, commented on element by element |
+| [`audio`](plugins/audio/README.md) | audio takes, such as voices reading one script, played and compared with their waveforms and transcripts |
+| [`calendar`](plugins/calendar/README.md) | times to arrange around what is already booked |
+| [`canvas`](plugins/canvas/README.md) | a set of designs on a canvas, the steps of a flow or variants of a screen, commented and approved frame by frame |
+| [`email`](plugins/email/README.md) | emails an agent wants to send, to edit, send, revise or discard |
+| [`logo`](plugins/logo/README.md) | candidate logo marks and icons, shown at every size |
+| [`model-3d`](plugins/model-3d/README.md) | candidate 3D models, viewed on a stage, with changes requested on their parts |
+| [`motion`](plugins/motion/README.md) | candidate animations, in CSS or Lottie, played frame by frame and side by side |
+| [`palette`](plugins/palette/README.md) | colour palettes or design tokens, light and dark, checked for contrast on the parts of a product |
+| [`trade`](plugins/trade/README.md) | a trade an agent proposes, on its candlestick chart with the entry, stop and targets to adjust |
+| [`video`](plugins/video/README.md) | a video, such as a promo cut or a screen recording, commented at a moment or over a stretch, on its picture or its sound |
+| [`visual-diff`](plugins/visual-diff/README.md) | before and after images of a revision, compared with a wipe, side by side, a fade or a difference highlight |
 
 ## Installing a plugin
 
@@ -40,27 +40,32 @@ A plugin with a build step, whose `package.json` has a `build` script, needs
 `npm ci && npm run build` in its folder first:
 
 ```sh
-pinrail plugins install ./email
+pinrail plugins install ./plugins/email
 ```
 
 ## Layout
 
-Every plugin uses the same layout:
+Each plugin has a folder in `plugins/`, and every plugin uses the same
+layout:
 
 ```
-email/
-  manifest.json           # name, version, title and the plugin's declarations
+plugins/email/
+  manifest.json             # name, version, title and the plugin's declarations
   README.md
-  icon.svg                # the plugin's icon
-  screenshot.png          # the image in the README, taken by pnpm screenshot
-  view/index.html         # the page the app serves, with the files it loads
-  schemas/                # payload.schema.json and decision.schema.json
-  templates/              # decision.md.j2, when the plugin writes its own Markdown
-  samples/                # <name>.json, reviews to try the plugin with; the first is the agents' example
-  fixtures/               # payloads for development and tests, and recorded decisions
-  tests/                  # the plugin's Playwright tests under the SDK's harness
-  src/                    # only for a plugin with a build: the sources the build turns into view/
+  icon.svg                  # the plugin's icon
+  screenshot.png            # the image in the README, taken by pnpm screenshot
+  view/index.html           # the page the app serves, with the files it loads
+  schemas/                  # payload.schema.json and decision.schema.json
+  templates/                # decision.md.j2, when the plugin writes its own Markdown
+  samples/                  # <name>.json, reviews to try the plugin with; the first is the agents' example
+  fixtures/                 # payloads for development and tests, and recorded decisions
+  tests/                    # the plugin's Playwright tests under the SDK's harness
+  src/                      # only for a plugin with a build: the sources the build turns into view/
 ```
+
+The repository's own files sit beside `plugins/`: `scripts/` holds the
+screenshot and release-notes scripts, and `licenses/` the licences of the
+code the plugins bundle.
 
 When a plugin is installed, only `manifest.json`, `icon.svg`, `README.md`,
 `LICENSE` and the folders `schemas/`, `view/`, `templates/` and `samples/`
@@ -77,12 +82,12 @@ takes the newest. Checking a plugin needs the `pinrail` command.
 
 ```sh
 pnpm install
-(cd artifact && npm ci && npm run build)   # each plugin with a build step
-pnpm test                                  # every plugin's tests
-pnpm format                                # format the views, scripts, tests and styles
-pinrail plugins check email                # what the app would say of a plugin
-pnpm exec pinrail-sdk dev email            # its view in a browser, with its fixtures
-pnpm screenshot email                      # retake its screenshot.png
+(cd plugins/artifact && npm ci && npm run build)   # each plugin with a build step
+pnpm test                                          # every plugin's tests
+pnpm format                                        # format the views, scripts, tests and styles
+pinrail plugins check plugins/email                # what the app would say of a plugin
+pnpm exec pinrail-sdk dev plugins/email            # its view in a browser, with its fixtures
+pnpm screenshot email                              # retake its screenshot.png
 ```
 
 `pnpm screenshot` without a name retakes every plugin's screenshot. Either
@@ -107,7 +112,7 @@ recorded decision. When a change to a plugin is meant to change them,
 rewrite the files and review the difference before you commit it:
 
 ```sh
-pinrail plugins check email --update-fixtures
+pinrail plugins check plugins/email --update-fixtures
 ```
 
 To take the newest SDK locally, install without the lock file and the

@@ -33,18 +33,18 @@ jobs:
           node-version: 24
           # a release builds from nothing a cache could have changed
           package-manager-cache: false
-      # the name becomes a path: a plugin's name, and a folder here
+      # the name becomes a path: a plugin's name, and its folder in plugins/
       - name: Name and version from the tag
         run: |
           name="${GITHUB_REF_NAME%-v*}"
-          [[ "$name" =~ ^[a-z][a-z0-9_-]*$ && -f "$name/manifest.json" ]] || { echo "the tag names no plugin: $name"; exit 1; }
+          [[ "$name" =~ ^[a-z][a-z0-9_-]*$ && -f "plugins/$name/manifest.json" ]] || { echo "the tag names no plugin: $name"; exit 1; }
           echo "PLUGIN=$name" >> "$GITHUB_ENV"
           echo "VERSION=${GITHUB_REF_NAME##*-v}" >> "$GITHUB_ENV"
       # before anything is built: a release says what changed
       - name: The release notes
-        run: node scripts/release-notes.mjs "$PLUGIN" "$VERSION" > "$RUNNER_TEMP/notes.md"
+        run: node scripts/release-notes.mjs "plugins/$PLUGIN" "$VERSION" > "$RUNNER_TEMP/notes.md"
       - name: Build when the package has a build script
-        working-directory: ${{ env.PLUGIN }}
+        working-directory: plugins/${{ env.PLUGIN }}
         run: |
           if [ -f package.json ] && node -e 'process.exit(require("./package.json").scripts?.build ? 0 : 1)'; then
             npm ci && npm run build
@@ -52,11 +52,11 @@ jobs:
           declared=$(node -e 'process.stdout.write(require("./manifest.json").version.trim())')
           test "$declared" = "$VERSION" || { echo "manifest says $declared, tag says $VERSION"; exit 1; }
       - name: The bundle, and nothing else
-        working-directory: ${{ env.PLUGIN }}
+        working-directory: plugins/${{ env.PLUGIN }}
         run: |
           # Lucide's icons carry their licence with them
-          if [ -d view/icons ]; then cp ../licenses/lucide-icons.txt view/icons/LICENSE; fi
-          zip -r "../$PLUGIN-$VERSION.zip" . \
+          if [ -d view/icons ]; then cp ../../licenses/lucide-icons.txt view/icons/LICENSE; fi
+          zip -r "$GITHUB_WORKSPACE/$PLUGIN-$VERSION.zip" . \
             -x "node_modules/*" "src/*" "tests/*" "test/*" "fixtures/*" ".*" "*/.*" \
                "package.json" "package-lock.json" "pnpm-lock.yaml" "yarn.lock" "bun.lockb" \
                "tsconfig*.json" "vite.config.*" "vitest.config.*" "playwright.config.*"
