@@ -13,6 +13,7 @@ holds the other official plugins.
 |---|---|
 | [`artifact`](artifact/README.md) | an HTML page an agent designed, commented on element by element |
 | [`calendar`](calendar/README.md) | times to arrange around what is already booked |
+| [`canvas`](canvas/README.md) | a set of designs on a canvas, the steps of a flow or variants of a screen, commented and approved frame by frame |
 | [`email`](email/README.md) | emails an agent wants to send, to edit, send, revise or discard |
 | [`logo`](logo/README.md) | candidate logo marks and icons, shown at every size |
 | [`model-3d`](model-3d/README.md) | candidate 3D models, viewed on a stage, with changes requested on their parts |

@@ -1,0 +1,11 @@
+{#- The decision as an agent reads it back: the verdict, then each frame with
+    what the person marked and the comments pinned to it. -#}
+**{{ "Approved" if data.verdict == "approve" else "Changes requested" }}**
+{% if data.favorite %}
+Favorite: **{{ data.favorite }}**
+{% endif %}{% for f in data.frames %}
+## {{ f.id }}: {{ {"approved": "approved", "changes": "needs changes", "unmarked": "not marked"}[f.status] }}
+{%- for c in data.comments if c.frame == f.id %}
+- {% if c.selector %}`{{ c.selector }}`{% if c.snippet %} (“{{ c.snippet }}”){% endif %}{% else %}at {{ (c.x * 100) | round | int }} % across, {{ (c.y * 100) | round | int }} % down{% endif %}: {{ c.body }}
+{%- endfor %}
+{% endfor -%}

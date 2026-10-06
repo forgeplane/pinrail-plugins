@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Design canvas decision",
+  "description": "The verdict on the set, what the person marked on each frame, and every comment pinned to a point of a frame.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "frames", "comments"],
+  "properties": {
+    "verdict": {
+      "enum": ["approve", "request_changes"],
+      "description": "approve: the designs can go ahead; any comments are remarks. request_changes: revise the frames marked changes and the ones with comments, and send the next round with --revises."
+    },
+    "favorite": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "With variants: the group the person starred as the one to go on with. Absent when they starred none."
+    },
+    "frames": {
+      "type": "array",
+      "description": "Every frame, in the order sent, with what the person marked on it.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": {
+            "enum": ["approved", "changes", "unmarked"],
+            "description": "approved: this frame is done. changes: this frame needs work. unmarked: the person did not say."
+          }
+        }
+      }
+    },
+    "comments": {
+      "type": "array",
+      "description": "Each comment, by frame in the order sent, then by when it was written.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "frame", "x", "y", "body"],
+        "properties": {
+          "id": { "type": "integer", "minimum": 1 },
+          "frame": { "type": "string", "description": "The id of the frame the comment is on." },
+          "x": { "type": "number", "minimum": 0, "maximum": 1, "description": "Where the pin is, across the frame: 0 is the left edge, 1 the right." },
+          "y": { "type": "number", "minimum": 0, "maximum": 1, "description": "Where the pin is, down the frame: 0 is the top, 1 the bottom." },
+          "selector": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "For an HTML frame: the CSS selector of the element under the pin, relative to <body> and unique in the document."
+          },
+          "tag": { "type": "string", "maxLength": 64 },
+          "snippet": { "type": "string", "maxLength": 200, "description": "The element's text, to find it again if the markup moved." },
+          "body": { "type": "string", "minLength": 1, "maxLength": 4000, "description": "What the person said." }
+        }
+      }
+    }
+  }
+}

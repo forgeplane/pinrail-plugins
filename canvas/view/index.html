@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Design canvas</title>
+    <link rel="stylesheet" href="/sdk/v1/pinrail-plugin.css" />
+    <script src="/sdk/v1/pinrail-plugin.js"></script>
+    <script src="/sdk/v1/markdown.js"></script>
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .shell {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100%;
+      }
+
+      /* the bar: the tools, the zoom, and the tally */
+      .top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+      }
+      .tools,
+      .zoom {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 7px;
+        overflow: hidden;
+      }
+      .tools button,
+      .zoom button {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 0;
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 12px var(--pinrail-sans);
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      .tools button + button,
+      .zoom button + button,
+      .zoom .level {
+        border-left: 1px solid var(--pinrail-border);
+      }
+      .tools button:hover,
+      .zoom button:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+      .tools button[aria-pressed="true"] {
+        background: var(--pinrail-accent-bg);
+        color: var(--pinrail-text);
+      }
+      .zoom .level {
+        min-width: 46px;
+        text-align: center;
+        font: 500 11.5px var(--pinrail-mono);
+        color: var(--pinrail-dim);
+        padding: 4px 6px;
+      }
+      .zoom .level + button {
+        border-left: 1px solid var(--pinrail-border);
+      }
+      .tally {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .tally b {
+        color: var(--pinrail-text);
+        font-variant-numeric: tabular-nums;
+      }
+      .context {
+        flex-basis: 100%;
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .context p {
+        margin: 2px 0;
+      }
+      [data-readonly="true"] .tools {
+        display: none;
+      }
+
+      .work {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        min-height: 0;
+      }
+
+      /* the canvas: a world of frames, panned and zoomed */
+      .viewport {
+        position: relative;
+        overflow: hidden;
+        min-width: 0;
+        cursor: grab;
+        touch-action: none;
+        background-color: var(--pinrail-bg);
+        background-image: radial-gradient(
+          color-mix(in srgb, var(--pinrail-text) 13%, transparent) 1px,
+          transparent 1px
+        );
+        background-size: 22px 22px;
+      }
+      .viewport.panning {
+        cursor: grabbing;
+      }
+      .viewport[data-tool="comment"] {
+        cursor: crosshair;
+      }
+      /* --lz scales the labels: they keep their size on screen down to 35 %,
+     then shrink with the canvas so they never cover the row above */
+      .world {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform-origin: 0 0;
+        --z: 1;
+        --lz: max(var(--z), 0.35);
+      }
+
+      .group-title {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 0.6em;
+        font: 600 calc(13px / var(--lz)) var(--pinrail-sans);
+        color: var(--pinrail-dim);
+        white-space: nowrap;
+      }
+      .group-title .star {
+        font-size: 0.85em;
+      }
+
+      /* the favorite among variants */
+      .star {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35em;
+        padding: 0.2em 0.65em;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 1em;
+        background: var(--pinrail-bg-panel);
+        color: var(--pinrail-dim);
+        font: 500 11.5px var(--pinrail-sans);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .group-title .star {
+        font: inherit;
+        font-weight: 500;
+      }
+      .star:hover:not(:disabled) {
+        color: var(--pinrail-text);
+        border-color: var(--pinrail-border-strong);
+      }
+      .star[aria-pressed="true"] {
+        color: #8a5a00;
+        background: #fbe7b5;
+        border-color: #e9c46a;
+      }
+      .star[aria-pressed="true"] .pinrail-icon {
+        background-color: #d4a017;
+      }
+      .star:disabled {
+        cursor: default;
+      }
+      .star[hidden] {
+        display: none;
+      }
+      :root[data-theme="dark"] .star[aria-pressed="true"] {
+        color: #f3d27a;
+        background: #3d3218;
+        border-color: #6b5420;
+      }
+      .frame {
+        position: absolute;
+      }
+      .frame-head {
+        position: absolute;
+        left: 0;
+        bottom: 100%;
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        max-width: 100%;
+        padding-bottom: 0.5em;
+        font: 500 calc(12px / var(--lz)) var(--pinrail-sans);
+        color: var(--pinrail-dim);
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .frame-head .title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--pinrail-text);
+      }
+      .frame-head .size {
+        font-family: var(--pinrail-mono);
+        font-size: 0.9em;
+        color: var(--pinrail-faint);
+      }
+      .frame-head .status {
+        padding: 0 0.5em;
+        border-radius: 1em;
+        font-size: 0.9em;
+        font-weight: 600;
+      }
+      .frame-head .status.approved {
+        background: color-mix(in srgb, var(--pinrail-success) 18%, transparent);
+        color: var(--pinrail-success);
+      }
+      .frame-head .status.changes {
+        background: color-mix(in srgb, var(--pinrail-warning) 20%, transparent);
+        color: var(--pinrail-warning);
+      }
+      .frame-body {
+        position: relative;
+        contain: layout paint;
+        background: #fff;
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--pinrail-text) 14%, transparent),
+          0 8px 30px -12px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+      }
+      .frame.selected .frame-body {
+        box-shadow:
+          0 0 0 calc(2px / var(--z)) var(--pinrail-accent),
+          0 8px 30px -12px rgba(0, 0, 0, 0.35);
+      }
+      .frame-body > img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .frame-body .host {
+        display: block;
+        width: 100%;
+        min-height: 100%;
+      }
+      .frame-error {
+        padding: 16px;
+        color: #b42318;
+        font: 12px/1.5 var(--pinrail-mono);
+        white-space: pre-wrap;
+      }
+      .frame.flash .frame-body {
+        animation: frame-flash 1.2s ease-out;
+      }
+      @keyframes frame-flash {
+        from {
+          box-shadow: 0 0 0 calc(6px / var(--z)) color-mix(in srgb, var(--pinrail-accent) 55%, transparent);
+        }
+      }
+
+      /* a flow: an arrow from each frame to the next */
+      .arrow {
+        position: absolute;
+        height: 0;
+        border-top: calc(2px / var(--z)) solid var(--pinrail-border-strong);
+      }
+      .arrow::after {
+        content: "";
+        position: absolute;
+        right: calc(-1px / var(--z));
+        top: calc(-6px / var(--z));
+        border: calc(5px / var(--z)) solid transparent;
+        border-left: calc(8px / var(--z)) solid var(--pinrail-border-strong);
+        border-right: 0;
+      }
+
+      /* commenting: the element under the pointer, and the pins */
+      .hover-box {
+        position: absolute;
+        pointer-events: none;
+        outline: calc(1.5px / var(--z)) solid var(--pinrail-accent);
+        background: color-mix(in srgb, var(--pinrail-accent) 8%, transparent);
+        border-radius: calc(2px / var(--z));
+      }
+      .hover-box[hidden] {
+        display: none;
+      }
+      .pins {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .pin {
+        position: absolute;
+        pointer-events: auto;
+        display: grid;
+        place-items: center;
+        width: 2em;
+        height: 2em;
+        margin: -2em 0 0 0;
+        box-sizing: border-box;
+        border-radius: 1em 1em 1em 0.15em;
+        background: var(--pinrail-accent);
+        color: #fff;
+        font: 700 calc(11px / var(--z)) var(--pinrail-sans);
+        box-shadow: 0 0.2em 0.6em -0.1em rgba(0, 0, 0, 0.45);
+        border: 0.12em solid #fff;
+        cursor: pointer;
+      }
+      .pin.draft {
+        background: var(--pinrail-bg-panel);
+        color: var(--pinrail-accent);
+        border-color: var(--pinrail-accent);
+      }
+      .pin.previous {
+        background: var(--pinrail-faint);
+      }
+      .pin.flash {
+        animation: pin-flash 1.2s ease-out;
+      }
+      @keyframes pin-flash {
+        from {
+          box-shadow: 0 0 0 0.8em color-mix(in srgb, var(--pinrail-accent) 45%, transparent);
+        }
+      }
+
+      /* writing a comment: a dialog beside its pin, over the canvas */
+      .dialog {
+        position: absolute;
+        z-index: 6;
+        width: 340px;
+        box-sizing: border-box;
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid var(--pinrail-border-strong);
+        border-radius: 12px;
+        background: var(--pinrail-bg-panel);
+        box-shadow:
+          0 1px 0 color-mix(in srgb, var(--pinrail-accent) 50%, transparent) inset,
+          0 16px 40px -16px rgba(0, 0, 0, 0.55);
+        font-size: 13px;
+        line-height: 1.4;
+        cursor: default;
+      }
+      .dialog[hidden] {
+        display: none;
+      }
+      .dialog textarea {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 64px;
+        padding: 8px 10px;
+        resize: vertical;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 8px;
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 13px/1.45 var(--pinrail-sans);
+        outline: none;
+        transition:
+          border-color 0.12s,
+          box-shadow 0.12s;
+      }
+      .dialog textarea:focus {
+        border-color: var(--pinrail-accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--pinrail-accent) 22%, transparent);
+      }
+      .dialog .foot {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .dialog .foot .pinrail-btn {
+        padding: 4px 12px;
+        font-size: 12.5px;
+      }
+      .dialog .hint {
+        flex: 1;
+        min-width: 0;
+        font-size: 11px;
+        color: var(--pinrail-faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .dialog kbd {
+        font: 10.5px var(--pinrail-mono);
+        padding: 0 4px;
+        border: 1px solid var(--pinrail-border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        color: var(--pinrail-dim);
+        background: var(--pinrail-bg);
+      }
+
+      .where {
+        display: flex;
+        gap: 6px;
+        align-items: baseline;
+        min-width: 0;
+        font-size: 11px;
+        color: var(--pinrail-dim);
+      }
+      .where .frame-name {
+        font: 600 10px var(--pinrail-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--pinrail-accent);
+        white-space: nowrap;
+      }
+      .where .el {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--pinrail-mono);
+        font-size: 10.5px;
+      }
+
+      /* the side: every frame with its comments, and the verdict */
+      .side {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        min-height: 0;
+        border-left: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+      }
+      .list {
+        overflow: auto;
+        padding: 10px 12px 12px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+        align-content: start;
+      }
+      .group-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid var(--pinrail-border);
+      }
+      .group-row .group-name {
+        flex: 1;
+        min-width: 0;
+        font: 600 10px var(--pinrail-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .frame-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 6px;
+      }
+      .frame-row .row-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .frame-row .name {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: none;
+        padding: 0;
+        text-align: left;
+        font: 600 12.5px var(--pinrail-sans);
+        color: var(--pinrail-text);
+        cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .frame-row .name:hover {
+        color: var(--pinrail-accent);
+      }
+      .frame-row .group {
+        font-weight: 400;
+        color: var(--pinrail-faint);
+      }
+      .frame-row .notes {
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .frame-row .notes p {
+        margin: 0;
+      }
+      .marks {
+        display: inline-flex;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .marks button {
+        display: inline-flex;
+        align-items: center;
+        border: 0;
+        background: none;
+        color: var(--pinrail-faint);
+        padding: 3px 6px;
+        cursor: pointer;
+      }
+      .marks button + button {
+        border-left: 1px solid var(--pinrail-border);
+      }
+      .marks button:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+      .marks button[aria-pressed="true"].approved {
+        background: var(--pinrail-success);
+        color: var(--pinrail-bg);
+      }
+      .marks button[aria-pressed="true"].changes {
+        background: var(--pinrail-warning);
+        color: var(--pinrail-bg);
+      }
+      .marked {
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .marked.approved {
+        color: var(--pinrail-success);
+      }
+      .marked.changes {
+        color: var(--pinrail-warning);
+      }
+      .marked.unmarked {
+        color: var(--pinrail-faint);
+        font-weight: 400;
+      }
+      .card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 2px 8px;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 9px;
+        padding: 8px 10px;
+        background: var(--pinrail-bg);
+        cursor: pointer;
+      }
+      .card:hover {
+        border-color: var(--pinrail-border-strong);
+      }
+      .card .num {
+        grid-row: span 3;
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 10px 10px 10px 2px;
+        background: var(--pinrail-accent);
+        color: #fff;
+        font: 700 10.5px var(--pinrail-sans);
+      }
+      .card .body {
+        margin: 0;
+        font-size: 13px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .card .actions {
+        display: flex;
+        gap: 10px;
+      }
+      .card .actions button {
+        border: 0;
+        background: none;
+        padding: 0;
+        color: var(--pinrail-dim);
+        font: 500 11.5px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .card .actions button:hover {
+        color: var(--pinrail-text);
+      }
+      .pinrail-empty {
+        color: var(--pinrail-faint);
+        font-size: 12px;
+        padding: 0 2px;
+      }
+      .previous {
+        border-top: 1px solid var(--pinrail-border);
+        padding-top: 8px;
+      }
+      .previous summary {
+        cursor: pointer;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .previous .card {
+        margin-top: 6px;
+        cursor: default;
+      }
+      .previous .card .num {
+        background: var(--pinrail-faint);
+      }
+
+      .verdict {
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--pinrail-border);
+        display: grid;
+        gap: 8px;
+      }
+      .verdict .choices {
+        display: flex;
+        gap: 8px;
+      }
+      .verdict .choices button {
+        flex: 1;
+        justify-content: center;
+        gap: 6px;
+      }
+      .verdict .choices .approve {
+        --tone: var(--pinrail-success);
+      }
+      .verdict .choices .changes {
+        --tone: var(--pinrail-warning);
+      }
+      .verdict .choices button {
+        color: var(--tone);
+        border-color: color-mix(in srgb, var(--tone) 45%, var(--pinrail-border));
+        background: color-mix(in srgb, var(--tone) 8%, transparent);
+      }
+      .verdict .choices button:hover {
+        background: color-mix(in srgb, var(--tone) 16%, transparent);
+      }
+      .verdict .choices button[aria-pressed="true"] {
+        background: var(--tone);
+        color: var(--pinrail-bg);
+        border-color: transparent;
+      }
+      .pinrail-errors {
+        color: var(--pinrail-danger);
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      .pinrail-errors:empty {
+        display: none;
+      }
+      .decided {
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell" id="shell">
+      <header class="top">
+        <div class="tools" role="group" aria-label="Tool">
+          <button type="button" data-tool="move" aria-pressed="true" title="Move (V)">
+            <span data-icon="mouse-pointer-2"></span> Move
+          </button>
+          <button type="button" data-tool="comment" aria-pressed="false" title="Comment (C)">
+            <span data-icon="message-square-plus"></span> Comment
+          </button>
+        </div>
+        <div class="zoom" role="group" aria-label="Zoom">
+          <button type="button" id="zoom-out" aria-label="Zoom out" title="Zoom out (-)">
+            <span data-icon="minus"></span>
+          </button>
+          <span class="level" id="zoom-level">100%</span>
+          <button type="button" id="zoom-in" aria-label="Zoom in" title="Zoom in (=)">
+            <span data-icon="plus"></span>
+          </button>
+          <button type="button" id="zoom-fit" title="Fit every frame (0)"><span data-icon="scan"></span> Fit</button>
+        </div>
+        <span class="tally" id="tally"></span>
+        <div class="context" id="context" hidden></div>
+      </header>
+      <div class="work">
+        <div class="viewport" id="viewport" data-tool="move">
+          <div class="world" id="world"></div>
+          <div class="dialog" id="comment-dialog" role="dialog" aria-label="Comment" hidden></div>
+        </div>
+        <aside class="side">
+          <div class="list" id="list"></div>
+          <div class="verdict" id="verdict"></div>
+        </aside>
+      </div>
+    </div>
+    <script src="view.js"></script>
+  </body>
+</html>

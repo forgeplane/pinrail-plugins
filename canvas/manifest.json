@@ -1,0 +1,44 @@
+{
+  "name": "canvas",
+  "version": "0.1.0",
+  "title": "Design canvas",
+  "description": "A set of designs laid out on a canvas, such as the steps of a wizard or variants of a screen. Pan and zoom, pin comments to any point or element, mark each frame approved or in need of changes, and approve the set or ask for changes.",
+  "use_when": "You designed several screens, dialogs or steps of a flow (as HTML mockups or images) and need a person to look at them side by side, say what to change on each, and tell you which ones are done.",
+  "attachments": {
+    "accept": [".html", ".htm", "text/html", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", "image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"],
+    "max_size": 10485760,
+    "max_count": 32
+  },
+  "shortcuts": [
+    { "keys": "c", "does": "Comment: click a frame to pin a comment", "group": "Canvas" },
+    { "keys": "v", "does": "Move: drag to pan the canvas", "group": "Canvas" },
+    { "keys": "0", "does": "Fit every frame on screen", "group": "Canvas" },
+    { "keys": "1", "does": "Zoom to 100 %", "group": "Canvas" },
+    { "keys": "=", "does": "Zoom in", "group": "Canvas" },
+    { "keys": "-", "does": "Zoom out", "group": "Canvas" },
+    { "keys": "escape", "does": "Close the comment being written, or stop commenting", "group": "Canvas" }
+  ],
+  "summary": {
+    "outcome": {
+      "verdict": {
+        "at": "/verdict",
+        "values": {
+          "approve": { "label": "approved", "tone": "success" },
+          "request_changes": { "label": "changes requested", "tone": "warning" }
+        }
+      },
+      "counts": [
+        {
+          "items": "/frames",
+          "by": "status",
+          "values": {
+            "changes": { "label": "frame to change", "plural": "frames to change", "tone": "warning" },
+            "approved": { "label": "frame approved", "plural": "frames approved", "tone": "success" }
+          },
+          "other": false
+        },
+        { "items": "/comments", "label": "comment", "plural": "comments", "tone": "info" }
+      ]
+    }
+  }
+}

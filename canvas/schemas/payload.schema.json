@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Design canvas",
+  "description": "A set of designs, each a frame on the canvas. Frames are laid out in rows, one row per group, in the order given.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["frames"],
+  "properties": {
+    "context": {
+      "type": "string",
+      "maxLength": 4000,
+      "description": "Markdown shown above the canvas: what the designs are for and what to look at."
+    },
+    "flow": {
+      "type": "boolean",
+      "description": "Draws an arrow from each frame to the next one in its group, for the steps of a flow such as a wizard."
+    },
+    "variants": {
+      "type": "boolean",
+      "description": "The groups are alternatives, such as three designs of one dialog: the person can star one as the favorite."
+    },
+    "frames": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 60,
+      "description": "The designs. Ids must be unique; a frame whose id repeats an earlier one is left out.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+            "description": "Stable across rounds, so the next round can show what was said about the same frame."
+          },
+          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "group": {
+            "type": "string",
+            "maxLength": 120,
+            "description": "The row the frame goes in, under this caption: a variant, a theme or a part of the flow. Frames without one share a row."
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "Markdown: what this frame shows, or what to decide about it."
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 120,
+            "maximum": 4000,
+            "description": "The frame's width in CSS pixels. An HTML frame defaults to 1280; an image, to its own width."
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 80,
+            "maximum": 6000,
+            "description": "The frame's height in CSS pixels. Without it, the frame is as tall as its content."
+          },
+          "html": {
+            "type": "string",
+            "maxLength": 2000000,
+            "description": "A whole, self-contained HTML document: styles in <style> elements, images and fonts as data URIs. Scripts do not run, and links and forms go nowhere."
+          },
+          "file": {
+            "$ref": "#/$defs/attachment",
+            "description": "The HTML document as an .html file sent with --attach, in place of `html`."
+          },
+          "image": {
+            "$ref": "#/$defs/attachment",
+            "description": "A PNG, JPEG, WebP, GIF or SVG image sent with --attach, in place of `html`."
+          }
+        },
+        "oneOf": [
+          { "required": ["html"] },
+          { "required": ["file"] },
+          { "required": ["image"] }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "attachment": {
+      "type": "object",
+      "required": ["$attachment"],
+      "additionalProperties": false,
+      "properties": {
+        "$attachment": { "type": "string", "minLength": 1, "maxLength": 120 }
+      }
+    }
+  }
+}
