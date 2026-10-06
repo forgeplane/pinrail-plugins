@@ -12,6 +12,7 @@ holds the other official plugins.
 | Plugin | For |
 |---|---|
 | [`artifact`](artifact/README.md) | an HTML page an agent designed, commented on element by element |
+| [`calendar`](calendar/README.md) | times to arrange around what is already booked |
 
 ## Installing a plugin
 
