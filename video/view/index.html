@@ -1,0 +1,2271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Video review</title>
+    <link rel="stylesheet" href="/sdk/v1/pinrail-plugin.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      :root {
+        --sound: #e3a94a;
+        --lane: 84px;
+      }
+      [data-theme="light"] {
+        --sound: #a86200;
+      }
+      .shell {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100%;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+      }
+      .top h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .top .subject {
+        color: var(--pinrail-dim);
+        font-size: 12.5px;
+      }
+      .top .pinrail-chip {
+        font: 11px var(--pinrail-mono);
+        padding: 1px 7px;
+        border-radius: 6px;
+        border: 1px solid var(--pinrail-border);
+        color: var(--pinrail-dim);
+      }
+      .tally {
+        margin-left: auto;
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .tally b {
+        color: var(--pinrail-text);
+        font-variant-numeric: tabular-nums;
+      }
+      .work {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 348px;
+        min-height: 0;
+      }
+
+      /* the stage: the video, as large as the room allows, and what is marked on it */
+      /* this side is for pointing, not for selecting text; WebKit, the engine of
+     the app's window, honours only its own name for the property */
+      .main {
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .main canvas,
+      .main video {
+        -webkit-user-drag: none;
+      }
+      .composer textarea {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      .main {
+        position: relative;
+        display: grid;
+        grid-template-rows: minmax(160px, 1fr) auto auto;
+        min-width: 0;
+        min-height: 0;
+      }
+      .stage {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 0;
+        overflow: hidden;
+        background: var(--pinrail-bg-raised);
+      }
+      .frame {
+        position: relative;
+        background: #000;
+        box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.6);
+      }
+      .frame video {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        cursor: crosshair;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .overlay[data-readonly="true"] {
+        cursor: pointer;
+      }
+      .area {
+        position: absolute;
+        border: 2px solid var(--pinrail-accent);
+        background: color-mix(in oklab, var(--pinrail-accent) 16%, transparent);
+        border-radius: 3px;
+        pointer-events: none;
+      }
+      .area.spot {
+        width: 0 !important;
+        height: 0 !important;
+        border: 0;
+        background: none;
+      }
+      .area.spot::after {
+        content: "";
+        position: absolute;
+        left: -9px;
+        top: -9px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid var(--pinrail-accent);
+        background: color-mix(in oklab, var(--pinrail-accent) 30%, transparent);
+      }
+      .area.drawing {
+        border-style: dashed;
+      }
+      .area.lit {
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--pinrail-accent) 35%, transparent);
+      }
+      .area .tag {
+        position: absolute;
+        left: -2px;
+        top: -22px;
+        display: grid;
+        place-items: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        border: 0;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 10.5px var(--pinrail-mono);
+        pointer-events: auto;
+        cursor: pointer;
+      }
+      .area.spot .tag {
+        left: 10px;
+        top: -20px;
+      }
+      .stage-msg {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        text-align: center;
+        color: var(--pinrail-dim);
+        font-size: 13.5px;
+        pointer-events: none;
+      }
+
+      /* the timeline: the scenes, the picture and the sound on one clock */
+      .timeline {
+        position: relative;
+        display: grid;
+        gap: 3px;
+        padding: 10px 16px 0 0;
+        border-top: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .lane {
+        display: grid;
+        grid-template-columns: var(--lane) 1fr;
+        align-items: center;
+      }
+      .lane[hidden] {
+        display: none;
+      }
+      .lane-name {
+        padding-left: 16px;
+        font: 600 10px var(--pinrail-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .track {
+        position: relative;
+        border-radius: 6px;
+        background: var(--pinrail-bg-raised);
+        touch-action: none;
+        cursor: text;
+      }
+      .lane.scenes .track {
+        height: 24px;
+        background: none;
+        cursor: pointer;
+      }
+      .lane.picture .track {
+        height: 46px;
+      }
+      .track canvas.strip {
+        border-radius: 6px;
+      }
+      /* marks on the picture lane sit on frames of the video, so they are stronger */
+      .lane.picture .mark.range {
+        background: color-mix(in oklab, var(--tone) 42%, transparent);
+      }
+      .lane.picture .mark.point {
+        box-shadow: 0 0 0 1px var(--pinrail-bg-raised);
+      }
+      .probe {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2px;
+        height: 2px;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .lane.sound .track {
+        height: 54px;
+      }
+      .scene {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 7px;
+        border-radius: 5px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-dim);
+        font: 500 11px var(--pinrail-sans);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        box-sizing: border-box;
+      }
+      .scene.now {
+        color: var(--pinrail-text);
+        border-color: var(--pinrail-border-strong);
+        background: var(--pinrail-bg-hover);
+      }
+      .track canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .track .played {
+        position: absolute;
+        inset: 0 auto 0 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .track .played canvas {
+        width: var(--full);
+      }
+      .track .none {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 11.5px;
+        color: var(--pinrail-faint);
+        pointer-events: none;
+      }
+      .mark {
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        border-radius: 3px;
+        pointer-events: none;
+      }
+      .mark.range {
+        background: color-mix(in oklab, var(--tone) 26%, transparent);
+        border-top: 2px solid var(--tone);
+      }
+      .mark.point {
+        width: 2px;
+        margin-left: -1px;
+        border-radius: 1px;
+        background: var(--tone);
+      }
+      .lane.picture {
+        --tone: var(--pinrail-accent);
+      }
+      .lane.sound {
+        --tone: var(--sound);
+      }
+      .pin {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: grid;
+        place-items: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        border-radius: 9px;
+        border: 0;
+        background: var(--tone);
+        color: var(--pinrail-bg);
+        font: 700 10.5px var(--pinrail-mono);
+        cursor: pointer;
+        box-shadow: 0 0 0 2px var(--pinrail-bg-raised);
+      }
+      .pin.lit {
+        box-shadow:
+          0 0 0 2px var(--pinrail-bg-raised),
+          0 0 0 4px color-mix(in oklab, var(--tone) 45%, transparent);
+      }
+      /* what lies over both lanes: the stretch being selected, and the playhead */
+      .over {
+        position: absolute;
+        left: var(--lane);
+        right: 16px;
+        top: 10px;
+        bottom: 22px;
+        pointer-events: none;
+      }
+      .sel {
+        position: absolute;
+        top: 27px;
+        bottom: 0;
+        background: color-mix(in oklab, var(--pinrail-text) 16%, transparent);
+        box-shadow:
+          inset 0 2px var(--pinrail-text),
+          inset 0 -2px var(--pinrail-text);
+      }
+      /* the two limits of the stretch, each dragged on its own */
+      .grip {
+        position: absolute;
+        z-index: 1;
+        top: -3px;
+        bottom: -3px;
+        width: 16px;
+        margin-left: -8px;
+        cursor: ew-resize;
+        pointer-events: auto;
+        touch-action: none;
+      }
+      .grip.start {
+        left: 0;
+      }
+      .grip.end {
+        left: 100%;
+      }
+      .grip::before {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        border-radius: 1px;
+        background: var(--pinrail-text);
+      }
+      .grip::after {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 50%;
+        width: 8px;
+        height: 24px;
+        margin-top: -12px;
+        border-radius: 4px;
+        background: var(--pinrail-text);
+        box-shadow: 0 0 0 2px var(--pinrail-bg);
+      }
+      .grip:hover::before,
+      .grip:hover::after,
+      .grip.held::before,
+      .grip.held::after {
+        background: var(--pinrail-accent);
+      }
+      /* every line on the timeline is two pixels wide and centred on its moment:
+     the playhead, a limit of the stretch, a comment at a moment */
+      .head {
+        position: absolute;
+        top: -4px;
+        bottom: -2px;
+        width: 2px;
+        margin-left: -1px;
+        background: var(--pinrail-text);
+      }
+      .head::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -4px;
+        border: 5px solid transparent;
+        border-top: 6px solid var(--pinrail-text);
+      }
+      .ruler {
+        position: relative;
+        height: 18px;
+        margin-left: var(--lane);
+        font: 10.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .ruler span {
+        position: absolute;
+        top: 3px;
+        transform: translateX(-50%);
+      }
+      .ruler span::before {
+        content: "";
+        position: absolute;
+        top: -4px;
+        left: 50%;
+        height: 4px;
+        border-left: 1px solid var(--pinrail-border-strong);
+      }
+
+      .transport {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+        padding: 9px 16px;
+        border-top: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+      }
+      .play {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--pinrail-button-bg);
+        color: #fff;
+        cursor: pointer;
+      }
+      .play:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .icon-btn {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        cursor: pointer;
+      }
+      .icon-btn:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+      .icon-btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .clock {
+        font: 12.5px var(--pinrail-mono);
+        color: var(--pinrail-dim);
+        font-variant-numeric: tabular-nums;
+      }
+      .clock b {
+        color: var(--pinrail-text);
+        font-weight: 600;
+      }
+      .clock .frame-no {
+        margin-left: 8px;
+        color: var(--pinrail-faint);
+      }
+      .tog {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 9px;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 8px;
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .tog:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+      .tog[aria-pressed="true"] {
+        color: var(--pinrail-text);
+        border-color: var(--pinrail-border-strong);
+        background: var(--pinrail-bg-raised);
+      }
+      .tog kbd,
+      .act kbd,
+      .choice kbd {
+        padding: 0 4px;
+        font-size: 10.5px;
+      }
+      .volume {
+        width: 64px;
+        accent-color: var(--pinrail-accent);
+      }
+      .sel-info {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .sel-info .span {
+        font: 12px var(--pinrail-mono);
+        color: var(--pinrail-text);
+      }
+      .act {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font: 600 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .act:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .pinrail-btn.quiet {
+        border-color: transparent;
+        background: none;
+        color: var(--pinrail-dim);
+        font-weight: 500;
+      }
+
+      /* the comment being written: a dialog on top of the video, beside the area it marks */
+      .composer {
+        position: absolute;
+        z-index: 5;
+        width: 384px;
+        max-width: calc(100% - 16px);
+        box-sizing: border-box;
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--pinrail-bg-raised);
+        box-shadow:
+          0 0 0 1px var(--pinrail-border-strong),
+          0 18px 40px -14px rgba(0, 0, 0, 0.5);
+      }
+      .composer:empty {
+        display: none;
+      }
+      .composer.passing {
+        opacity: 0.3;
+        pointer-events: none;
+      }
+      .composer-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 12px;
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+        cursor: grab;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .composer.moving .composer-head {
+        cursor: grabbing;
+      }
+      .composer-head b {
+        font: 600 12px var(--pinrail-mono);
+        color: var(--pinrail-text);
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .seg button {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border: 0;
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font-weight: 600;
+      }
+      .where {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-dim);
+      }
+      .where .x {
+        border: 0;
+        background: none;
+        padding: 0;
+        color: var(--pinrail-faint);
+        cursor: pointer;
+        display: grid;
+      }
+      .composer textarea,
+      #note {
+        width: 100%;
+        resize: vertical;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font: 13px/1.5 var(--pinrail-sans);
+        box-sizing: border-box;
+      }
+      .composer textarea {
+        min-height: 64px;
+        background: var(--pinrail-bg);
+      }
+      .composer textarea:focus,
+      #note:focus {
+        outline: none;
+        border-color: var(--pinrail-accent);
+      }
+      .composer-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .composer-actions .k {
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .composer-actions .push {
+        margin-left: auto;
+      }
+      .quick {
+        padding: 3px 9px;
+        border-radius: 99px;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 11.5px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .quick:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+
+      /* the side: what the agent says, the verdict, and every comment in time order */
+      .side {
+        overflow-y: auto;
+        min-height: 0;
+        border-left: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+        padding: 16px;
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+      .label {
+        margin: 0 0 8px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+      .notes {
+        color: var(--pinrail-dim);
+        font-size: 13px;
+        line-height: 1.6;
+        padding: 10px 12px;
+        border: 1px dashed var(--pinrail-border);
+        border-radius: 10px;
+      }
+      .notes p {
+        margin: 0 0 6px;
+      }
+      .notes p:last-child {
+        margin: 0;
+      }
+      .choices {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .choice {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 8px 8px;
+        white-space: nowrap;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 12.5px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .choice[aria-pressed="true"][data-verdict="approve"] {
+        background: color-mix(in oklab, var(--pinrail-success, #2f9e6b) 18%, var(--pinrail-bg));
+        border-color: var(--pinrail-success, #2f9e6b);
+      }
+      .choice[aria-pressed="true"][data-verdict="request_changes"] {
+        background: var(--pinrail-accent-bg);
+        border-color: var(--pinrail-accent);
+        color: var(--pinrail-accent);
+      }
+      .choice:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .choices.ask {
+        outline: 2px solid var(--pinrail-accent);
+        outline-offset: 4px;
+        border-radius: 10px;
+      }
+      #note {
+        margin-top: 8px;
+        min-height: 58px;
+        font-size: 13px;
+      }
+      .marks {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .marks li {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: var(--pinrail-bg-raised);
+        border: 1px solid var(--pinrail-border);
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .marks li.lit {
+        border-color: var(--pinrail-accent);
+      }
+      .marks li[data-on="sound"].lit {
+        border-color: var(--sound);
+      }
+      .marks .num {
+        grid-row: span 2;
+        align-self: start;
+        display: grid;
+        place-items: center;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 11px var(--pinrail-mono);
+      }
+      .marks li[data-on="sound"] .num {
+        background: var(--sound);
+      }
+      .marks .when {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 8px;
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-dim);
+      }
+      .marks .when .kind {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--pinrail-faint);
+      }
+      .marks .text {
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+      .marks .acts {
+        grid-column: 2;
+        display: flex;
+        gap: 2px;
+        margin: 0 -6px -2px;
+      }
+      .marks .acts .pinrail-btn {
+        padding: 2px 6px;
+        font-size: 11.5px;
+      }
+      .pinrail-empty {
+        color: var(--pinrail-faint);
+        font-size: 12.5px;
+        line-height: 1.5;
+        margin: 0;
+      }
+      .earlier {
+        opacity: 0.9;
+      }
+      .earlier .marks li {
+        background: none;
+        border-style: dashed;
+      }
+      .earlier .verdict {
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+        margin: 0 0 8px;
+      }
+
+      @media (max-width: 900px) {
+        .work {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(0, 1.4fr) minmax(0, 1fr);
+        }
+        .side {
+          border-left: 0;
+          border-top: 1px solid var(--pinrail-border);
+        }
+        .sel-info {
+          margin-left: 0;
+          flex-basis: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="/sdk/v1/pinrail-plugin.js"></script>
+    <script src="/sdk/v1/markdown.js"></script>
+    <div class="shell" id="app">
+      <div class="top"><h1>Loading…</h1></div>
+    </div>
+    <script>
+      "use strict";
+      const esc = Pinrail.escape;
+      const $ = (id) => document.getElementById(id);
+      const PEAKS = 2400;
+      const VERDICTS = { approve: "Approve", request_changes: "Request changes" };
+      const VERDICT_KEYS = { approve: "g", request_changes: "r" };
+      const RATES = [0.25, 0.5, 1, 1.5, 2];
+      const QUICK = ["Make this shorter", "Hold this longer", "Cut this"];
+
+      const S = {};
+      let P = null; // the payload
+      let M = null; // the video, once its metadata is read: { duration, width, height } or { error }
+      let W = null; // the sound: { peaks, max }, or { error } when it could not be read
+      let video = null;
+      let url = null;
+      let serial = 0;
+      let rounds = 0;
+
+      function reset() {
+        Object.assign(S, {
+          pos: 0,
+          playing: false,
+          range: null,
+          loop: false,
+          stopAt: null,
+          rate: 1,
+          muted: false,
+          volume: 1,
+          composing: null,
+          comments: [],
+          verdict: null,
+          note: "",
+          lit: null,
+          armed: false,
+          popAt: null,
+        });
+      }
+      reset();
+
+      /* ---------- time, frames and scenes */
+
+      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+      const fmt = (ms) => {
+        ms = Math.max(0, Math.round(ms));
+        const m = Math.floor(ms / 60000),
+          s = Math.floor((ms % 60000) / 1000),
+          cs = Math.floor((ms % 1000) / 10);
+        return `${m}:${String(s).padStart(2, "0")}.${String(cs).padStart(2, "0")}`;
+      };
+      const fmtShort = (ms) => {
+        const s = Math.round(ms / 1000);
+        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+      };
+      const duration = () => (M && M.duration) || 0;
+      const stepMs = () => 1000 / (P.fps || 30);
+      const frameOf = (ms) => Math.floor((ms / 1000) * (P.fps || 30) + 1e-6);
+      const lastFrameOf = (ms) => Math.max(0, Math.ceil((ms / 1000) * (P.fps || 30) - 1e-6) - 1);
+      const startOf = (c) => c.at_ms ?? c.start_ms;
+      const byTime = (a, b) => startOf(a) - startOf(b) || (a.end_ms ?? a.at_ms) - (b.end_ms ?? b.at_ms);
+      const pct = (ms) => `${((ms / (duration() || 1)) * 100).toFixed(3)}%`;
+      const when = (c) => (c.at_ms !== undefined ? fmt(c.at_ms) : `${fmt(c.start_ms)}–${fmt(c.end_ms)}`);
+
+      /* The scenes a moment or a stretch touches, by id, in order. */
+      function scenesAt(a, b) {
+        const point = b === undefined;
+        return (P.scenes || [])
+          .filter((s) => (point ? s.start_ms <= a && a < s.end_ms : s.start_ms < b && s.end_ms > a))
+          .map((s) => s.id);
+      }
+      const sceneName = (id) => {
+        const s = (P.scenes || []).find((x) => x.id === id);
+        return s ? s.name || s.id : id;
+      };
+
+      /* ---------- the decision */
+
+      function decisionData() {
+        const comments = [...S.comments].sort(byTime).map((c) => {
+          const out = { on: c.on };
+          if (c.at_ms !== undefined) {
+            out.at_ms = c.at_ms;
+            if (P.fps) out.at_frame = frameOf(c.at_ms);
+          } else {
+            out.start_ms = c.start_ms;
+            out.end_ms = c.end_ms;
+            if (P.fps) {
+              out.start_frame = frameOf(c.start_ms);
+              out.end_frame = Math.max(out.start_frame, lastFrameOf(c.end_ms));
+            }
+          }
+          const scenes = c.at_ms !== undefined ? scenesAt(c.at_ms) : scenesAt(c.start_ms, c.end_ms);
+          if (scenes.length) out.scenes = scenes;
+          if (c.region && c.on === "picture") out.region = regionOut(c.region);
+          out.note = c.note;
+          return out;
+        });
+        const data = { verdict: S.verdict || (comments.length ? "request_changes" : null) };
+        const note = S.note.trim();
+        if (note) data.note = note;
+        if (duration()) {
+          data.video = { duration_ms: duration() };
+          if (M.width && M.height) Object.assign(data.video, { width: M.width, height: M.height });
+          if (P.fps) data.video.fps = P.fps;
+        }
+        data.comments = comments;
+        return data;
+      }
+
+      const round4 = (v) => Math.round(v * 10000) / 10000;
+      function regionOut(r) {
+        const w = (M && M.width) || 0,
+          h = (M && M.height) || 0;
+        const out = { shape: r.shape, x: round4(r.x), y: round4(r.y) };
+        const px = { x: Math.round(r.x * w), y: Math.round(r.y * h) };
+        if (r.shape === "box") {
+          out.width = round4(r.width);
+          out.height = round4(r.height);
+          px.width = Math.round(r.width * w);
+          px.height = Math.round(r.height * h);
+        }
+        out.px = px;
+        return out;
+      }
+
+      function save() {
+        S.armed = false;
+        plugin.draft({ comments: S.comments, verdict: S.verdict, note: S.note });
+      }
+
+      function status() {
+        if (plugin.readonly) return;
+        const n = S.comments.length;
+        const some = `${n} ${n === 1 ? "comment" : "comments"}`;
+        let label = "Hand over";
+        if (S.verdict === "approve") label = n ? `Approve, with ${some}` : "Approve";
+        else if (S.verdict === "request_changes" || n) label = n ? `Request changes · ${some}` : "Request changes";
+        else if (S.armed) label = "Choose first: approve or request changes";
+        plugin.handOverLabel(label);
+      }
+
+      /* ---------- reading the video and its sound */
+
+      const TYPES = { mp4: "video/mp4", m4v: "video/mp4", mov: "video/quicktime", webm: "video/webm" };
+
+      async function load(round) {
+        const name = Pinrail.attachmentName(P.file);
+        let bytes;
+        try {
+          bytes = await plugin.attachment(name);
+        } catch (error) {
+          if (round === rounds) fail(`${name} could not be read: ${error.message || error}`);
+          return;
+        }
+        if (round !== rounds) return;
+        const listed = (plugin.attachments || []).find((a) => a.name === name);
+        const type =
+          (listed && /^(video|audio)\//.test(listed.media_type) && listed.media_type) ||
+          TYPES[name.split(".").pop().toLowerCase()] ||
+          "video/mp4";
+        url = URL.createObjectURL(new Blob([bytes], { type }));
+        video.src = url;
+        video.load();
+        // the sound, for the waveform: the track sent on its own, or the video's
+        let sound = bytes;
+        const own = P.sound && Pinrail.attachmentName(P.sound);
+        if (own) {
+          try {
+            sound = await plugin.attachment(own);
+          } catch {
+            /* the video's own, then */
+          }
+        }
+        let result;
+        try {
+          result = await peaksOf(sound);
+        } catch (error) {
+          result = { error };
+        }
+        if (round !== rounds) return;
+        W = result;
+        renderLanes();
+        drawWave();
+      }
+
+      function decode(bytes) {
+        const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        const ctx = new Ctx(1, 2, 44100);
+        return new Promise((resolve, reject) => {
+          const p = ctx.decodeAudioData(bytes, resolve, reject);
+          if (p && p.catch) p.catch(reject);
+        });
+      }
+
+      async function peaksOf(bytes) {
+        const buffer = await decode(bytes);
+        const n = buffer.length,
+          peaks = new Float32Array(PEAKS);
+        const chans = [...Array(buffer.numberOfChannels).keys()].map((c) => buffer.getChannelData(c));
+        let max = 0;
+        for (let p = 0; p < PEAKS; p++) {
+          const a = Math.floor((p / PEAKS) * n),
+            b = Math.max(a + 1, Math.floor(((p + 1) / PEAKS) * n));
+          const stride = Math.max(1, Math.floor((b - a) / 64));
+          let v = 0;
+          for (const d of chans)
+            for (let i = a; i < b && i < n; i += stride) {
+              const x = Math.abs(d[i]);
+              if (x > v) v = x;
+            }
+          peaks[p] = v;
+          if (v > max) max = v;
+        }
+        if (max === 0) throw new Error("it is silent");
+        return { peaks, max };
+      }
+
+      function fail(message) {
+        M = { error: message };
+        renderStage();
+        renderTransport();
+      }
+
+      /* ---------- playback */
+
+      const ready = () => !!duration();
+      const here = () => (video && ready() ? video.currentTime * 1000 : S.pos);
+
+      function play() {
+        if (!ready()) return;
+        S.stopAt = null;
+        if (S.pos >= duration() - 20) seek(0);
+        video.play().catch((error) => {
+          // a platform that plays sound only after a click in the view itself
+          if (error && error.name === "NotAllowedError") $("stage-msg").textContent = "Click the picture to play";
+        });
+      }
+      function pause() {
+        if (video && !video.paused) video.pause();
+      }
+      function toggle() {
+        video && video.paused ? play() : pause();
+      }
+
+      /* Go to a moment. A comment being written at a moment goes with the playhead. */
+      function seek(ms, { follow = true } = {}) {
+        if (!ready()) return;
+        S.pos = clamp(ms, 0, duration());
+        video.currentTime = S.pos / 1000;
+        if (follow && S.composing && S.composing.at_ms !== undefined) {
+          S.composing.at_ms = Math.round(S.pos);
+          paintComposerHead();
+        }
+        paint();
+      }
+      function step(frames) {
+        pause();
+        const n = clamp(frameOf(here()) + frames, 0, lastFrameOf(duration()));
+        // the middle of the frame, so a rounding never lands on its neighbour
+        seek((n + 0.5) * stepMs());
+      }
+      function playRange() {
+        const c = S.composing;
+        if (!S.range && c && c.at_ms === undefined) S.range = { start: c.start_ms, end: c.end_ms, on: c.on };
+        if (!S.range || !ready()) return;
+        seek(S.range.start, { follow: false });
+        video.play().catch(() => {});
+        S.stopAt = S.loop ? null : S.range.end;
+        renderLanes();
+      }
+
+      function setRate(dir) {
+        const i = clamp(RATES.indexOf(S.rate) + dir, 0, RATES.length - 1);
+        S.rate = RATES[i];
+        video.playbackRate = S.rate;
+        renderTransport();
+      }
+      function setMuted(m) {
+        S.muted = m;
+        video.muted = m;
+        renderTransport();
+      }
+
+      function tick() {
+        requestAnimationFrame(tick);
+        if (!video || video.paused || !ready()) return;
+        const p = video.currentTime * 1000;
+        if (S.loop && S.range && p >= S.range.end) return seek(S.range.start, { follow: false });
+        if (S.stopAt !== null && p >= S.stopAt) {
+          const at = S.stopAt;
+          S.stopAt = null;
+          pause();
+          return seek(at, { follow: false });
+        }
+        S.pos = p;
+        paint();
+      }
+
+      /* The moving parts, without a render: the playhead, the clock, the scene, what is marked on this frame. */
+      let shown = "";
+      function paint() {
+        if (!P) return;
+        const d = duration();
+        const pos = S.pos;
+        const head = $("head");
+        if (head && d) head.style.left = pct(pos);
+        const played = document.querySelector(".lane.sound .played");
+        if (played && d) played.style.width = pct(pos);
+        const clock = $("clock");
+        if (clock)
+          clock.innerHTML = `<b>${fmt(pos)}</b> / ${fmt(d)}${P.fps && d ? `<span class="frame-no">frame ${frameOf(pos)}</span>` : ""}`;
+        const timeline = $("timeline");
+        if (timeline) {
+          timeline.dataset.pos = String(Math.round(pos));
+          timeline.setAttribute("aria-valuenow", String(Math.round(pos)));
+          timeline.setAttribute("aria-valuetext", fmt(pos));
+        }
+        const btn = $("play");
+        if (btn) {
+          const want = S.playing ? "pause" : "play";
+          if (btn.dataset.icon !== want) {
+            btn.dataset.icon = want;
+            btn.innerHTML = Pinrail.icon(want, { size: 16 });
+            btn.setAttribute("aria-label", S.playing ? "Pause" : "Play");
+            btn.setAttribute("aria-pressed", String(S.playing));
+          }
+        }
+        const now = scenesAt(pos)[0];
+        document.querySelectorAll(".scene").forEach((el) => el.classList.toggle("now", el.dataset.scene === now));
+        // the areas marked on this frame; redrawn only when the set changes
+        const key = visibleAreas()
+          .map((a) => a.key)
+          .join("|");
+        if (key !== shown) {
+          shown = key;
+          renderOverlay();
+        }
+      }
+
+      /* ---------- comments */
+
+      function compose(on, region) {
+        if (plugin.readonly || !ready()) return;
+        pause();
+        const at = Math.round(here());
+        const target = on || (S.range && S.range.on) || "picture";
+        S.composing = S.range
+          ? { start_ms: S.range.start, end_ms: S.range.end, on: target, note: "" }
+          : { at_ms: at, on: target, note: "" };
+        if (region && target === "picture") S.composing.region = region;
+        S.popAt = null;
+        S.lit = null;
+        renderComposer();
+        renderTransport();
+        renderOverlay();
+        $("mark-note")?.focus({ preventScroll: true });
+      }
+
+      /* Opens a comment again: its words in the dialog, its area on the frame, and
+   for a stretch its two limits, to drag. */
+      function edit(id) {
+        if (plugin.readonly) return show(id);
+        if (S.composing && S.composing.editing === id) return $("mark-note")?.focus({ preventScroll: true });
+        // what was being written is kept, not thrown away by the click
+        if (S.composing && $("mark-note")?.value.trim()) addComment();
+        const c = S.comments.find((x) => x.id === id);
+        if (!c) return;
+        pause();
+        S.range = c.at_ms === undefined ? { start: c.start_ms, end: c.end_ms, on: c.on } : null;
+        S.popAt = null;
+        S.lit = id;
+        S.composing = { ...c, editing: id };
+        seek(startOf(c), { follow: false });
+        renderAll();
+        $("mark-note")?.focus({ preventScroll: true });
+        document.querySelector(`[data-row="${id}"]`)?.scrollIntoView({ block: "nearest" });
+      }
+
+      function addComment() {
+        const field = $("mark-note");
+        const note = field ? field.value.trim() : "";
+        if (!note || !S.composing) return false;
+        const { editing, ...c } = S.composing;
+        const made = { ...c, note, id: editing || `c${++serial}` };
+        if (made.on !== "picture") delete made.region;
+        S.comments = [...S.comments.filter((x) => x.id !== made.id), made].sort(byTime);
+        S.composing = null;
+        S.range = null;
+        S.lit = made.id;
+        save();
+        renderAll();
+        return true;
+      }
+      function cancelCompose() {
+        if (S.composing && S.composing.editing) S.range = null;
+        S.composing = null;
+        renderAll();
+      }
+      function removeComment(id) {
+        S.comments = S.comments.filter((c) => c.id !== id);
+        if (S.lit === id) S.lit = null;
+        save();
+        renderAll();
+      }
+      function show(id) {
+        const c = S.comments.find((x) => x.id === id);
+        if (!c) return;
+        pause();
+        S.lit = id;
+        seek(startOf(c), { follow: false });
+        renderLanes();
+        renderSide();
+        renderOverlay();
+        document.querySelector(`[data-row="${id}"]`)?.scrollIntoView({ block: "nearest" });
+      }
+      function neighbour(dir) {
+        const list = [...S.comments].sort(byTime);
+        const pos = here();
+        const next =
+          dir > 0 ? list.find((c) => startOf(c) > pos + 1) : [...list].reverse().find((c) => startOf(c) < pos - 1);
+        if (next) show(next.id);
+      }
+
+      /* A stretch as it is being dragged, before it is set: the selection, its
+   times, and the comment being written on it. */
+      function previewRange(a, b) {
+        const sel = $("sel");
+        sel.hidden = false;
+        sel.style.left = pct(a);
+        sel.style.width = pct(b - a);
+        const span = $("span");
+        if (span) span.textContent = `${fmt(a)}–${fmt(b)}`;
+        const length = $("span-length");
+        if (length) length.textContent = `${((b - a) / 1000).toFixed(2)} s`;
+        const c = S.composing;
+        if (c && c.at_ms === undefined) {
+          c.start_ms = Math.round(a);
+          c.end_ms = Math.round(b);
+          paintComposerHead();
+        }
+      }
+
+      function setRange(a, b, on) {
+        if (!ready()) return;
+        const s = clamp(Math.round(Math.min(a, b)), 0, duration()),
+          t = clamp(Math.round(Math.max(a, b)), 0, duration());
+        S.range = t - s >= 40 ? { start: s, end: t, on: on || (S.range && S.range.on) || "picture" } : null;
+        const c = S.composing;
+        if (c && S.range) {
+          // the comment being written takes the stretch, and keeps its words
+          c.note = $("mark-note")?.value ?? c.note;
+          delete c.at_ms;
+          c.start_ms = s;
+          c.end_ms = t;
+        }
+        renderComposer();
+        if (c) $("mark-note")?.focus({ preventScroll: true });
+        renderLanes();
+        renderTransport();
+      }
+
+      function setVerdict(v) {
+        if (plugin.readonly) return;
+        S.verdict = S.verdict === v ? null : v;
+        save();
+        renderSide();
+        status();
+      }
+
+      /* ---------- areas of the frame */
+
+      /* What is marked on the frame now: the comment being written, and every
+   picture comment the playhead is on. */
+      function visibleAreas() {
+        const out = [];
+        const pos = S.pos;
+        const near = Math.max(stepMs(), 250);
+        const list = [...S.comments].sort(byTime);
+        list.forEach((c, k) => {
+          if (!c.region || c.on !== "picture" || (S.composing && S.composing.editing === c.id)) return;
+          const on =
+            c.at_ms !== undefined ? Math.abs(pos - c.at_ms) <= near : pos >= c.start_ms - 1 && pos <= c.end_ms + 1;
+          if (on)
+            out.push({ key: `${c.id}:${S.lit === c.id}`, region: c.region, n: k + 1, id: c.id, lit: S.lit === c.id });
+        });
+        const c = S.composing;
+        if (c && c.region && c.on === "picture")
+          out.push({ key: `new:${JSON.stringify(c.region)}`, region: c.region, drawing: true });
+        return out;
+      }
+
+      function areaStyle(r) {
+        return r.shape === "box"
+          ? `left:${r.x * 100}%;top:${r.y * 100}%;width:${r.width * 100}%;height:${r.height * 100}%`
+          : `left:${r.x * 100}%;top:${r.y * 100}%`;
+      }
+
+      function renderOverlay() {
+        const overlay = $("overlay");
+        if (!overlay) return;
+        overlay.dataset.readonly = String(plugin.readonly);
+        overlay.innerHTML = visibleAreas()
+          .map(
+            (a) =>
+              `<div class="area${a.region.shape === "point" ? " spot" : ""}${a.drawing ? " drawing" : ""}${a.lit ? " lit" : ""}" style="${areaStyle(a.region)}">${
+                a.n
+                  ? `<button type="button" class="tag" data-show="${a.id}" aria-label="Comment ${a.n}">${a.n}</button>`
+                  : ""
+              }</div>`,
+          )
+          .join("");
+        shown = visibleAreas()
+          .map((a) => a.key)
+          .join("|");
+      }
+
+      /* ---------- rendering */
+
+      function renderTop() {
+        const n = S.comments.length;
+        const sound = S.comments.filter((c) => c.on === "sound").length;
+        const parts = [];
+        if (duration()) parts.push(fmt(duration()));
+        if (M && M.width) parts.push(`${M.width}×${M.height}`);
+        if (P.fps) parts.push(`${P.fps} fps`);
+        $("top").innerHTML = `
+    <h1>${esc(plugin.review.title || "Video review")}</h1>
+    ${P.name ? `<span class="subject">${esc(P.name)}</span>` : ""}
+    ${[...parts, ...(P.details || [])].map((d) => `<span class="pinrail-chip">${esc(d)}</span>`).join("")}
+    <div class="tally" aria-live="polite"><span><b>${n}</b> ${n === 1 ? "comment" : "comments"}</span>${sound ? `<span><b>${sound}</b> on the sound</span>` : ""}</div>`;
+      }
+
+      function renderStage() {
+        const msg = $("stage-msg");
+        if (!msg) return;
+        msg.textContent =
+          M && M.error ? `This video could not be played: ${M.error}` : ready() ? "" : "Reading the video…";
+        fit();
+      }
+
+      /* The frame, as large as the stage allows at the video's own shape. */
+      function fit() {
+        const stage = $("stage"),
+          frame = $("frame");
+        if (!stage || !frame) return;
+        const w = (M && M.width) || 16,
+          h = (M && M.height) || 9;
+        const room = { w: stage.clientWidth - 24, h: stage.clientHeight - 24 };
+        const scale = Math.max(0, Math.min(room.w / w, room.h / h));
+        frame.style.width = `${Math.floor(w * scale)}px`;
+        frame.style.height = `${Math.floor(h * scale)}px`;
+        frame.style.visibility = ready() ? "visible" : "hidden";
+        placeComposer();
+      }
+
+      function marksFor(on) {
+        const list = [...S.comments].sort(byTime);
+        return list
+          .map((c, k) => {
+            if (c.on !== on || (S.composing && S.composing.editing === c.id)) return "";
+            const lit = S.lit === c.id ? " lit" : "";
+            return c.at_ms !== undefined
+              ? `<span class="mark point" style="left:${pct(c.at_ms)}"></span><button type="button" class="pin${lit}" data-show="${c.id}" style="left:${pct(c.at_ms)}" aria-label="Comment ${k + 1} at ${fmt(c.at_ms)}">${k + 1}</button>`
+              : `<span class="mark range" style="left:${pct(c.start_ms)};width:${pct(c.end_ms - c.start_ms)}"></span><button type="button" class="pin${lit}" data-show="${c.id}" style="left:${pct(c.start_ms)}" aria-label="Comment ${k + 1}, ${fmt(c.start_ms)} to ${fmt(c.end_ms)}">${k + 1}</button>`;
+          })
+          .join("");
+      }
+
+      function renderLanes() {
+        const d = duration();
+        const scenes = $("track-scenes");
+        if (scenes)
+          scenes.innerHTML = d
+            ? (P.scenes || [])
+                .map(
+                  (s) =>
+                    `<button type="button" class="scene" data-scene="${esc(s.id)}" style="left:${pct(s.start_ms)};width:calc(${pct(Math.min(s.end_ms, d) - s.start_ms)} - 2px)" title="${esc(s.name || s.id)} · ${fmt(s.start_ms)}–${fmt(s.end_ms)} · shift-click to select it">${esc(s.name || s.id)}</button>`,
+                )
+                .join("")
+            : "";
+        const picture = $("track-picture");
+        if (picture)
+          picture.innerHTML = `<canvas class="strip" id="strip" aria-hidden="true"></canvas>${d ? marksFor("picture") : ""}`;
+        const sound = $("track-sound");
+        if (sound) {
+          sound.innerHTML = `${W && W.peaks ? `<canvas class="base" aria-hidden="true"></canvas><div class="played"><canvas aria-hidden="true"></canvas></div>` : `<span class="none">${W ? "No waveform: the sound could not be read" : "Reading the sound…"}</span>`}${d ? marksFor("sound") : ""}`;
+        }
+        const sel = $("sel");
+        if (sel) {
+          sel.hidden = !S.range;
+          if (S.range) {
+            sel.style.left = pct(S.range.start);
+            sel.style.width = pct(S.range.end - S.range.start);
+          }
+        }
+        const ruler = $("ruler");
+        if (ruler && d) {
+          const stepSize =
+            [500, 1000, 2000, 5000, 10000, 15000, 30000, 60000, 120000, 300000].find((s) => d / s <= 12) || 600000;
+          const ticks = [];
+          for (let t = 0; t <= d; t += stepSize)
+            ticks.push(`<span style="left:${pct(t)}">${stepSize < 1000 ? (t / 1000).toFixed(1) : fmtShort(t)}</span>`);
+          ruler.innerHTML = ticks.join("");
+        }
+        drawWave();
+        drawStrip();
+        paint();
+      }
+
+      /* ---------- the picture lane: frames of the video, along the timeline */
+
+      const STRIP = { thumbs: [], run: 0 };
+
+      /* Reads one frame for each slot of the picture lane, from a second, unseen
+   player on the same file, and draws each as it arrives. */
+      async function filmstrip() {
+        const track = $("track-picture");
+        if (!track || !ready() || !M.width || !url) return;
+        const run = ++STRIP.run;
+        const h = track.clientHeight;
+        const count = slotsFor(track);
+        const scale = Math.min(2, window.devicePixelRatio || 1);
+        const th = Math.round(h * scale),
+          tw = Math.round((th * M.width) / M.height);
+        const probe = document.createElement("video");
+        probe.className = "probe";
+        probe.muted = true;
+        probe.playsInline = true;
+        probe.preload = "auto";
+        $("stage").appendChild(probe);
+        const stale = () => run !== STRIP.run;
+        const heard = (name, ms) =>
+          new Promise((resolve) => {
+            const done = () => {
+              clearTimeout(timer);
+              probe.removeEventListener(name, done);
+              resolve();
+            };
+            const timer = setTimeout(done, ms);
+            probe.addEventListener(name, done);
+          });
+        try {
+          probe.src = url;
+          await heard("loadeddata", 8000);
+          const thumbs = new Array(count);
+          for (let i = 0; i < count && !stale(); i++) {
+            // each slot shows the frame at the moment its left side stands for. The
+            // first is read a moment in: only a seek makes sure a frame is there to draw
+            const at = clamp((i / count) * duration(), 20, Math.max(20, duration() - 50)) / 1000;
+            const seeked = heard("seeked", 4000);
+            probe.currentTime = at;
+            await seeked;
+            if (stale() || probe.readyState < 2) continue;
+            const c = document.createElement("canvas");
+            c.width = tw;
+            c.height = th;
+            c.getContext("2d").drawImage(probe, 0, 0, tw, th);
+            thumbs[i] = c;
+            STRIP.thumbs = thumbs;
+            drawStrip();
+          }
+        } finally {
+          probe.removeAttribute("src");
+          probe.load();
+          probe.remove();
+        }
+      }
+
+      /* How many frames the lane has room for, each at the video's own shape. */
+      function slotsFor(track) {
+        const each = track.clientHeight * (M.width / M.height);
+        return clamp(Math.ceil(track.clientWidth / each), 4, 60);
+      }
+
+      function drawStrip() {
+        const canvas = $("strip");
+        if (!canvas) return;
+        const w = canvas.clientWidth,
+          h = canvas.clientHeight;
+        const n = STRIP.thumbs.length;
+        if (!w || !h) return;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        const g = canvas.getContext("2d");
+        const slot = canvas.width / (n || 1);
+        let drawn = 0;
+        for (let i = 0; i < n; i++) {
+          const t = STRIP.thumbs[i];
+          if (!t) continue;
+          // the middle of the frame, cut to the slot
+          const k = Math.max(slot / t.width, canvas.height / t.height);
+          const sw = slot / k,
+            sh = canvas.height / k;
+          const x = Math.round(i * slot);
+          g.drawImage(
+            t,
+            (t.width - sw) / 2,
+            (t.height - sh) / 2,
+            sw,
+            sh,
+            x,
+            0,
+            Math.round((i + 1) * slot) - x,
+            canvas.height,
+          );
+          drawn++;
+        }
+        canvas.dataset.frames = String(drawn);
+        canvas.dataset.slots = String(n);
+      }
+
+      /* After the lane changes width: the same frames, redrawn; read again when
+   there is room for many more of them, or far fewer. */
+      let restrip = 0;
+      function fitStrip() {
+        drawStrip();
+        const track = $("track-picture");
+        if (!track || !ready() || !M.width || !STRIP.thumbs.length) return;
+        const want = slotsFor(track);
+        if (Math.abs(want - STRIP.thumbs.length) / STRIP.thumbs.length < 0.3) return;
+        clearTimeout(restrip);
+        restrip = setTimeout(filmstrip, 400);
+      }
+
+      const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+      function drawOne(canvas, color, width, alpha) {
+        if (!canvas || !W || !W.peaks) return;
+        const dpr = window.devicePixelRatio || 1;
+        const w = width || canvas.clientWidth,
+          h = canvas.clientHeight;
+        if (!w || !h) return;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        const g = canvas.getContext("2d");
+        g.scale(dpr, dpr);
+        g.globalAlpha = alpha;
+        g.fillStyle = color;
+        const cols = Math.floor(w / 3),
+          scale = 1 / W.max;
+        for (let x = 0; x < cols; x++) {
+          const a = Math.floor((x / cols) * PEAKS),
+            b = Math.max(a + 1, Math.floor(((x + 1) / cols) * PEAKS));
+          let v = 0;
+          for (let i = a; i < b; i++) if (W.peaks[i] > v) v = W.peaks[i];
+          const bh = Math.max(1, v * scale * h * 0.9);
+          g.fillRect(x * 3, (h - bh) / 2, 2, bh);
+        }
+      }
+      function drawWave() {
+        const track = $("track-sound");
+        if (!track || !W || !W.peaks) return;
+        const w = track.clientWidth;
+        drawOne(track.querySelector("canvas.base"), token("--pinrail-faint"), 0, 0.55);
+        drawOne(track.querySelector(".played canvas"), token("--sound"), w, 1);
+        track.style.setProperty("--full", `${w}px`);
+      }
+
+      function renderTransport() {
+        const el = $("transport");
+        if (!el) return;
+        const ro = plugin.readonly;
+        const ok = ready();
+        const r = S.range;
+        const off = ok ? "" : "disabled";
+        el.innerHTML = `
+    <button type="button" class="play" id="play" data-icon="${S.playing ? "pause" : "play"}" aria-label="${S.playing ? "Pause" : "Play"}" aria-pressed="${S.playing}" ${off}>${Pinrail.icon(S.playing ? "pause" : "play", { size: 16 })}</button>
+    <button type="button" class="icon-btn" data-do="back" aria-label="Back one frame" title="Back one frame (←)" ${off}>${Pinrail.icon("step-back", { size: 14 })}</button>
+    <button type="button" class="icon-btn" data-do="forward" aria-label="Forward one frame" title="Forward one frame (→)" ${off}>${Pinrail.icon("step-forward", { size: 14 })}</button>
+    <span class="clock" id="clock"></span>
+    <button type="button" class="tog" data-do="rate" title="Speed (- and =)" aria-label="Speed, ${S.rate} times">${S.rate}×</button>
+    <button type="button" class="icon-btn" data-do="mute" aria-label="${S.muted ? "Unmute" : "Mute"}" aria-pressed="${S.muted}" title="Mute (m)">${Pinrail.icon(S.muted ? "volume-x" : "volume-2", { size: 15 })}</button>
+    <input type="range" class="volume" id="volume" min="0" max="1" step="0.05" value="${S.volume}" aria-label="Volume">
+    <button type="button" class="tog" data-do="loop" aria-pressed="${S.loop}" title="Loop the selected stretch (l)">${Pinrail.icon("repeat", { size: 13 })} Loop <kbd>l</kbd></button>
+    <span class="sel-info">${
+      r
+        ? `<span class="span" id="span">${fmt(r.start)}–${fmt(r.end)}</span><span id="span-length">${((r.end - r.start) / 1000).toFixed(2)} s</span>
+          <button type="button" class="act" data-do="play-range" title="Play the selected stretch (shift and space)">${Pinrail.icon("play", { size: 12 })} Play selection <kbd>⇧ space</kbd></button>
+          ${
+            ro || S.composing
+              ? ""
+              : `<button type="button" class="act" data-do="comment">${Pinrail.icon("message-square", { size: 12 })} Comment <kbd>c</kbd></button>
+          <button type="button" class="act" data-do="comment-sound">${Pinrail.icon("audio-lines", { size: 12 })} On the sound <kbd>a</kbd></button>`
+          }
+          <button type="button" class="pinrail-btn quiet" data-do="clear">Clear</button>`
+        : ro || !ok || S.composing
+          ? ""
+          : `<button type="button" class="act" data-do="comment">${Pinrail.icon("message-square", { size: 12 })} Comment here <kbd>c</kbd></button>
+          <button type="button" class="act" data-do="comment-sound">${Pinrail.icon("audio-lines", { size: 12 })} On the sound <kbd>a</kbd></button>`
+    }</span>`;
+        paint();
+      }
+
+      function whereText(c) {
+        const frames = P.fps
+          ? c.at_ms !== undefined
+            ? ` · frame ${frameOf(c.at_ms)}`
+            : ` · frames ${frameOf(c.start_ms)}–${Math.max(frameOf(c.start_ms), lastFrameOf(c.end_ms))}`
+          : "";
+        return `${c.at_ms !== undefined ? "at" : "on"} <b>${when(c)}</b>${frames}`;
+      }
+      function paintComposerHead() {
+        const el = $("composing-when");
+        if (el && S.composing) el.innerHTML = whereText(S.composing);
+        placeComposer();
+      }
+      function areaText(r) {
+        const w = (M && M.width) || 0,
+          h = (M && M.height) || 0;
+        return r.shape === "box"
+          ? `area ${Math.round(r.x * w)},${Math.round(r.y * h)} · ${Math.round(r.width * w)}×${Math.round(r.height * h)} px`
+          : `spot ${Math.round(r.x * w)},${Math.round(r.y * h)} px`;
+      }
+      function paintComposerArea() {
+        const el = $("composing-area");
+        const c = S.composing;
+        if (!el || !c) return;
+        el.innerHTML =
+          c.on !== "picture"
+            ? ""
+            : c.region
+              ? `${Pinrail.icon("square-dashed", { size: 13 })} ${areaText(c.region)} <button type="button" class="x" data-do="clear-area" aria-label="Remove the area">${Pinrail.icon("x", { size: 12 })}</button>`
+              : `${Pinrail.icon("square-dashed", { size: 13 })} drag on the picture to mark an area, or click a spot`;
+        placeComposer();
+      }
+
+      /* Where the comment's dialog goes: beside the area it marks, away from it; or,
+   with no area, over the foot of the video, above its moment or stretch on
+   the timeline. Once the person has moved it, it stays where they put it. */
+      function placeComposer() {
+        const el = $("composer");
+        const c = S.composing;
+        if (!el || !c || !$("stage")) return;
+        const main = el.parentElement.getBoundingClientRect();
+        const stage = $("stage").getBoundingClientRect();
+        const w = el.offsetWidth,
+          h = el.offsetHeight,
+          gap = 12;
+        let x, y;
+        if (S.popAt) {
+          x = main.left + S.popAt.x;
+          y = main.top + S.popAt.y;
+        } else if (c.region && c.on === "picture") {
+          const f = $("overlay").getBoundingClientRect();
+          const r = c.region;
+          const a = {
+            left: f.left + r.x * f.width,
+            top: f.top + r.y * f.height,
+            w: (r.width || 0) * f.width,
+            h: (r.height || 0) * f.height,
+          };
+          if (a.left + a.w + gap + w <= stage.right - 8) {
+            x = a.left + a.w + gap;
+            y = a.top;
+          } else if (a.left - gap - w >= stage.left + 8) {
+            x = a.left - gap - w;
+            y = a.top;
+          } else {
+            x = a.left + a.w / 2 - w / 2;
+            y = a.top + a.h + gap + h <= main.bottom - 8 ? a.top + a.h + gap : a.top - gap - h;
+          }
+        } else {
+          const track = $("track-picture").getBoundingClientRect();
+          const at = c.at_ms !== undefined ? c.at_ms : (c.start_ms + c.end_ms) / 2;
+          x = track.left + (at / (duration() || 1)) * track.width - w / 2;
+          y = stage.bottom - gap - h;
+        }
+        el.style.left = `${clamp(x, main.left + 8, main.right - 8 - w) - main.left}px`;
+        el.style.top = `${clamp(y, main.top + 8, main.bottom - 8 - h) - main.top}px`;
+      }
+
+      function renderComposer() {
+        const el = $("composer");
+        if (!el) return;
+        const c = S.composing;
+        if (!c) {
+          el.innerHTML = "";
+          S.popAt = null;
+          return;
+        }
+        const stretch = c.at_ms === undefined;
+        el.innerHTML = `
+    <div class="composer-head" role="group" aria-label="${c.editing ? "Edit the comment" : "New comment"}">
+      <span>Comment <span id="composing-when">${whereText(c)}</span></span>
+      <span class="seg" role="group" aria-label="What it is about">
+        <button type="button" data-on="picture" aria-pressed="${c.on === "picture"}">${Pinrail.icon("image", { size: 12 })} Picture</button>
+        <button type="button" data-on="sound" aria-pressed="${c.on === "sound"}">${Pinrail.icon("audio-lines", { size: 12 })} Sound</button>
+      </span>
+      ${stretch ? `<button type="button" class="act" data-do="play-range" title="Play the selected stretch (shift and space)">${Pinrail.icon("play", { size: 12 })} Play selection</button>` : ""}
+      <span class="where" id="composing-area"></span>
+    </div>
+    <textarea id="mark-note" aria-label="Comment" placeholder="${c.on === "sound" ? "What should change in the sound here? e.g. too loud, the beat comes in late" : "What should change here? e.g. hold this longer, this text is too small"}">${esc(c.note || "")}</textarea>
+    <div class="composer-actions">
+      ${stretch ? QUICK.map((q) => `<button type="button" class="quick" data-quick="${esc(q)}">${esc(q)}</button>`).join("") : ""}
+      <span class="k push">↵ add · esc</span>
+      <button type="button" class="pinrail-btn quiet" data-do="cancel">Cancel</button>
+      <button type="button" class="pinrail-btn pinrail-btn-primary" data-do="add">${c.editing ? "Save" : "Comment"}</button>
+    </div>`;
+        paintComposerArea();
+      }
+
+      function commentRow(c, k, ro) {
+        const scenes = (c.at_ms !== undefined ? scenesAt(c.at_ms) : scenesAt(c.start_ms, c.end_ms)).map(sceneName);
+        return `<li data-row="${c.id ?? ""}" data-on="${c.on}" data-seek="${startOf(c)}"${S.lit && S.lit === c.id ? ' class="lit"' : ""}>
+      <span class="num">${k + 1}</span>
+      <span class="when"><span>${when(c)}</span><span class="kind">${Pinrail.icon(c.on === "sound" ? "audio-lines" : "image", { size: 11 })}${c.on}${c.region && c.on === "picture" ? ` · ${c.region.shape === "box" ? "area" : "spot"}` : ""}</span>${scenes.length ? `<span>${esc(scenes.join(", "))}</span>` : ""}</span>
+      <span class="text">${esc(c.note)}</span>
+      ${ro ? "" : `<span class="acts"><button type="button" class="pinrail-btn quiet" data-edit="${c.id}">Edit</button><button type="button" class="pinrail-btn quiet" data-remove="${c.id}">Remove</button></span>`}
+    </li>`;
+      }
+
+      function renderSide() {
+        const el = $("side-body");
+        if (!el) return;
+        const ro = plugin.readonly;
+        const list = [...S.comments].sort(byTime);
+        const verdict = S.verdict || (ro ? plugin.review.decision?.data?.verdict : null);
+        const before = plugin.previous?.decision?.data;
+        el.innerHTML = `
+    <section aria-label="Your verdict">
+      <p class="label">Verdict</p>
+      <div class="choices${S.armed && !verdict ? " ask" : ""}" id="choices" role="group" aria-label="Verdict">
+        ${Object.entries(VERDICTS)
+          .map(
+            ([v, label]) =>
+              `<button type="button" class="choice" data-verdict="${v}" aria-pressed="${verdict === v}" ${ro ? "disabled" : ""}>${label} <kbd>${VERDICT_KEYS[v]}</kbd></button>`,
+          )
+          .join("")}
+      </div>
+    </section>
+    <section aria-label="Comments">
+      <p class="label">Comments${list.length ? ` · ${list.length}` : ""}</p>
+      ${
+        list.length
+          ? `<ol class="marks" id="marks">${list.map((c, k) => commentRow(c, k, ro)).join("")}</ol>`
+          : `<p class="pinrail-empty">${ro ? "None." : "Press <kbd>c</kbd> to comment at the playhead, or <kbd>a</kbd> to comment on the sound. Drag on the timeline to comment on a stretch, and on the picture to mark an area of the frame."}</p>`
+      }
+    </section>
+    ${
+      before
+        ? `<section class="earlier" aria-label="The last round">
+      <p class="label">Last round</p>
+      <p class="verdict">${before.verdict === "approve" ? "Approved" : "Changes requested"}${before.note ? ` — ${esc(before.note)}` : ""}</p>
+      ${(before.comments || []).length ? `<ol class="marks">${before.comments.map((c, k) => commentRow(c, k, true)).join("")}</ol><p class="pinrail-empty" style="margin-top:8px">The times are the earlier cut's. Click one to go there in this cut.</p>` : ""}
+    </section>`
+        : ""
+    }`;
+      }
+
+      function renderAll() {
+        renderTop();
+        renderStage();
+        renderLanes();
+        renderTransport();
+        renderComposer();
+        renderSide();
+        renderOverlay();
+        status();
+      }
+
+      /* The page, once: the video element stays put while everything around it is redrawn. */
+      function build() {
+        $("app").innerHTML = `
+    <div class="top" id="top"></div>
+    <div class="work">
+      <main class="main" aria-label="The video">
+        <div class="stage" id="stage">
+          <div class="frame" id="frame"><video id="video" playsinline preload="auto"></video><div class="overlay" id="overlay"></div></div>
+          <div class="stage-msg" id="stage-msg"></div>
+        </div>
+        <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="Playhead" aria-valuemin="0" aria-valuemax="0" data-pos="0">
+          <div class="lane scenes"${(P.scenes || []).length ? "" : " hidden"}><span class="lane-name">Scenes</span><div class="track" id="track-scenes" data-lane="scenes"></div></div>
+          <div class="lane picture"><span class="lane-name">${Pinrail.icon("image", { size: 12 })} Picture</span><div class="track" id="track-picture" data-lane="picture"></div></div>
+          <div class="lane sound"><span class="lane-name">${Pinrail.icon("audio-lines", { size: 12 })} Sound</span><div class="track" id="track-sound" data-lane="sound"></div></div>
+          <div class="over"><span class="sel" id="sel" hidden><span class="grip start" data-grip="start" title="Drag to move where the stretch starts"></span><span class="grip end" data-grip="end" title="Drag to move where the stretch ends"></span></span><span class="head" id="head"></span></div>
+          <div class="ruler" id="ruler" aria-hidden="true"></div>
+        </div>
+        <div class="transport" id="transport"></div>
+        <div class="composer" id="composer" role="dialog" aria-label="Comment"></div>
+      </main>
+      <aside class="side" aria-label="The review">
+        ${P.notes ? `<div class="notes">${Pinrail.markdown(P.notes)}</div>` : ""}
+        <div id="side-body" style="display:grid;gap:16px"></div>
+        <section aria-label="A note about the whole video">
+          <p class="label">About the whole video</p>
+          <textarea id="note" aria-label="About the whole video" placeholder="Optional: what holds for the video as a whole" ${plugin.readonly ? "disabled" : ""}></textarea>
+        </section>
+      </aside>
+    </div>`;
+        $("note").value = S.note;
+        if ((P.scenes || []).length) document.querySelector(".over .sel").style.top = "27px";
+        else document.querySelector(".over .sel").style.top = "0";
+
+        video = $("video");
+        video.addEventListener("loadedmetadata", () => {
+          M = { duration: Math.round(video.duration * 1000), width: video.videoWidth, height: video.videoHeight };
+          $("timeline").setAttribute("aria-valuemax", String(M.duration));
+          $("timeline").dataset.duration = String(M.duration);
+          renderAll();
+          filmstrip();
+        });
+        video.addEventListener("error", () => {
+          const e = video.error;
+          fail(e && e.message ? e.message : "the app cannot decode this format");
+        });
+        video.addEventListener("play", () => {
+          S.playing = true;
+          $("stage-msg").textContent = "";
+          paint();
+        });
+        video.addEventListener("pause", () => {
+          S.playing = false;
+          S.pos = video.currentTime * 1000;
+          paint();
+        });
+        video.addEventListener("ended", () => {
+          S.playing = false;
+          S.pos = duration();
+          paint();
+        });
+        video.addEventListener("seeked", () => {
+          if (video.paused) {
+            S.pos = video.currentTime * 1000;
+            paint();
+          }
+        });
+        new ResizeObserver(() => {
+          fit();
+          drawWave();
+          fitStrip();
+        }).observe($("stage"));
+      }
+
+      /* ---------- pointer: on the timeline, a click seeks and a drag selects a stretch */
+
+      let drag = null;
+      const msAt = (ev) => {
+        const r = $("track-picture").getBoundingClientRect();
+        return clamp((ev.clientX - r.left) / r.width, 0, 1) * duration();
+      };
+      const fracAt = (ev) => {
+        const r = $("overlay").getBoundingClientRect();
+        return { x: clamp((ev.clientX - r.left) / r.width, 0, 1), y: clamp((ev.clientY - r.top) / r.height, 0, 1) };
+      };
+
+      document.addEventListener("pointerdown", (ev) => {
+        if (!P || ev.button !== 0 || !ready()) return;
+        const t = ev.target;
+        if (t.closest(".pin, .tag")) return;
+        const grip = t.closest("[data-grip]");
+        if (grip && S.range) {
+          pause();
+          drag = { kind: "limit", fixed: grip.dataset.grip === "start" ? S.range.end : S.range.start, grip };
+          grip.classList.add("held");
+          grip.setPointerCapture?.(ev.pointerId);
+          return;
+        }
+        if (t.closest("#composer")) {
+          if (t.closest(".composer-head") && !t.closest("button")) {
+            const r = $("composer").getBoundingClientRect();
+            drag = { kind: "dialog", dx: ev.clientX - r.left, dy: ev.clientY - r.top };
+            $("composer").classList.add("moving");
+          }
+          return;
+        }
+        const scene = t.closest(".scene");
+        if (scene) {
+          const s = (P.scenes || []).find((x) => x.id === scene.dataset.scene);
+          if (!s) return;
+          if (ev.shiftKey && !plugin.readonly) setRange(s.start_ms, Math.min(s.end_ms, duration()), "picture");
+          else seek(s.start_ms);
+          return;
+        }
+        const track = t.closest(".track");
+        if (track && track.dataset.lane !== "scenes") {
+          drag = { kind: "time", lane: track.dataset.lane, from: msAt(ev), x: ev.clientX, moved: false };
+          track.setPointerCapture?.(ev.pointerId);
+          return;
+        }
+        if (t.closest("#overlay")) {
+          const p = fracAt(ev);
+          drag = { kind: "area", from: p, x: ev.clientX, y: ev.clientY, moved: false };
+          $("overlay").setPointerCapture?.(ev.pointerId);
+          $("composer").classList.add("passing");
+        }
+      });
+
+      document.addEventListener("pointermove", (ev) => {
+        if (!drag) return;
+        if (drag.kind === "dialog") {
+          const main = $("composer").parentElement.getBoundingClientRect();
+          S.popAt = { x: ev.clientX - drag.dx - main.left, y: ev.clientY - drag.dy - main.top };
+          return placeComposer();
+        }
+        if (drag.kind === "limit") {
+          // never closer to the other limit than a stretch can be
+          let at = msAt(ev);
+          if (Math.abs(at - drag.fixed) < 40) at = clamp(drag.fixed + (at >= drag.fixed ? 40 : -40), 0, duration());
+          drag.at = at;
+          previewRange(Math.min(drag.fixed, at), Math.max(drag.fixed, at));
+          // the video goes with the limit, to show the frame it is on
+          return seek(at, { follow: false });
+        }
+        if (drag.kind === "time") {
+          if (!drag.moved && Math.abs(ev.clientX - drag.x) < 4) return;
+          drag.moved = true;
+          if (plugin.readonly) return;
+          const at = msAt(ev);
+          previewRange(Math.min(drag.from, at), Math.max(drag.from, at));
+          // and with the end of the stretch as it is dragged out
+          pause();
+          return seek(at, { follow: false });
+        }
+        if (!drag.moved && Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) < 6) return;
+        drag.moved = true;
+        const c = S.composing;
+        if (plugin.readonly || (c && c.on !== "picture")) return;
+        const p = fracAt(ev);
+        drag.box = {
+          shape: "box",
+          x: Math.min(drag.from.x, p.x),
+          y: Math.min(drag.from.y, p.y),
+          width: Math.abs(p.x - drag.from.x),
+          height: Math.abs(p.y - drag.from.y),
+        };
+        let el = document.querySelector(".area.live");
+        if (!el) {
+          el = document.createElement("div");
+          el.className = "area drawing live";
+          $("overlay").appendChild(el);
+        }
+        el.setAttribute("style", areaStyle(drag.box));
+      });
+
+      document.addEventListener("pointerup", (ev) => {
+        if (!drag) return;
+        const d = drag;
+        drag = null;
+        $("composer").classList.remove("passing", "moving");
+        if (d.kind === "dialog") return;
+        if (d.kind === "limit") {
+          d.grip.classList.remove("held");
+          if (d.at !== undefined) setRange(d.fixed, d.at);
+          return;
+        }
+        if (d.kind === "time") {
+          const at = msAt(ev);
+          if (d.moved && !plugin.readonly) return setRange(d.from, at, d.lane === "sound" ? "sound" : "picture");
+          if (S.range && !S.composing) {
+            S.range = null;
+            renderLanes();
+            renderTransport();
+          }
+          return seek(at);
+        }
+        document.querySelector(".area.live")?.remove();
+        const c = S.composing;
+        if (plugin.readonly) return toggle();
+        if (d.moved && d.box && d.box.width > 0.004 && d.box.height > 0.004) {
+          if (c && c.on === "picture") {
+            c.region = d.box;
+            paintComposerArea();
+            renderOverlay();
+            $("mark-note")?.focus({ preventScroll: true });
+          } else if (!c) compose("picture", d.box);
+          return;
+        }
+        // a click: a spot for the comment being written, and otherwise play or pause
+        if (c && c.on === "picture") {
+          c.region = { shape: "point", ...fracAt(ev) };
+          paintComposerArea();
+          renderOverlay();
+          $("mark-note")?.focus({ preventScroll: true });
+        } else if (!c) toggle();
+      });
+
+      /* A drag here marks a stretch or an area, a double click and shift with a
+   click mean something of the view's own: none of them selects the page. */
+      const inMain = (node) => (node && node.nodeType === 1 ? node : node?.parentElement)?.closest?.(".main");
+      document.addEventListener("selectstart", (ev) => {
+        if (inMain(ev.target) && !ev.target.closest?.("textarea")) ev.preventDefault();
+      });
+      document.addEventListener("dragstart", (ev) => {
+        if (inMain(ev.target)) ev.preventDefault();
+      });
+
+      /* ---------- clicks */
+
+      document.addEventListener("click", (ev) => {
+        if (!P) return;
+        const t = ev.target.closest ? ev.target : null;
+        if (!t) return;
+        if (t.closest("#play")) return toggle();
+        const act = t.closest("[data-do]");
+        if (act) {
+          switch (act.dataset.do) {
+            case "back":
+              return step(-1);
+            case "forward":
+              return step(1);
+            case "rate":
+              return setRate(S.rate === RATES.at(-1) ? -RATES.length : 1);
+            case "mute":
+              return setMuted(!S.muted);
+            case "loop":
+              S.loop = !S.loop;
+              return renderTransport();
+            case "play-range":
+              return playRange();
+            case "comment":
+              return compose("picture");
+            case "comment-sound":
+              return compose("sound");
+            case "clear":
+              S.range = null;
+              renderLanes();
+              return renderTransport();
+            case "add":
+              return addComment();
+            case "cancel":
+              return cancelCompose();
+            case "clear-area":
+              if (S.composing) {
+                delete S.composing.region;
+                paintComposerArea();
+                renderOverlay();
+              }
+              return;
+          }
+        }
+        const target = t.closest("[data-on]");
+        if (target && target.closest(".seg") && S.composing) {
+          const field = $("mark-note");
+          S.composing.note = field ? field.value : "";
+          S.composing.on = target.dataset.on;
+          renderComposer();
+          renderOverlay();
+          return $("mark-note")?.focus({ preventScroll: true });
+        }
+        const quick = t.closest("[data-quick]");
+        if (quick) {
+          const field = $("mark-note");
+          if (field) {
+            field.value = field.value.trim() ? `${field.value.trim()} ${quick.dataset.quick}` : quick.dataset.quick;
+            field.focus();
+          }
+          return;
+        }
+        const rm = t.closest("[data-remove]");
+        if (rm) return removeComment(rm.dataset.remove);
+        const ed = t.closest("[data-edit]");
+        if (ed) return edit(ed.dataset.edit);
+        const pinned = t.closest("[data-show]");
+        if (pinned) return edit(pinned.dataset.show);
+        const choice = t.closest("[data-verdict]");
+        if (choice) return setVerdict(choice.dataset.verdict);
+        const row = t.closest("[data-seek]");
+        if (row) {
+          if (row.dataset.row) return edit(row.dataset.row);
+          pause();
+          return seek(Math.min(Number(row.dataset.seek), duration()), { follow: false });
+        }
+      });
+
+      document.addEventListener("input", (ev) => {
+        if (ev.target.id === "volume") {
+          S.volume = Number(ev.target.value);
+          video.volume = S.volume;
+          if (S.volume > 0 && S.muted) setMuted(false);
+          return;
+        }
+        if (ev.target.id !== "note" || plugin.readonly) return;
+        S.note = ev.target.value;
+        S.armed = false;
+        plugin.draft({ comments: S.comments, verdict: S.verdict, note: S.note });
+      });
+
+      /* ---------- keys */
+
+      document.addEventListener("keydown", (ev) => {
+        if (ev.target.id === "mark-note") {
+          if (ev.key === "Enter" && !ev.shiftKey && !ev.metaKey && !ev.ctrlKey) {
+            ev.preventDefault();
+            addComment();
+          }
+          if (ev.key === "Escape") {
+            ev.preventDefault();
+            cancelCompose();
+          }
+          return;
+        }
+        if (!P || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+        if (ev.target.closest && ev.target.closest("textarea, input")) return;
+        const key = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+        const pos = here();
+        if (key === " " && ev.shiftKey && S.range) playRange();
+        else if (key === " ") toggle();
+        else if (key === "ArrowLeft") ev.shiftKey ? seek(pos - 1000) : step(-1);
+        else if (key === "ArrowRight") ev.shiftKey ? seek(pos + 1000) : step(1);
+        else if (key === "Home") seek(0);
+        else if (key === "End") seek(duration());
+        else if (key === "-" || key === "_") setRate(-1);
+        else if (key === "=" || key === "+") setRate(1);
+        else if (key === "m") setMuted(!S.muted);
+        else if (key === "l") {
+          S.loop = !S.loop;
+          renderTransport();
+        } else if (key === "n") neighbour(1);
+        else if (key === "p") neighbour(-1);
+        else if (key === "Escape" && (S.range || S.composing)) {
+          S.range = null;
+          S.composing = null;
+          renderAll();
+        } else if (plugin.readonly) return;
+        else if (key === "i") setRange(pos, S.range ? S.range.end : duration());
+        else if (key === "o") setRange(S.range ? S.range.start : 0, pos);
+        else if (key === "c") compose("picture");
+        else if (key === "a") compose("sound");
+        else if (key === "g") setVerdict("approve");
+        else if (key === "r") setVerdict("request_changes");
+        else return;
+        ev.preventDefault();
+      });
+
+      /* ---------- the protocol */
+
+      const plugin = Pinrail.connect({
+        onInit({ review, draft }) {
+          const round = ++rounds;
+          if (video) {
+            video.pause();
+            video.removeAttribute("src");
+          }
+          if (url) {
+            URL.revokeObjectURL(url);
+            url = null;
+          }
+          P = review.payload;
+          M = null;
+          STRIP.thumbs = [];
+          STRIP.run++;
+          W = null;
+          reset();
+          const decided = review.decision?.data;
+          const from = decided || (draft && typeof draft === "object" ? draft : null);
+          if (from) {
+            S.comments = (from.comments || []).map((c) => {
+              const { px, ...region } = c.region || {};
+              const kept = { id: `c${++serial}`, on: c.on || "picture", note: c.note };
+              if (c.at_ms !== undefined) kept.at_ms = c.at_ms;
+              else {
+                kept.start_ms = c.start_ms;
+                kept.end_ms = c.end_ms;
+              }
+              if (c.region) kept.region = region;
+              return kept;
+            });
+            S.verdict = from.verdict || null;
+            S.note = from.note || "";
+          }
+          build();
+          renderAll();
+          load(round);
+        },
+        onSubmitted() {
+          pause();
+          S.composing = null;
+          S.range = null;
+          $("note").disabled = true;
+          renderAll();
+        },
+        onViolations(errors) {
+          plugin.handOverLabel(`Check: ${errors[0]?.message ?? "the decision"}`);
+        },
+        onCollect() {
+          // a comment still being written goes with the rest
+          if (S.composing && $("mark-note")?.value.trim()) addComment();
+          const data = decisionData();
+          if (!data.verdict) {
+            S.armed = true;
+            status();
+            renderSide();
+            $("choices")?.scrollIntoView({ block: "nearest" });
+            return;
+          }
+          return data;
+        },
+        onAppearance() {
+          drawWave();
+        },
+      });
+      tick();
+    </script>
+  </body>
+</html>

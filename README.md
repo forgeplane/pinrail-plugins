@@ -21,6 +21,7 @@ holds the other official plugins.
 | [`motion`](motion/README.md) | candidate animations, in CSS or Lottie, played frame by frame and side by side |
 | [`palette`](palette/README.md) | colour palettes or design tokens, light and dark, checked for contrast on the parts of a product |
 | [`trade`](trade/README.md) | a trade an agent proposes, on its candlestick chart with the entry, stop and targets to adjust |
+| [`video`](video/README.md) | a video, such as a promo cut or a screen recording, commented at a moment or over a stretch, on its picture or its sound |
 | [`visual-diff`](visual-diff/README.md) | before and after images of a revision, compared with a wipe, side by side, a fade or a difference highlight |
 
 ## Installing a plugin

@@ -1,0 +1,103 @@
+{
+  "title": "Test pattern — cut 1",
+  "payload": {
+    "name": "Test pattern",
+    "file": {
+      "$attachment": "clip.webm"
+    },
+    "notes": "Six seconds of a **test pattern** with a beep every second.",
+    "fps": 30,
+    "scenes": [
+      {
+        "id": "open",
+        "name": "Opening",
+        "start_ms": 0,
+        "end_ms": 2000
+      },
+      {
+        "id": "middle",
+        "name": "Middle",
+        "start_ms": 2000,
+        "end_ms": 4000
+      },
+      {
+        "id": "close",
+        "name": "Close",
+        "start_ms": 4000,
+        "end_ms": 6000
+      }
+    ],
+    "details": [
+      "640×360",
+      "VP8"
+    ]
+  },
+  "attachments": {
+    "clip.webm": {
+      "path": "clip/clip.webm",
+      "media_type": "video/webm"
+    }
+  },
+  "decision": {
+    "decided_by": "maya",
+    "decided_at": "2026-10-01T10:00:00Z",
+    "data": {
+      "verdict": "request_changes",
+      "note": "Close. Two things on the picture and one on the sound.",
+      "video": {
+        "duration_ms": 6000,
+        "width": 640,
+        "height": 360,
+        "fps": 30
+      },
+      "comments": [
+        {
+          "on": "picture",
+          "at_ms": 1017,
+          "at_frame": 30,
+          "scenes": [
+            "open"
+          ],
+          "region": {
+            "shape": "box",
+            "x": 0.1,
+            "y": 0.2,
+            "width": 0.3,
+            "height": 0.25,
+            "px": {
+              "x": 64,
+              "y": 72,
+              "width": 192,
+              "height": 90
+            }
+          },
+          "note": "This corner is too busy"
+        },
+        {
+          "on": "picture",
+          "start_ms": 2000,
+          "end_ms": 4000,
+          "start_frame": 60,
+          "end_frame": 119,
+          "scenes": [
+            "middle"
+          ],
+          "note": "Make this shorter"
+        },
+        {
+          "on": "sound",
+          "start_ms": 3000,
+          "end_ms": 5000,
+          "start_frame": 90,
+          "end_frame": 149,
+          "scenes": [
+            "middle",
+            "close"
+          ],
+          "note": "The beep is too loud here"
+        }
+      ]
+    }
+  },
+  "agent_note": "Thanks. Send the next cut when it is ready."
+}

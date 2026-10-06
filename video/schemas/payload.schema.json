@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Video review payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["file"],
+  "$defs": {
+    "attachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$attachment"],
+      "properties": {
+        "$attachment": { "type": "string", "minLength": 1, "maxLength": 120 }
+      }
+    },
+    "ms": { "type": "integer", "minimum": 0, "description": "Milliseconds from the start of the video." }
+  },
+  "properties": {
+    "file": {
+      "$ref": "#/$defs/attachment",
+      "description": "The video, sent with --attach. MP4 with H.264 and AAC plays wherever the app runs; WebM plays where the platform decodes it."
+    },
+    "name": { "type": "string", "maxLength": 200, "description": "What the video is called: a cut, a take, a version." },
+    "notes": { "type": "string", "maxLength": 8000, "description": "Markdown: what this cut is, what changed since the last one, and what to look or listen for." },
+    "fps": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 240,
+      "description": "The video's frame rate. With it, the person steps frame by frame and every comment comes back with frame numbers. A player cannot read it from the file, so state it when you work in frames."
+    },
+    "scenes": {
+      "type": "array",
+      "maxItems": 100,
+      "description": "The parts of the video, in order, drawn on the timeline. Each comment comes back with the ids of the scenes it touches, so give each scene the id you know it by: a component, a file, a shot.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "start_ms", "end_ms"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "name": { "type": "string", "maxLength": 80, "description": "What the timeline calls it; the id when absent." },
+          "start_ms": { "$ref": "#/$defs/ms" },
+          "end_ms": { "$ref": "#/$defs/ms" }
+        }
+      }
+    },
+    "sound": {
+      "$ref": "#/$defs/attachment",
+      "description": "The sound track on its own (M4A, MP3 or WAV), for the waveform on the timeline. Send it only when the waveform does not show without it: the view first reads the sound from the video itself."
+    },
+    "details": {
+      "type": "array",
+      "maxItems": 8,
+      "items": { "type": "string", "maxLength": 60 },
+      "description": "Short facts shown beside the name: a codec, a renderer, a model."
+    }
+  }
+}

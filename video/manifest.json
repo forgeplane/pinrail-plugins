@@ -1,0 +1,171 @@
+{
+  "name": "video",
+  "version": "0.1.0",
+  "title": "Video review",
+  "description": "A video to watch on a stage, with its scenes and its sound on a timeline. Comment at a moment or over a stretch, on the picture or on the sound, box an area of a frame to say what to change there, and approve the cut or ask for changes.",
+  "use_when": "You made a video (a promo cut, a screen recording, a rendered animation, a generated clip) and need a person to watch it and say what to change: at which moment, over which stretch, where on the frame, and whether it is about the picture or the sound.",
+  "attachments": {
+    "accept": [
+      ".mp4",
+      ".m4v",
+      ".mov",
+      ".webm",
+      ".m4a",
+      ".mp3",
+      ".wav",
+      "video/mp4",
+      "video/quicktime",
+      "video/webm",
+      "audio/mp4",
+      "audio/mpeg",
+      "audio/wav"
+    ],
+    "max_size": 104857600,
+    "max_count": 2
+  },
+  "summary": {
+    "request": {
+      "counts": [
+        {
+          "items": "/scenes",
+          "label": "scene",
+          "plural": "scenes"
+        }
+      ]
+    },
+    "outcome": {
+      "verdict": {
+        "at": "/verdict",
+        "values": {
+          "approve": {
+            "label": "approved",
+            "tone": "success"
+          },
+          "request_changes": {
+            "label": "changes requested",
+            "tone": "warning"
+          }
+        }
+      },
+      "counts": [
+        {
+          "items": "/comments",
+          "by": "on",
+          "values": {
+            "picture": {
+              "label": "on the picture",
+              "tone": "info"
+            },
+            "sound": {
+              "label": "on the sound",
+              "tone": "warning"
+            }
+          },
+          "other": false
+        }
+      ]
+    }
+  },
+  "shortcuts": [
+    {
+      "keys": "space",
+      "does": "Play or pause",
+      "group": "Playback"
+    },
+    {
+      "keys": "arrowleft",
+      "does": "Back one frame",
+      "group": "Playback"
+    },
+    {
+      "keys": "arrowright",
+      "does": "Forward one frame",
+      "group": "Playback"
+    },
+    {
+      "keys": "shift+arrowleft",
+      "does": "Back one second",
+      "group": "Playback"
+    },
+    {
+      "keys": "shift+arrowright",
+      "does": "Forward one second",
+      "group": "Playback"
+    },
+    {
+      "keys": "home",
+      "does": "To the start",
+      "group": "Playback"
+    },
+    {
+      "keys": "end",
+      "does": "To the end",
+      "group": "Playback"
+    },
+    {
+      "keys": "-",
+      "does": "Slower, down to 0.25×",
+      "group": "Playback"
+    },
+    {
+      "keys": "=",
+      "does": "Faster, up to 2×",
+      "group": "Playback"
+    },
+    {
+      "keys": "m",
+      "does": "Mute or unmute",
+      "group": "Playback"
+    },
+    {
+      "keys": "shift+space",
+      "does": "Play the selected stretch",
+      "group": "Playback"
+    },
+    {
+      "keys": "l",
+      "does": "Loop the selected stretch",
+      "group": "Playback"
+    },
+    {
+      "keys": "i",
+      "does": "Mark where a stretch starts",
+      "group": "Comments"
+    },
+    {
+      "keys": "o",
+      "does": "Mark where a stretch ends",
+      "group": "Comments"
+    },
+    {
+      "keys": "c",
+      "does": "Comment on the picture, at the playhead or on the stretch",
+      "group": "Comments"
+    },
+    {
+      "keys": "a",
+      "does": "Comment on the sound, at the playhead or on the stretch",
+      "group": "Comments"
+    },
+    {
+      "keys": "n",
+      "does": "Next comment",
+      "group": "Comments"
+    },
+    {
+      "keys": "p",
+      "does": "Previous comment",
+      "group": "Comments"
+    },
+    {
+      "keys": "g",
+      "does": "Approve the video",
+      "group": "Verdict"
+    },
+    {
+      "keys": "r",
+      "does": "Request changes",
+      "group": "Verdict"
+    }
+  ]
+}

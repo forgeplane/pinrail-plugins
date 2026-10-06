@@ -1,0 +1,31 @@
+{#- The decision as an agent reads it back: the verdict and the note about
+    the whole, then every comment in time order, each with what it is about,
+    its moment or stretch (as m:ss.cc, in ms and in frames), the scenes it
+    touches, and the area of the frame it marks. -#}
+{%- macro t(ms) -%}
+{%- set s = (ms % 60000) // 1000 -%}{%- set cs = (ms % 1000) // 10 -%}
+{{ ms // 60000 }}:{{ "0" if s < 10 else "" }}{{ s }}.{{ "0" if cs < 10 else "" }}{{ cs }}
+{%- endmacro -%}
+{%- macro where(c) -%}
+{%- if c.at_ms is defined -%}at {{ t(c.at_ms) }} ({{ c.at_ms }} ms{% if c.at_frame is defined %}, frame {{ c.at_frame }}{% endif %})
+{%- else -%}{{ t(c.start_ms) }}–{{ t(c.end_ms) }} ({{ c.start_ms }}–{{ c.end_ms }} ms{% if c.start_frame is defined %}, frames {{ c.start_frame }}–{{ c.end_frame }}{% endif %})
+{%- endif -%}
+{%- if c.scenes %} in {% for s in c.scenes %}`{{ s }}`{% if not loop.last %}, {% endif %}{% endfor %}{% endif -%}
+{%- if c.region -%}
+{%- if c.region.shape == "box" %}, area {{ c.region.px.x }},{{ c.region.px.y }} {{ c.region.px.width }}×{{ c.region.px.height }} px
+{%- else %}, spot {{ c.region.px.x }},{{ c.region.px.y }} px
+{%- endif -%}
+{%- endif -%}
+{%- endmacro -%}
+{%- set name = review.payload.name if review.payload.name else "the video" -%}
+**{{ "Approved" if data.verdict == "approve" else "Changes requested" }}**: {{ name }}
+{%- if data.video %} ({{ t(data.video.duration_ms) }}{% if data.video.width %}, {{ data.video.width }}×{{ data.video.height }}{% endif %}{% if data.video.fps %}, {{ data.video.fps }} fps{% endif %}){% endif %}
+{% if data.note %}
+> {{ data.note }}
+{% endif %}
+{%- if data.comments %}
+## Comments
+{% for c in data.comments %}
+{{ loop.index }}. **{{ c.on }}** {{ where(c) }}: {{ c.note }}
+{%- endfor %}
+{% endif -%}

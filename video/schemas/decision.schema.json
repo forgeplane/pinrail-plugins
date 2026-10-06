@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Video review decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "comments"],
+  "$defs": {
+    "ms": { "type": "integer", "minimum": 0, "description": "Milliseconds from the start of the video, as the file plays." },
+    "frame": { "type": "integer", "minimum": 0, "description": "A frame number, counted from 0, at the payload's fps." },
+    "unit": { "type": "number", "minimum": 0, "maximum": 1 },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shape", "x", "y", "px"],
+      "description": "A place on the frame the comment is about, as it looked at the comment's moment, or at the start of its stretch.",
+      "properties": {
+        "shape": { "enum": ["box", "point"], "description": "box: an area. point: a spot." },
+        "x": { "$ref": "#/$defs/unit", "description": "The box's left edge, or the point, as a fraction of the frame's width from its left." },
+        "y": { "$ref": "#/$defs/unit", "description": "The box's top edge, or the point, as a fraction of the frame's height from its top." },
+        "width": { "$ref": "#/$defs/unit", "description": "The box's width, as a fraction of the frame's width." },
+        "height": { "$ref": "#/$defs/unit", "description": "The box's height, as a fraction of the frame's height." },
+        "px": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y"],
+          "description": "The same place in the video's own pixels, origin top left.",
+          "properties": {
+            "x": { "type": "integer", "minimum": 0 },
+            "y": { "type": "integer", "minimum": 0 },
+            "width": { "type": "integer", "minimum": 0 },
+            "height": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "verdict": {
+      "enum": ["approve", "request_changes"],
+      "description": "approve: the video can go out as it is; any comments are remarks. request_changes: apply the comments and send the next cut with --revises."
+    },
+    "note": { "type": "string", "maxLength": 4000, "description": "About the video as a whole." },
+    "video": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duration_ms"],
+      "description": "The video as it was watched: the frame of reference for every time and place below. Missing only when the file could not be played.",
+      "properties": {
+        "duration_ms": { "$ref": "#/$defs/ms" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "fps": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "comments": {
+      "type": "array",
+      "description": "What to change, in time order. Each is at a moment (at_ms) or over a stretch (start_ms to end_ms), and is about the picture or the sound.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["on", "note"],
+        "oneOf": [
+          { "required": ["at_ms"], "not": { "anyOf": [{ "required": ["start_ms"] }, { "required": ["end_ms"] }] } },
+          { "required": ["start_ms", "end_ms"], "not": { "required": ["at_ms"] } }
+        ],
+        "properties": {
+          "on": { "enum": ["picture", "sound"], "description": "picture: what is seen. sound: what is heard, whatever is on screen." },
+          "at_ms": { "$ref": "#/$defs/ms" },
+          "start_ms": { "$ref": "#/$defs/ms" },
+          "end_ms": { "$ref": "#/$defs/ms" },
+          "at_frame": { "$ref": "#/$defs/frame" },
+          "start_frame": { "$ref": "#/$defs/frame" },
+          "end_frame": { "$ref": "#/$defs/frame", "description": "The last frame of the stretch, inclusive." },
+          "scenes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The ids of the payload's scenes the comment touches, in order."
+          },
+          "region": { "$ref": "#/$defs/region" },
+          "note": { "type": "string", "minLength": 1, "maxLength": 2000, "description": "What to change." }
+        }
+      }
+    }
+  }
+}
