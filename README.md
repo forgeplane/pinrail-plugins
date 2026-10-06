@@ -14,6 +14,7 @@ holds the other official plugins.
 | [`artifact`](artifact/README.md) | an HTML page an agent designed, commented on element by element |
 | [`calendar`](calendar/README.md) | times to arrange around what is already booked |
 | [`email`](email/README.md) | emails an agent wants to send, to edit, send, revise or discard |
+| [`logo`](logo/README.md) | candidate logo marks and icons, shown at every size |
 
 ## Installing a plugin
 
