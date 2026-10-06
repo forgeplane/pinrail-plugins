@@ -7,6 +7,9 @@
 //   node scripts/screenshot.mjs              # every plugin
 //   node scripts/screenshot.mjs email audio  # these plugins
 //
+// Then it lays every plugin's screenshot out in a grid, with the plugin's
+// icon and title, as .github/plugins.png for the repository's README.
+//
 // The image is not part of a plugin's bundle: an install copies only the
 // manifest, the icon, the README, the licence and the fixed folders.
 
@@ -76,5 +79,51 @@ for (const name of plugins) {
     console.error(`${name}: ${error.message}`);
   }
 }
+
+/** Every plugin's screenshot in a grid of four columns, each with its icon
+ *  and title, on one image. */
+async function collage(browser) {
+  const all = fs
+    .readdirSync(root)
+    .filter((name) => fs.existsSync(path.join(root, name, "screenshot.png")))
+    .map((name) => {
+      const manifest = JSON.parse(fs.readFileSync(path.join(root, name, "manifest.json"), "utf8"));
+      const icon = path.join(root, name, "icon.svg");
+      return {
+        title: manifest.title,
+        image: fs.readFileSync(path.join(root, name, "screenshot.png")).toString("base64"),
+        icon: fs.existsSync(icon) ? fs.readFileSync(icon, "utf8").replace(/<!--.*?-->/gs, "") : "",
+      };
+    })
+    .sort((a, b) => a.title.localeCompare(b.title));
+  const escape = (text) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const cards = all
+    .map(
+      (p) => `<figure>
+        <img src="data:image/png;base64,${p.image}" alt="">
+        <figcaption>${p.icon}<span>${escape(p.title)}</span></figcaption>
+      </figure>`,
+    )
+    .join("");
+  const page = await browser.newPage({ viewport: { width: 1200, height: 800 }, deviceScaleFactor: 2 });
+  await page.setContent(`<!doctype html><style>
+    body { margin: 0; font: 600 14px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      color: #2b2f3a; background: radial-gradient(circle at 20% 0%, #eef0ff, transparent 60%),
+      radial-gradient(circle at 90% 100%, #fff1e8, transparent 55%), #f6f7f9; }
+    main { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 20px; padding: 32px; }
+    figure { margin: 0; }
+    img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top left;
+      border-radius: 10px; border: 1px solid #dde0e7; box-shadow: 0 8px 24px -12px rgba(30, 35, 60, 0.35); }
+    figcaption { display: flex; align-items: center; gap: 7px; margin-top: 10px; }
+    figcaption svg { width: 15px; height: 15px; color: #5b5bd6; flex: none; }
+  </style><main>${cards}</main>`);
+  await page.waitForLoadState("load");
+  const out = path.join(root, ".github", "plugins.png");
+  await page.locator("main").screenshot({ path: out });
+  console.log(`collage: ${path.relative(root, out)}`);
+  await page.close();
+}
+
+if (!failed) await collage(browser);
 await browser.close();
 process.exit(failed ? 1 : 0);

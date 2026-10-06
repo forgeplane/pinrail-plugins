@@ -4,6 +4,8 @@ The official plugins for [Pinrail](https://pinrail.dev). A plugin defines
 one kind of review: the payload an agent sends, the decision the person
 gives back, and the view the person decides in.
 
+![The plugins in this repository, each showing a sample review](.github/plugins.png)
+
 Pinrail's core plugins, `list`, `feedback`, `code-review`, `image` and
 `markdown`, come with the app and live in its repository,
 [forgeplane/pinrail](https://github.com/forgeplane/pinrail). This repository
@@ -83,10 +85,12 @@ pnpm exec pinrail-sdk dev email            # its view in a browser, with its fix
 pnpm screenshot email                      # retake its screenshot.png
 ```
 
-`pnpm screenshot` without a name retakes every plugin's screenshot. It
-mounts the view under the SDK's harness with the plugin's own sample, in
-the light theme, so build a plugin that has a build step first. A
-screenshot is not part of the plugin when it is installed.
+`pnpm screenshot` without a name retakes every plugin's screenshot. Either
+way, it then rebuilds `.github/plugins.png`, the grid of every plugin's
+screenshot at the top of this README. It mounts each view under the SDK's
+harness with the plugin's own sample, in the light theme, so build a
+plugin that has a build step first. A screenshot is not part of the
+plugin when it is installed.
 
 CI checks that the HTML, JavaScript, TypeScript and CSS files are formatted
 with Prettier. `pnpm format` formats them. The recorded reviews in each
