@@ -1,0 +1,1851 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Audio review</title>
+    <link rel="stylesheet" href="/sdk/v1/pinrail-plugin.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      :root {
+        --fav: #d4a017;
+      }
+      .shell {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100%;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+      }
+      .top h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .top .subject {
+        color: var(--pinrail-dim);
+        font-size: 12.5px;
+      }
+      .tally {
+        margin-left: auto;
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .tally b {
+        color: var(--pinrail-text);
+        font-variant-numeric: tabular-nums;
+      }
+      .work {
+        display: grid;
+        grid-template-columns: 248px 1fr;
+        min-height: 0;
+      }
+
+      /* the rail: every take, with its waveform */
+      .rail {
+        overflow-y: auto;
+        border-right: 1px solid var(--pinrail-border);
+        padding: 12px;
+        display: grid;
+        gap: 4px;
+        align-content: start;
+        background: var(--pinrail-bg-panel);
+      }
+      .rail-label {
+        margin: 4px 6px 6px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+      .pick {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 6px 10px;
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: none;
+        color: var(--pinrail-text);
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+      }
+      .pick:hover {
+        background: var(--pinrail-bg-hover);
+      }
+      .pick[aria-current="true"] {
+        background: var(--pinrail-bg-raised);
+        border-color: var(--pinrail-border-strong);
+      }
+      .pick:focus-visible {
+        outline: 2px solid var(--pinrail-accent);
+        outline-offset: 1px;
+      }
+      .pick-name {
+        font-size: 13px;
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .mini {
+        grid-column: 1 / -1;
+        position: relative;
+        height: 34px;
+      }
+      .mini canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .mini .wait {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .pick-meta {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 8px;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .pick-meta .marks {
+        margin-left: auto;
+        color: var(--pinrail-dim);
+      }
+
+      .verdict-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 7px;
+        border-radius: 99px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .v-favorite {
+        background: color-mix(in oklab, var(--fav) 22%, transparent);
+        color: color-mix(in oklab, #b8860b 80%, var(--pinrail-text));
+      }
+      .v-keep {
+        background: var(--pinrail-accent-bg);
+        color: var(--pinrail-accent);
+      }
+      .v-drop {
+        background: color-mix(in oklab, var(--pinrail-faint) 18%, transparent);
+        color: var(--pinrail-faint);
+        text-decoration: line-through;
+      }
+      .v-none {
+        color: var(--pinrail-faint);
+        background: none;
+        padding-inline: 0;
+      }
+
+      .sheet {
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .sheet-inner {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 22px 28px 28px;
+        display: grid;
+        gap: 18px;
+      }
+      .notes {
+        color: var(--pinrail-dim);
+        font-size: 13px;
+        line-height: 1.6;
+        padding: 12px 14px;
+        border: 1px dashed var(--pinrail-border);
+        border-radius: 10px;
+      }
+      .notes p {
+        margin: 0 0 6px;
+      }
+      .notes p:last-child {
+        margin: 0;
+      }
+      .take-head {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+      }
+      .take-head h2 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: -0.02em;
+      }
+      .take-id {
+        font: 12px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .details .pinrail-chip {
+        font: 11px var(--pinrail-mono);
+        padding: 1px 7px;
+        border-radius: 6px;
+        border: 1px solid var(--pinrail-border);
+        color: var(--pinrail-dim);
+      }
+      .previous {
+        flex-basis: 100%;
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .reasoning {
+        max-width: 72ch;
+        color: var(--pinrail-dim);
+        font-size: 14px;
+        line-height: 1.65;
+        margin-top: -6px;
+      }
+      .reasoning p {
+        margin: 0 0 8px;
+      }
+      .reasoning p:last-child {
+        margin: 0;
+      }
+      .label {
+        margin: 0 0 8px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+
+      /* the player: waveform, marks on it, the transport under it */
+      .player {
+        display: grid;
+        gap: 0;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 14px;
+        background: var(--pinrail-bg-raised);
+        overflow: hidden;
+      }
+      .wave {
+        position: relative;
+        height: 148px;
+        margin: 26px 16px 0;
+        cursor: text;
+        touch-action: none;
+        user-select: none;
+        outline: none;
+      }
+      .wave:focus-visible {
+        box-shadow: 0 0 0 2px var(--pinrail-accent);
+        border-radius: 4px;
+      }
+      .wave canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .wave .played {
+        position: absolute;
+        inset: 0 auto 0 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .wave .played canvas {
+        width: var(--full);
+      }
+      .wave .region,
+      .wave .sel,
+      .wave .point {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        pointer-events: none;
+      }
+      .wave .cut {
+        background: repeating-linear-gradient(
+          135deg,
+          color-mix(in oklab, var(--pinrail-danger) 28%, transparent) 0 5px,
+          color-mix(in oklab, var(--pinrail-danger) 10%, transparent) 5px 10px
+        );
+        box-shadow:
+          inset 1px 0 var(--pinrail-danger),
+          inset -1px 0 var(--pinrail-danger);
+      }
+      .wave .range {
+        background: color-mix(in oklab, var(--pinrail-accent) 24%, transparent);
+        border-top: 2px solid var(--pinrail-accent);
+      }
+      .wave .point {
+        width: 0;
+        border-left: 2px solid var(--pinrail-accent);
+      }
+      .wave .sel {
+        background: color-mix(in oklab, var(--pinrail-text) 12%, transparent);
+        box-shadow:
+          inset 1px 0 var(--pinrail-text),
+          inset -1px 0 var(--pinrail-text);
+      }
+      .wave .head {
+        position: absolute;
+        top: -6px;
+        bottom: -6px;
+        width: 0;
+        border-left: 2px solid var(--pinrail-text);
+        pointer-events: none;
+      }
+      .wave .head::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -6px;
+        border: 5px solid transparent;
+        border-top: 6px solid var(--pinrail-text);
+      }
+      .wave .pin {
+        position: absolute;
+        top: -24px;
+        transform: translateX(-50%);
+        display: grid;
+        place-items: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        border-radius: 9px;
+        border: 0;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 10.5px var(--pinrail-mono);
+        cursor: pointer;
+        pointer-events: auto;
+        box-shadow: 0 0 0 2px var(--pinrail-bg-raised);
+      }
+      .wave .pin.cutpin {
+        background: var(--pinrail-danger);
+      }
+      .wave .broken,
+      .wave .reading {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 12px;
+        text-align: center;
+        color: var(--pinrail-dim);
+        font-size: 13px;
+        cursor: default;
+      }
+      .ruler {
+        position: relative;
+        height: 20px;
+        margin: 4px 16px 0;
+        font: 10.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        border-top: 1px solid var(--pinrail-border);
+      }
+      .ruler span {
+        position: absolute;
+        top: 3px;
+        transform: translateX(-50%);
+      }
+      .ruler span::before {
+        content: "";
+        position: absolute;
+        top: -4px;
+        left: 50%;
+        height: 4px;
+        border-left: 1px solid var(--pinrail-border-strong);
+      }
+      .transport {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+        padding: 10px 14px;
+        border-top: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+      }
+      .play {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--pinrail-button-bg);
+        color: #fff;
+        cursor: pointer;
+      }
+      .play:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .clock {
+        font: 12.5px var(--pinrail-mono);
+        color: var(--pinrail-dim);
+        font-variant-numeric: tabular-nums;
+        min-width: 128px;
+      }
+      .clock b {
+        color: var(--pinrail-text);
+        font-weight: 600;
+      }
+      .tog {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 9px;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 8px;
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .tog:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+      .tog[aria-pressed="true"] {
+        color: var(--pinrail-text);
+        border-color: var(--pinrail-border-strong);
+        background: var(--pinrail-bg-raised);
+      }
+      .tog kbd,
+      .act kbd,
+      .choice kbd {
+        padding: 0 4px;
+        font-size: 10.5px;
+      }
+      .sel-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .sel-info .span {
+        font: 12px var(--pinrail-mono);
+        color: var(--pinrail-text);
+      }
+      .act {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font: 600 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .act.danger {
+        color: var(--pinrail-danger);
+      }
+      .act:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .matched {
+        font-size: 11.5px;
+        color: var(--pinrail-faint);
+      }
+
+      .composer {
+        display: grid;
+        gap: 8px;
+        padding: 12px 14px;
+        border-top: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+      }
+      .composer-head {
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .composer-head b {
+        font: 600 12px var(--pinrail-mono);
+        color: var(--pinrail-text);
+      }
+      .composer textarea,
+      #note {
+        width: 100%;
+        resize: vertical;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font: 13px/1.5 var(--pinrail-sans);
+        box-sizing: border-box;
+      }
+      .composer textarea {
+        min-height: 56px;
+      }
+      .composer textarea:focus,
+      #note:focus {
+        outline: none;
+        border-color: var(--pinrail-accent);
+      }
+      .composer-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        align-items: center;
+      }
+      .composer-actions .k {
+        margin-right: auto;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .pinrail-btn.quiet {
+        border-color: transparent;
+        background: none;
+        color: var(--pinrail-dim);
+        font-weight: 500;
+      }
+
+      /* the transcript, in sync */
+      .transcript {
+        display: grid;
+        gap: 8px;
+        font-size: 15px;
+        line-height: 1.85;
+      }
+      .seg {
+        display: grid;
+        grid-template-columns: 64px 1fr;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .seg-at {
+        border: 0;
+        background: none;
+        padding: 0;
+        text-align: left;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        cursor: pointer;
+      }
+      .seg-at:hover {
+        color: var(--pinrail-accent);
+      }
+      .seg-at .sid {
+        display: block;
+        font-size: 10px;
+        line-height: 1.2;
+        opacity: 0.8;
+      }
+      .w,
+      .unit {
+        border-radius: 4px;
+        padding: 1px 1px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .w:hover,
+      .unit:hover {
+        background: var(--pinrail-bg-hover);
+      }
+      .w.now,
+      .unit.now {
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+      }
+      .w.in-sel,
+      .unit.in-sel {
+        background: color-mix(in oklab, var(--pinrail-text) 14%, transparent);
+      }
+      .w.noted,
+      .unit.noted {
+        text-decoration: underline 2px color-mix(in oklab, var(--pinrail-accent) 70%, transparent);
+        text-underline-offset: 4px;
+      }
+      .w.gone,
+      .unit.gone {
+        text-decoration: line-through 2px var(--pinrail-danger);
+        color: var(--pinrail-faint);
+      }
+      .script {
+        font-size: 14.5px;
+        line-height: 1.7;
+        color: var(--pinrail-dim);
+        max-width: 72ch;
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--pinrail-faint);
+      }
+
+      /* comments and cuts */
+      .marks {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .marks li {
+        display: grid;
+        grid-template-columns: auto auto 1fr auto;
+        align-items: start;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: var(--pinrail-bg-raised);
+        border: 1px solid var(--pinrail-border);
+        font-size: 13.5px;
+      }
+      .marks li.lit {
+        border-color: var(--pinrail-accent);
+      }
+      .marks .num {
+        display: grid;
+        place-items: center;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 11px var(--pinrail-mono);
+      }
+      .marks .num.cutnum {
+        background: var(--pinrail-danger);
+      }
+      .marks .when {
+        border: 0;
+        background: none;
+        padding: 2px 0 0;
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-dim);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .marks .when:hover {
+        color: var(--pinrail-accent);
+      }
+      .marks .quote {
+        display: block;
+        font-size: 12px;
+        color: var(--pinrail-faint);
+      }
+      .marks .acts {
+        display: flex;
+        gap: 4px;
+      }
+      .pinrail-empty {
+        color: var(--pinrail-faint);
+        font-size: 13px;
+        padding: 6px 2px;
+        text-align: left;
+      }
+
+      .decide {
+        display: grid;
+        gap: 10px;
+        padding-top: 4px;
+      }
+      .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .choice {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 13px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .choice[aria-pressed="true"][data-action="favorite"] {
+        background: color-mix(in oklab, var(--fav) 22%, var(--pinrail-bg));
+        border-color: var(--fav);
+      }
+      .choice[aria-pressed="true"][data-action="keep"] {
+        background: var(--pinrail-accent-bg);
+        border-color: var(--pinrail-accent);
+        color: var(--pinrail-accent);
+      }
+      .choice[aria-pressed="true"][data-action="drop"] {
+        background: var(--pinrail-bg-hover);
+        color: var(--pinrail-faint);
+        text-decoration: line-through;
+      }
+      .choice:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .choices .nav {
+        margin-left: auto;
+        display: flex;
+        gap: 6px;
+      }
+      .choices .nav button {
+        padding: 7px 11px;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        font: 12px var(--pinrail-mono);
+        cursor: pointer;
+      }
+      #note {
+        min-height: 60px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 13.5px;
+      }
+
+      @media (max-width: 820px) {
+        .work {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
+        .rail {
+          grid-auto-flow: column;
+          grid-auto-columns: 200px;
+          overflow-x: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--pinrail-border);
+        }
+        .rail-label {
+          display: none;
+        }
+        .sel-info {
+          margin-left: 0;
+          flex-basis: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="/sdk/v1/pinrail-plugin.js"></script>
+    <script src="/sdk/v1/markdown.js"></script>
+    <div class="shell" id="app">
+      <div class="top"><h1>Loading…</h1></div>
+    </div>
+    <script>
+      "use strict";
+      const esc = Pinrail.escape;
+      const ACTIONS = { favorite: "Favourite", keep: "Keep", drop: "Drop" };
+      const KEYS = { favorite: "f", keep: "s", drop: "x" };
+      const PEAKS = 2000;
+
+      const S = {
+        sel: 0,
+        back: null,
+        verdicts: {},
+        armed: false,
+        pos: 0,
+        playing: false,
+        stopAt: null,
+        range: null,
+        loop: false,
+        skipCuts: false,
+        composing: null,
+        matched: null,
+        keepScroll: false,
+        lit: null,
+      };
+      let P = null;
+      const takes = []; // per payload take: { buffer, peaks, duration, peak_db } or { error }
+      const scripts = []; // per payload take: its transcript, flattened
+
+      /* ---------- time */
+
+      const fmt = (ms) => {
+        ms = Math.max(0, Math.round(ms));
+        const m = Math.floor(ms / 60000),
+          s = Math.floor((ms % 60000) / 1000),
+          cs = Math.floor((ms % 1000) / 10);
+        return `${m}:${String(s).padStart(2, "0")}.${String(cs).padStart(2, "0")}`;
+      };
+      const fmtShort = (ms) => {
+        const s = Math.round(ms / 1000);
+        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+      };
+      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+      /* ---------- transcripts: segments and words, flattened, in time order */
+
+      function transcriptOf(m) {
+        const t = m.transcript;
+        if (!t) return null;
+        const top = (t.words || []).map((w) => ({ ...w }));
+        let segments = (t.segments || []).map((s) => ({ ...s }));
+        if (!segments.length && top.length)
+          segments = [{ text: null, start_ms: top[0].start_ms, end_ms: top.at(-1).end_ms, words: top }];
+        const words = [];
+        segments.forEach((s, si) => {
+          const own =
+            s.words && s.words.length ? s.words : top.filter((w) => w.start_ms >= s.start_ms && w.start_ms < s.end_ms);
+          s.first = words.length;
+          for (const w of own) words.push({ text: w.text, start_ms: w.start_ms, end_ms: w.end_ms, seg: si });
+          s.count = words.length - s.first;
+        });
+        return { segments, words };
+      }
+
+      /* What a moment or a stretch lies under: the words, their text, the segments. */
+      function anchorFor(i, a, b) {
+        const tr = scripts[i];
+        if (!tr) return {};
+        const point = b === undefined;
+        const hit = (s, e) => (point ? s <= a && a < e : s < b && e > a);
+        const out = {};
+        const idx = [];
+        tr.words.forEach((w, k) => {
+          if (hit(w.start_ms, w.end_ms)) idx.push(k);
+        });
+        if (idx.length) {
+          out.text = tr.words
+            .slice(idx[0], idx.at(-1) + 1)
+            .map((w) => w.text)
+            .join(" ");
+          out.words = [idx[0], idx.at(-1)];
+        } else if (!tr.words.length) {
+          const segs = tr.segments.filter((s) => hit(s.start_ms, s.end_ms));
+          if (segs.length) out.text = segs.map((s) => s.text).join(" ");
+        }
+        const ids = tr.segments.filter((s) => s.id && hit(s.start_ms, s.end_ms)).map((s) => s.id);
+        if (ids.length) out.segments = ids;
+        return out;
+      }
+
+      /* ---------- reading and decoding */
+
+      let ctx = null;
+      const audio = () => (ctx ||= new (window.AudioContext || window.webkitAudioContext)());
+
+      async function read(m) {
+        const name = Pinrail.attachmentName(m.file);
+        const bytes = await plugin.attachment(name);
+        let buffer;
+        try {
+          buffer = await audio().decodeAudioData(bytes);
+        } catch (e) {
+          throw new Error(`${name} is not audio this app can decode${e && e.message ? ` (${e.message})` : ""}`);
+        }
+        const n = buffer.length,
+          peaks = new Float32Array(PEAKS);
+        const chans = [...Array(buffer.numberOfChannels).keys()].map((c) => buffer.getChannelData(c));
+        let max = 0;
+        for (let p = 0; p < PEAKS; p++) {
+          const a = Math.floor((p / PEAKS) * n),
+            b = Math.max(a + 1, Math.floor(((p + 1) / PEAKS) * n));
+          let v = 0;
+          for (const d of chans)
+            for (let i = a; i < b && i < n; i++) {
+              const x = Math.abs(d[i]);
+              if (x > v) v = x;
+            }
+          peaks[p] = v;
+          if (v > max) max = v;
+        }
+        return {
+          buffer,
+          peaks,
+          max,
+          duration: Math.round(buffer.duration * 1000),
+          peak_db: max > 0 ? 20 * Math.log10(max) : -Infinity,
+        };
+      }
+
+      /* ---------- waveforms */
+
+      const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+      function drawWave(canvas, e, color, width, alpha = 1) {
+        if (!canvas || !e?.peaks) return;
+        const dpr = window.devicePixelRatio || 1;
+        const w = width || canvas.clientWidth,
+          h = canvas.clientHeight;
+        if (!w || !h) return;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        const g = canvas.getContext("2d");
+        g.scale(dpr, dpr);
+        g.globalAlpha = alpha;
+        g.fillStyle = color;
+        const step = h > 60 ? 3 : 2,
+          bar = step - 1;
+        const cols = Math.floor(w / step),
+          scale = e.max > 0 ? 1 / e.max : 1;
+        for (let x = 0; x < cols; x++) {
+          const a = Math.floor((x / cols) * PEAKS),
+            b = Math.max(a + 1, Math.floor(((x + 1) / cols) * PEAKS));
+          let v = 0;
+          for (let i = a; i < b; i++) if (e.peaks[i] > v) v = e.peaks[i];
+          const bh = Math.max(1, v * scale * h * 0.94);
+          g.fillRect(x * step, (h - bh) / 2, bar, bh);
+        }
+      }
+
+      function drawAll() {
+        const e = takes[S.sel];
+        const wave = document.getElementById("wave");
+        if (wave && e?.peaks) {
+          const w = wave.clientWidth;
+          drawWave(wave.querySelector("canvas.base"), e, token("--pinrail-faint"), 0, 0.5);
+          drawWave(wave.querySelector(".played canvas"), e, token("--pinrail-accent"), w);
+          wave.style.setProperty("--full", `${w}px`);
+        }
+        document
+          .querySelectorAll(".mini canvas")
+          .forEach((c) => drawWave(c, takes[Number(c.dataset.mini)], token("--pinrail-faint")));
+      }
+
+      /* ---------- playback */
+
+      let src = null,
+        t0 = 0,
+        p0 = 0,
+        run = 0;
+      const cur = () => takes[S.sel];
+      const now = () => (S.playing && ctx ? Math.min(cur()?.duration ?? 0, p0 + (ctx.currentTime - t0) * 1000) : S.pos);
+
+      function stopSource() {
+        if (!src) return;
+        run++;
+        try {
+          src.stop();
+        } catch {}
+        src.disconnect();
+        src = null;
+      }
+      function start() {
+        const e = cur();
+        if (!e?.buffer) return;
+        const c = audio();
+        c.resume?.();
+        stopSource();
+        if (S.pos >= e.duration - 10) S.pos = 0;
+        src = c.createBufferSource();
+        src.buffer = e.buffer;
+        src.connect(c.destination);
+        const mine = ++run;
+        src.onended = () => {
+          if (mine === run && S.playing) {
+            S.playing = false;
+            S.pos = e.duration;
+            paint();
+          }
+        };
+        t0 = c.currentTime;
+        p0 = S.pos;
+        src.start(0, S.pos / 1000);
+        S.playing = true;
+      }
+      function play() {
+        S.stopAt = null;
+        start();
+        paint();
+      }
+      function pause() {
+        if (!S.playing) return;
+        S.pos = now();
+        stopSource();
+        S.playing = false;
+        paint();
+      }
+      function toggle() {
+        S.playing ? pause() : play();
+      }
+      function seek(ms) {
+        const e = cur();
+        S.pos = clamp(Math.round(ms), 0, e?.duration ?? 0);
+        if (S.playing) start();
+        paint();
+      }
+      function playRange() {
+        if (!S.range) return;
+        S.pos = S.range.start;
+        start();
+        S.stopAt = S.loop ? null : S.range.end;
+        paint();
+      }
+
+      const cutsOf = (i) => verdictOf(P.takes[i].id)?.cuts || [];
+
+      function tick() {
+        requestAnimationFrame(tick);
+        if (!S.playing) return;
+        const p = now();
+        if (S.loop && S.range && p >= S.range.end) return seek(S.range.start);
+        if (S.stopAt !== null && p >= S.stopAt) {
+          S.pos = S.stopAt;
+          S.stopAt = null;
+          stopSource();
+          S.playing = false;
+          return paint();
+        }
+        if (S.skipCuts) {
+          const c = cutsOf(S.sel).find((c) => p >= c.start_ms && p < c.end_ms - 5);
+          if (c) return seek(c.end_ms);
+        }
+        S.pos = p;
+        paint();
+      }
+
+      /* The moving parts, without a render: the playhead, the clock, the word being said. */
+      let litWord = -1;
+      function paint() {
+        const e = cur();
+        const pos = S.playing ? now() : S.pos;
+        const wave = document.getElementById("wave");
+        if (wave && e?.duration) {
+          const pct = (pos / e.duration) * 100;
+          wave.querySelector(".head").style.left = `${pct}%`;
+          wave.querySelector(".played").style.width = `${pct}%`;
+          wave.setAttribute("aria-valuenow", String(Math.round(pos)));
+          wave.setAttribute("aria-valuetext", fmt(pos));
+          wave.dataset.pos = String(Math.round(pos));
+        }
+        const clock = document.getElementById("clock");
+        if (clock && e?.duration) clock.innerHTML = `<b>${fmt(pos)}</b> / ${fmt(e.duration)}`;
+        const btn = document.getElementById("play");
+        if (btn) {
+          btn.setAttribute("aria-pressed", String(S.playing));
+          btn.setAttribute("aria-label", S.playing ? "Pause" : "Play");
+          const want = S.playing ? "pause" : "play";
+          if (btn.dataset.icon !== want) {
+            btn.dataset.icon = want;
+            btn.innerHTML = Pinrail.icon(want, { size: 16 });
+          }
+        }
+        const tr = scripts[S.sel];
+        let k = -1;
+        if (tr) {
+          if (tr.words.length) k = tr.words.findIndex((w) => pos >= w.start_ms && pos < w.end_ms);
+          else k = tr.segments.findIndex((s) => pos >= s.start_ms && pos < s.end_ms);
+        }
+        if (k !== litWord) {
+          document.querySelector(".transcript .now")?.classList.remove("now");
+          const el = document.querySelector(`.transcript [data-w="${k}"], .transcript [data-unit="${k}"]`);
+          el?.classList.add("now");
+          litWord = k;
+        }
+      }
+
+      /* ---------- verdicts, comments, cuts */
+
+      const verdictOf = (id) => S.verdicts[id] || null;
+      const hasMarks = (v) => v && ((v.comments || []).length || (v.cuts || []).length);
+      const actionOf = (v) => (v && v.action) || (hasMarks(v) ? "keep" : null);
+      const chip = (action) =>
+        action && ACTIONS[action]
+          ? `<span class="verdict-chip v-${action}">${action === "favorite" ? "★ " : ""}${ACTIONS[action]}</span>`
+          : `<span class="verdict-chip v-none">—</span>`;
+      const startOf = (c) => c.at_ms ?? c.start_ms;
+      const byTime = (a, b) => startOf(a) - startOf(b) || (a.end_ms ?? a.at_ms) - (b.end_ms ?? b.at_ms);
+
+      function update(id, change) {
+        const v = verdictOf(id) || { action: null };
+        S.verdicts[id] = { ...v, ...change };
+        S.armed = false;
+        plugin.draft(S.verdicts);
+      }
+
+      function decisionData() {
+        const decisions = [],
+          undecided = [];
+        P.takes.forEach((m, i) => {
+          const v = verdictOf(m.id);
+          const action = actionOf(v);
+          if (!action) {
+            undecided.push(m.id);
+            return;
+          }
+          const d = { id: m.id, action };
+          if (takes[i]?.duration) d.duration_ms = takes[i].duration;
+          const note = v.note ? v.note.trim() : "";
+          if (note) d.note = note;
+          const comments = [...(v.comments || [])].sort(byTime);
+          if (comments.length)
+            d.comments = comments.map(({ at_ms, start_ms, end_ms, text, words, segments, note }) => ({
+              ...(at_ms !== undefined ? { at_ms } : { start_ms, end_ms }),
+              ...(text ? { text } : {}),
+              ...(words ? { words } : {}),
+              ...(segments ? { segments } : {}),
+              note,
+            }));
+          const cuts = [...(v.cuts || [])].sort(byTime);
+          if (cuts.length)
+            d.cuts = cuts.map(({ start_ms, end_ms, text, words, segments }) => ({
+              start_ms,
+              end_ms,
+              ...(text ? { text } : {}),
+              ...(words ? { words } : {}),
+              ...(segments ? { segments } : {}),
+            }));
+          decisions.push(d);
+        });
+        return { decisions, undecided };
+      }
+
+      function status() {
+        if (plugin.readonly) return;
+        const d = decisionData();
+        const fav = d.decisions.find((x) => x.action === "favorite");
+        const kept = d.decisions.filter((x) => x.action === "keep").length;
+        const dropped = d.decisions.filter((x) => x.action === "drop").length;
+        const parts = [];
+        if (fav) parts.push(`★ ${P.takes.find((m) => m.id === fav.id)?.name ?? fav.id}`);
+        if (kept) parts.push(`${kept} kept`);
+        if (dropped) parts.push(`${dropped} dropped`);
+        const label = S.armed
+          ? `Hand over with ${d.undecided.length} undecided`
+          : parts.length
+            ? `Hand over: ${parts.join(", ")}`
+            : "Hand over";
+        plugin.handOverLabel(label);
+      }
+
+      function setVerdict(action) {
+        if (plugin.readonly) return;
+        const id = P.takes[S.sel].id;
+        const v = verdictOf(id);
+        if (v?.action === action) update(id, { action: null });
+        else {
+          if (action === "favorite")
+            for (const [other, o] of Object.entries(S.verdicts))
+              if (o.action === "favorite" && other !== id) S.verdicts[other] = { ...o, action: "keep" };
+          update(id, { action });
+        }
+        S.keepScroll = true;
+        render();
+      }
+
+      function compose() {
+        if (plugin.readonly || !cur()?.duration) return;
+        const at = S.playing ? now() : S.pos;
+        pause();
+        S.composing = S.range
+          ? { start_ms: S.range.start, end_ms: S.range.end, ...anchorFor(S.sel, S.range.start, S.range.end) }
+          : { at_ms: Math.round(at), ...anchorFor(S.sel, Math.round(at)) };
+        S.keepScroll = true;
+        render();
+        document.getElementById("mark-note")?.focus({ preventScroll: true });
+      }
+      function addComment() {
+        const note = document.getElementById("mark-note")?.value.trim();
+        if (!note || !S.composing) return;
+        const id = P.takes[S.sel].id;
+        const v = verdictOf(id) || {};
+        update(id, { comments: [...(v.comments || []), { ...S.composing, note }].sort(byTime) });
+        S.composing = null;
+        S.range = null;
+        S.keepScroll = true;
+        render();
+      }
+      function cancelCompose() {
+        S.composing = null;
+        S.keepScroll = true;
+        render();
+      }
+
+      function cut() {
+        if (plugin.readonly || !S.range) return;
+        const id = P.takes[S.sel].id;
+        const v = verdictOf(id) || {};
+        let a = S.range.start,
+          b = S.range.end;
+        const rest = [];
+        for (const c of v.cuts || []) {
+          if (c.start_ms <= b && c.end_ms >= a) {
+            a = Math.min(a, c.start_ms);
+            b = Math.max(b, c.end_ms);
+          } else rest.push(c);
+        }
+        update(id, { cuts: [...rest, { start_ms: a, end_ms: b, ...anchorFor(S.sel, a, b) }].sort(byTime) });
+        S.range = null;
+        S.keepScroll = true;
+        render();
+      }
+      function removeMark(kind, k) {
+        const id = P.takes[S.sel].id;
+        const v = verdictOf(id);
+        update(id, { [kind]: [...v[kind]].sort(byTime).filter((_, i) => i !== k) });
+        S.keepScroll = true;
+        render();
+      }
+
+      function setRange(a, b) {
+        const e = cur();
+        if (!e?.duration) return;
+        const s = clamp(Math.round(Math.min(a, b)), 0, e.duration),
+          t = clamp(Math.round(Math.max(a, b)), 0, e.duration);
+        S.range = t - s >= 20 ? { start: s, end: t } : null;
+        S.composing = null;
+        S.keepScroll = true;
+        render();
+      }
+
+      /* ---------- taking turns: the next take at the same point */
+
+      function mapPosition(from, to, ms) {
+        const a = scripts[from],
+          b = scripts[to];
+        if (a && b && a.words.length && a.words.length === b.words.length) {
+          let k = a.words.findIndex((w) => ms < w.end_ms);
+          if (k < 0) k = a.words.length - 1;
+          const w = a.words[k],
+            x = b.words[k];
+          const f = w.end_ms > w.start_ms ? clamp((ms - w.start_ms) / (w.end_ms - w.start_ms), 0, 1) : 0;
+          const lead = ms < w.start_ms ? ms - w.start_ms : 0;
+          return { ms: Math.max(0, x.start_ms + f * (x.end_ms - x.start_ms) + lead), by: "word", word: w.text };
+        }
+        return { ms, by: "time" };
+      }
+
+      function select(i, { back = false } = {}) {
+        const n = P.takes.length;
+        i = (i + n) % n;
+        if (i === S.sel) return;
+        const was = S.sel;
+        const wasPlaying = S.playing;
+        const pos = S.playing ? now() : S.pos;
+        pause();
+        const mapped = mapPosition(was, i, pos);
+        S.back = was;
+        S.sel = i;
+        S.range = null;
+        S.composing = null;
+        S.pos = clamp(Math.round(mapped.ms), 0, takes[i]?.duration ?? Math.round(mapped.ms));
+        S.matched = pos > 0 ? mapped : null;
+        render();
+        if (wasPlaying && takes[i]?.buffer) {
+          start();
+          paint();
+        }
+        document.querySelector(`[data-pick="${S.sel}"]`)?.scrollIntoView({ block: "nearest" });
+      }
+
+      /* ---------- rendering */
+
+      function renderTop() {
+        const d = decisionData();
+        const count = (a) => d.decisions.filter((x) => x.action === a).length;
+        return `<div class="top">
+      <h1>${esc(plugin.review.title || "Audio review")}</h1>
+      <span class="subject">${P.takes.length} ${P.takes.length === 1 ? "take" : "takes"}</span>
+      <div class="tally" aria-live="polite">
+        <span><b>${count("favorite")}</b> favourite</span><span><b>${count("keep")}</b> kept</span><span><b>${count("drop")}</b> dropped</span><span><b>${d.undecided.length}</b> undecided</span>
+      </div>
+    </div>`;
+      }
+
+      function marksLabel(v) {
+        const c = (v?.comments || []).length,
+          k = (v?.cuts || []).length;
+        const parts = [];
+        if (c) parts.push(`${c} ${c === 1 ? "comment" : "comments"}`);
+        if (k) parts.push(`${k} ${k === 1 ? "cut" : "cuts"}`);
+        return parts.join(" · ");
+      }
+
+      function renderPick(m, i) {
+        const e = takes[i];
+        const v = verdictOf(m.id);
+        return `<button type="button" class="pick" data-pick="${i}" aria-current="${i === S.sel}" aria-label="${esc(m.name)}">
+      <span class="pick-name">${esc(m.name)}</span>${chip(actionOf(v))}
+      <span class="mini">${e?.peaks ? `<canvas data-mini="${i}" aria-hidden="true"></canvas>` : `<span class="wait">${e?.error ? "can't read it" : "reading…"}</span>`}</span>
+      <span class="pick-meta"><span>${e?.duration ? fmt(e.duration) : ""}</span><span class="marks">${esc(marksLabel(v))}</span></span>
+    </button>`;
+      }
+
+      function renderRail() {
+        return `<nav class="rail" aria-label="Takes">
+      <p class="rail-label">${P.takes.length} ${P.takes.length === 1 ? "take" : "takes"}</p>
+      ${P.takes.map(renderPick).join("")}
+    </nav>`;
+      }
+
+      function renderWave(e, v) {
+        if (e?.error)
+          return `<div class="wave" id="wave"><div class="broken">This take could not be read: ${esc(e.error.message || String(e.error))}</div></div>`;
+        if (!e) return `<div class="wave" id="wave"><div class="reading">Reading the take…</div></div>`;
+        const pct = (ms) => `${((ms / e.duration) * 100).toFixed(3)}%`;
+        const comments = [...(v.comments || [])].sort(byTime);
+        const cuts = [...(v.cuts || [])].sort(byTime);
+        const regions = [
+          ...cuts.map(
+            (
+              c,
+              k,
+            ) => `<span class="region cut" style="left:${pct(c.start_ms)};width:${pct(c.end_ms - c.start_ms)}"></span>
+      <button type="button" class="pin cutpin" data-mark="cuts:${k}" style="left:${pct((c.start_ms + c.end_ms) / 2)}" aria-label="Cut ${fmt(c.start_ms)} to ${fmt(c.end_ms)}">${Pinrail.icon("scissors", { size: 11 })}</button>`,
+          ),
+          ...comments.map((c, k) =>
+            c.at_ms !== undefined
+              ? `<span class="point" style="left:${pct(c.at_ms)}"></span><button type="button" class="pin" data-mark="comments:${k}" style="left:${pct(c.at_ms)}" aria-label="Comment ${k + 1} at ${fmt(c.at_ms)}">${k + 1}</button>`
+              : `<span class="region range" style="left:${pct(c.start_ms)};width:${pct(c.end_ms - c.start_ms)}"></span><button type="button" class="pin" data-mark="comments:${k}" style="left:${pct(c.start_ms)}" aria-label="Comment ${k + 1}, ${fmt(c.start_ms)} to ${fmt(c.end_ms)}">${k + 1}</button>`,
+          ),
+        ].join("");
+        return `<div class="wave" id="wave" tabindex="0" role="slider" aria-label="Playhead" aria-valuemin="0" aria-valuemax="${e.duration}" aria-valuenow="${Math.round(S.pos)}" data-pos="${Math.round(S.pos)}" data-duration="${e.duration}">
+      <canvas class="base" aria-hidden="true"></canvas>
+      <div class="played"><canvas aria-hidden="true"></canvas></div>
+      ${regions}
+      ${S.range ? `<span class="sel" style="left:${pct(S.range.start)};width:${pct(S.range.end - S.range.start)}"></span>` : ""}
+      <span class="head"></span>
+    </div>`;
+      }
+
+      function renderRuler(e) {
+        if (!e?.duration) return "";
+        const d = e.duration;
+        const step =
+          [500, 1000, 2000, 5000, 10000, 15000, 30000, 60000, 120000, 300000].find((s) => d / s <= 12) || 600000;
+        const ticks = [];
+        for (let t = 0; t <= d; t += step)
+          ticks.push(
+            `<span style="left:${((t / d) * 100).toFixed(3)}%">${step < 1000 ? (t / 1000).toFixed(1) : fmtShort(t)}</span>`,
+          );
+        return `<div class="ruler" aria-hidden="true">${ticks.join("")}</div>`;
+      }
+
+      function renderTransport(e) {
+        const ro = plugin.readonly;
+        const r = S.range;
+        const ready = !!e?.buffer;
+        return `<div class="transport">
+      <button type="button" class="play" id="play" data-icon="${S.playing ? "pause" : "play"}" aria-label="${S.playing ? "Pause" : "Play"}" aria-pressed="${S.playing}" ${ready ? "" : "disabled"}>${Pinrail.icon(S.playing ? "pause" : "play", { size: 16 })}</button>
+      <span class="clock" id="clock"><b>${fmt(S.pos)}</b> / ${fmt(e?.duration || 0)}</span>
+      <button type="button" class="tog" data-toggle="loop" aria-pressed="${S.loop}" title="Loop the selection (l)">${Pinrail.icon("repeat", { size: 13 })} Loop <kbd>l</kbd></button>
+      ${cutsOf(S.sel).length ? `<button type="button" class="tog" data-toggle="skipCuts" aria-pressed="${S.skipCuts}" title="Hear it with the cuts taken out (p)">${Pinrail.icon("scissors", { size: 13 })} Without cuts <kbd>p</kbd></button>` : ""}
+      ${S.matched ? `<span class="matched">${S.matched.by === "word" ? `same point, by the word “${esc(S.matched.word)}”` : "same point in time"}</span>` : ""}
+      <span class="sel-info">
+        ${
+          r
+            ? `<span class="span">${fmt(r.start)}–${fmt(r.end)}</span>
+          <button type="button" class="act" data-do="play-range">${Pinrail.icon("play", { size: 12 })} Play</button>
+          ${
+            ro
+              ? ""
+              : `<button type="button" class="act" data-do="compose">${Pinrail.icon("message-square", { size: 12 })} Comment <kbd>c</kbd></button>
+          <button type="button" class="act danger" data-do="cut">${Pinrail.icon("scissors", { size: 12 })} Cut <kbd>⌫</kbd></button>`
+          }
+          <button type="button" class="pinrail-btn quiet" data-do="clear">Clear</button>`
+            : ro || !ready
+              ? ""
+              : `<span>Drag across the waveform or the words to select</span>
+          <button type="button" class="act" data-do="compose">${Pinrail.icon("message-square", { size: 12 })} Comment here <kbd>c</kbd></button>`
+        }
+      </span>
+    </div>`;
+      }
+
+      function renderComposer() {
+        const c = S.composing;
+        if (!c) return "";
+        const where =
+          c.at_ms !== undefined ? `at <b>${fmt(c.at_ms)}</b>` : `on <b>${fmt(c.start_ms)}–${fmt(c.end_ms)}</b>`;
+        return `<div class="composer" role="group" aria-label="New comment">
+      <div class="composer-head">Comment ${where}${c.text ? ` · “${esc(c.text)}”` : ""}</div>
+      <textarea id="mark-note" aria-label="Comment" placeholder="What should change here? e.g. too fast, say “Nguyen” as “Win”, a breath to remove"></textarea>
+      <div class="composer-actions"><span class="k">↵ add · esc</span><button type="button" class="pinrail-btn quiet" data-do="cancel">Cancel</button><button type="button" class="pinrail-btn pinrail-btn-primary" data-do="add">Comment</button></div>
+    </div>`;
+      }
+
+      function renderTranscript(i, v) {
+        const tr = scripts[i];
+        const m = P.takes[i];
+        if (!tr)
+          return P.script ? `<section><p class="label">Script</p><p class="script">${esc(P.script)}</p></section>` : "";
+        const comments = v.comments || [],
+          cuts = v.cuts || [];
+        const under = (list, s, e) =>
+          list.some((c) => (c.at_ms !== undefined ? s <= c.at_ms && c.at_ms < e : c.start_ms < e && c.end_ms > s));
+        const cls = (s, e) =>
+          [
+            S.range && S.range.start < e && S.range.end > s ? "in-sel" : "",
+            under(comments, s, e) ? "noted" : "",
+            cuts.some((c) => c.start_ms <= s && c.end_ms >= e) ? "gone" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+        const segs = tr.segments
+          .map((s, si) => {
+            const body = s.count
+              ? tr.words
+                  .slice(s.first, s.first + s.count)
+                  .map(
+                    (w, k) =>
+                      `<span class="w ${cls(w.start_ms, w.end_ms)}" data-w="${s.first + k}">${esc(w.text)}</span>`,
+                  )
+                  .join(" ")
+              : `<span class="unit ${cls(s.start_ms, s.end_ms)}" data-unit="${si}">${esc(s.text || "")}</span>`;
+            return `<div class="seg"><button type="button" class="seg-at" data-seek="${s.start_ms}" aria-label="Play from ${fmt(s.start_ms)}">${fmt(s.start_ms)}${s.id || s.speaker ? `<span class="sid">${esc([s.id, s.speaker].filter(Boolean).join(" · "))}</span>` : ""}</button><div>${body}</div></div>`;
+          })
+          .join("");
+        return `<section aria-label="Transcript of ${esc(m.name)}"><p class="label">Transcript</p>
+      <div class="transcript" id="transcript">${segs}</div>
+      ${plugin.readonly ? "" : `<p class="hint">Click a word to play from it; drag across words to select them.</p>`}
+    </section>`;
+      }
+
+      function renderMarks(v) {
+        const comments = [...(v.comments || [])].sort(byTime);
+        const cuts = [...(v.cuts || [])].sort(byTime);
+        const ro = plugin.readonly;
+        const quote = (c) =>
+          c.text
+            ? `<span class="quote">“${esc(c.text)}”${c.segments ? ` · ${esc(c.segments.join(", "))}` : ""}</span>`
+            : "";
+        const rows = [
+          ...comments.map(
+            (
+              c,
+              k,
+            ) => `<li data-row="comments:${k}"${S.lit === `comments:${k}` ? ' class="lit"' : ""}><span class="num">${k + 1}</span>
+        <button type="button" class="when" data-seek="${startOf(c)}">${c.at_ms !== undefined ? fmt(c.at_ms) : `${fmt(c.start_ms)}–${fmt(c.end_ms)}`}</button>
+        <span>${esc(c.note)}${quote(c)}</span>
+        <span class="acts">${ro ? "" : `<button type="button" class="pinrail-btn quiet" data-remove="comments:${k}">Remove</button>`}</span></li>`,
+          ),
+          ...cuts.map(
+            (
+              c,
+              k,
+            ) => `<li data-row="cuts:${k}"${S.lit === `cuts:${k}` ? ' class="lit"' : ""}><span class="num cutnum">${Pinrail.icon("scissors", { size: 11 })}</span>
+        <button type="button" class="when" data-seek="${Math.max(0, c.start_ms - 1000)}">${fmt(c.start_ms)}–${fmt(c.end_ms)}</button>
+        <span>Cut ${fmt(c.end_ms - c.start_ms).replace(/^0:0?/, "")} s${quote(c)}</span>
+        <span class="acts">${ro ? "" : `<button type="button" class="pinrail-btn quiet" data-remove="cuts:${k}">Remove</button>`}</span></li>`,
+          ),
+        ];
+        return `<section aria-label="Comments and cuts"><p class="label">Comments and cuts</p>
+      ${rows.length ? `<ol class="marks">${rows.join("")}</ol>` : `<p class="pinrail-empty">${ro ? "None." : "Press c to comment at the playhead, or select a stretch to comment on it or cut it."}</p>`}
+    </section>`;
+      }
+
+      function renderSheet() {
+        const m = P.takes[S.sel];
+        const e = takes[S.sel];
+        const v = verdictOf(m.id) || {};
+        const prev = previousVerdict(plugin.previous, m.id);
+        const ro = plugin.readonly ? "disabled" : "";
+        const action = actionOf(v);
+        return `<main class="sheet" id="sheet" aria-labelledby="take-name"><div class="sheet-inner">
+      ${P.notes ? `<div class="notes">${Pinrail.markdown(P.notes)}</div>` : ""}
+      <header class="take-head">
+        <h2 id="take-name">${esc(m.name)}</h2>
+        <span class="take-id">${esc(m.id)} · ${S.sel + 1} of ${P.takes.length}${e?.duration ? ` · ${fmt(e.duration)}` : ""}${e?.buffer ? ` · peak ${e.peak_db.toFixed(1)} dB` : ""}</span>
+        ${(m.details || []).length ? `<span class="details">${m.details.map((d) => `<span class="pinrail-chip">${esc(d)}</span>`).join("")}</span>` : ""}
+        ${prev ? `<div class="previous">Last round: ${chip(prev.action)} ${prev.note ? "— " + esc(prev.note) : ""}</div>` : ""}
+      </header>
+      ${m.reasoning ? `<div class="reasoning">${Pinrail.markdown(m.reasoning)}</div>` : ""}
+
+      <section class="player" aria-label="${esc(m.name)}, the waveform">
+        ${renderWave(e, v)}
+        ${renderRuler(e)}
+        ${renderTransport(e)}
+        ${renderComposer()}
+      </section>
+
+      ${renderTranscript(S.sel, v)}
+      ${renderMarks(v)}
+
+      <section class="decide" aria-label="Your verdict on ${esc(m.name)}">
+        <div class="choices" role="group" aria-label="Verdict">
+          ${Object.entries(ACTIONS)
+            .map(
+              ([a, label]) =>
+                `<button type="button" class="choice" data-action="${a}" aria-pressed="${action === a}" ${ro}>${a === "favorite" ? "★ " : ""}${label} <kbd>${KEYS[a]}</kbd></button>`,
+            )
+            .join("")}
+          <span class="nav"><button type="button" data-step="-1" aria-label="Previous take">← k</button><button type="button" data-step="1" aria-label="Next take">j →</button></span>
+        </div>
+        <textarea id="note" aria-label="Note on ${esc(m.name)}" placeholder="${action === "drop" ? "Why it goes (optional)" : "About the take as a whole (optional)"}" ${ro}>${esc(v.note || "")}</textarea>
+      </section>
+    </div></main>`;
+      }
+
+      function pickFor(m, i) {
+        const t = document.createElement("template");
+        t.innerHTML = renderPick(m, i).trim();
+        return t.content.firstChild;
+      }
+
+      function render() {
+        if (!P) return;
+        const sheet = document.getElementById("sheet");
+        const scroll = sheet ? sheet.scrollTop : 0;
+        const rail = document.querySelector(".rail");
+        const railScroll = rail ? rail.scrollTop : 0;
+        const focus = document.activeElement?.id;
+        document.getElementById("app").innerHTML =
+          `${renderTop()}<div class="work">${renderRail()}${renderSheet()}</div>`;
+        if (S.keepScroll) document.getElementById("sheet").scrollTop = scroll;
+        document.querySelector(".rail").scrollTop = railScroll;
+        S.keepScroll = false;
+        if (focus === "note" || focus === "wave")
+          document.getElementById(focus)?.focus({ preventScroll: true, focusVisible: false });
+        litWord = -2;
+        drawAll();
+        paint();
+        status();
+      }
+
+      /* ---------- pointer: seek with a click, select with a drag */
+
+      let drag = null;
+      const msAt = (ev) => {
+        const wave = document.getElementById("wave");
+        const r = wave.getBoundingClientRect();
+        return clamp((ev.clientX - r.left) / r.width, 0, 1) * (cur()?.duration || 0);
+      };
+      document.addEventListener("pointerdown", (ev) => {
+        if (!P || ev.button !== 0) return;
+        const wave = ev.target.closest?.("#wave");
+        if (wave && cur()?.duration && !ev.target.closest(".pin")) {
+          const at = msAt(ev);
+          drag = {
+            kind: "wave",
+            from: ev.shiftKey && !plugin.readonly ? (S.range ? S.range.start : S.pos) : at,
+            x: ev.clientX,
+            moved: ev.shiftKey,
+          };
+          wave.setPointerCapture?.(ev.pointerId);
+          return;
+        }
+        const w = ev.target.closest?.("[data-w], [data-unit]");
+        if (w && cur()?.duration) {
+          const k = Number(w.dataset.w ?? w.dataset.unit);
+          drag = { kind: w.dataset.w !== undefined ? "word" : "unit", from: k, to: k, moved: false };
+        }
+      });
+      document.addEventListener("pointermove", (ev) => {
+        if (!drag) return;
+        if (drag.kind === "wave") {
+          if (!drag.moved && Math.abs(ev.clientX - drag.x) < 4) return;
+          drag.moved = true;
+          if (plugin.readonly) return;
+          const e = cur();
+          const a = Math.min(drag.from, msAt(ev)),
+            b = Math.max(drag.from, msAt(ev));
+          const wave = document.getElementById("wave");
+          let sel = wave.querySelector(".sel");
+          if (!sel) {
+            sel = document.createElement("span");
+            sel.className = "sel";
+            wave.insertBefore(sel, wave.querySelector(".head"));
+          }
+          sel.style.left = `${(a / e.duration) * 100}%`;
+          sel.style.width = `${((b - a) / e.duration) * 100}%`;
+          return;
+        }
+        const w = document
+          .elementFromPoint(ev.clientX, ev.clientY)
+          ?.closest?.(drag.kind === "word" ? "[data-w]" : "[data-unit]");
+        if (!w || plugin.readonly) return;
+        const k = Number(w.dataset.w ?? w.dataset.unit);
+        if (k !== drag.to) {
+          drag.to = k;
+          drag.moved = true;
+          const [a, b] = [Math.min(drag.from, k), Math.max(drag.from, k)];
+          document.querySelectorAll(".transcript .in-sel").forEach((el) => el.classList.remove("in-sel"));
+          for (let j = a; j <= b; j++)
+            document
+              .querySelector(`.transcript [data-${drag.kind === "word" ? "w" : "unit"}="${j}"]`)
+              ?.classList.add("in-sel");
+        }
+      });
+      document.addEventListener("pointerup", (ev) => {
+        if (!drag) return;
+        const d = drag;
+        drag = null;
+        if (d.kind === "wave") {
+          const at = msAt(ev);
+          if (d.moved && !plugin.readonly) return setRange(d.from, at);
+          if (S.range || S.composing) {
+            S.range = null;
+            S.composing = null;
+            S.keepScroll = true;
+            S.pos = Math.round(at);
+            render();
+            if (S.playing) start();
+            return;
+          }
+          return seek(at);
+        }
+        const tr = scripts[S.sel];
+        const list = d.kind === "word" ? tr.words : tr.segments;
+        const [a, b] = [Math.min(d.from, d.to), Math.max(d.from, d.to)];
+        if (d.moved || (ev.shiftKey && !plugin.readonly)) {
+          if (ev.shiftKey && !d.moved) {
+            const here = list.findIndex((w) => S.pos < w.end_ms);
+            const k0 = Math.min(here < 0 ? a : here, a),
+              k1 = Math.max(here < 0 ? b : here, b);
+            return setRange(list[k0].start_ms, list[k1].end_ms);
+          }
+          return setRange(list[a].start_ms, list[b].end_ms);
+        }
+        if (S.range) {
+          S.range = null;
+          S.keepScroll = true;
+          render();
+        }
+        seek(list[a].start_ms);
+      });
+
+      /* ---------- clicks */
+
+      document.addEventListener("click", (ev) => {
+        if (!P) return;
+        const t = ev.target.closest ? ev.target : null;
+        if (!t) return;
+        if (t.closest("#play")) return toggle();
+        const act = t.closest("[data-do]");
+        if (act) {
+          switch (act.dataset.do) {
+            case "play-range":
+              return playRange();
+            case "compose":
+              return compose();
+            case "cut":
+              return cut();
+            case "clear":
+              S.range = null;
+              S.keepScroll = true;
+              return render();
+            case "add":
+              return addComment();
+            case "cancel":
+              return cancelCompose();
+          }
+        }
+        const tog = t.closest("[data-toggle]");
+        if (tog) {
+          S[tog.dataset.toggle] = !S[tog.dataset.toggle];
+          tog.setAttribute("aria-pressed", String(S[tog.dataset.toggle]));
+          return;
+        }
+        const mark = t.closest("[data-mark]");
+        if (mark) return showMark(mark.dataset.mark);
+        const sk = t.closest("[data-seek]");
+        if (sk) {
+          const row = sk.closest("[data-row]");
+          if (row) S.lit = row.dataset.row;
+          seek(Number(sk.dataset.seek));
+          if (row) litRow();
+          return;
+        }
+        const rm = t.closest("[data-remove]");
+        if (rm) {
+          const [kind, k] = rm.dataset.remove.split(":");
+          return removeMark(kind, Number(k));
+        }
+        const pick = t.closest("[data-pick]");
+        if (pick) return select(Number(pick.dataset.pick));
+        const choice = t.closest("[data-action]");
+        if (choice) return setVerdict(choice.dataset.action);
+        const step = t.closest("[data-step]");
+        if (step) return select(S.sel + Number(step.dataset.step));
+      });
+
+      function litRow() {
+        document.querySelectorAll(".marks li").forEach((li) => li.classList.toggle("lit", li.dataset.row === S.lit));
+      }
+      function showMark(key) {
+        const [kind, k] = key.split(":");
+        const list = [...(verdictOf(P.takes[S.sel].id)?.[kind] || [])].sort(byTime);
+        const m = list[Number(k)];
+        if (!m) return;
+        S.lit = key;
+        seek(kind === "cuts" ? Math.max(0, m.start_ms - 1000) : startOf(m));
+        litRow();
+        document.querySelector(`[data-row="${key}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+
+      document.addEventListener("input", (ev) => {
+        if (ev.target.id !== "note" || plugin.readonly) return;
+        const id = P.takes[S.sel].id;
+        S.verdicts[id] = { ...(verdictOf(id) || { action: null }), note: ev.target.value };
+        S.armed = false;
+        plugin.draft(S.verdicts);
+      });
+
+      /* ---------- keys */
+
+      document.addEventListener("keydown", (ev) => {
+        if (ev.target.id === "mark-note") {
+          if (ev.key === "Enter" && !ev.shiftKey && !ev.metaKey && !ev.ctrlKey) {
+            ev.preventDefault();
+            addComment();
+          }
+          if (ev.key === "Escape") {
+            ev.preventDefault();
+            cancelCompose();
+          }
+          return;
+        }
+        if (!P || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+        if (ev.target.closest && ev.target.closest("textarea, input")) return;
+        const key = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+        const dur = cur()?.duration || 0;
+        const pos = S.playing ? now() : S.pos;
+        if (key === " ") toggle();
+        else if (key === "ArrowLeft") seek(pos - (ev.shiftKey ? 5000 : 1000));
+        else if (key === "ArrowRight") seek(pos + (ev.shiftKey ? 5000 : 1000));
+        else if (key === "0" || key === "Home") seek(0);
+        else if (key === "End") seek(dur);
+        else if (key === "j") select(S.sel + 1);
+        else if (key === "k") select(S.sel - 1);
+        else if (key === "b") {
+          if (S.back !== null) select(S.back);
+        } else if (key === "l") {
+          S.loop = !S.loop;
+          document.querySelector('[data-toggle="loop"]')?.setAttribute("aria-pressed", String(S.loop));
+        } else if (key === "p") {
+          S.skipCuts = !S.skipCuts;
+          document.querySelector('[data-toggle="skipCuts"]')?.setAttribute("aria-pressed", String(S.skipCuts));
+        } else if (plugin.readonly) {
+          if (key === "Escape" && S.range) {
+            S.range = null;
+            render();
+          } else return;
+        } else if (key === "i") setRange(pos, S.range ? S.range.end : dur);
+        else if (key === "o") setRange(S.range ? S.range.start : 0, pos);
+        else if (key === "c") compose();
+        else if (key === "Backspace" || key === "Delete") cut();
+        else if (key === "f") setVerdict("favorite");
+        else if (key === "s") setVerdict("keep");
+        else if (key === "x") setVerdict("drop");
+        else if (key === "Escape" && (S.range || S.composing)) {
+          S.range = null;
+          S.composing = null;
+          S.keepScroll = true;
+          render();
+        } else return;
+        ev.preventDefault();
+      });
+
+      new ResizeObserver(() => drawAll()).observe(document.documentElement);
+
+      /* ---------- the protocol */
+
+      let rounds = 0;
+      const plugin = Pinrail.connect({
+        async onInit({ review, draft }) {
+          P = review.payload;
+          pause();
+          Object.assign(S, {
+            sel: 0,
+            back: null,
+            verdicts: {},
+            armed: false,
+            pos: 0,
+            range: null,
+            composing: null,
+            matched: null,
+            lit: null,
+          });
+          const decided = review.decision?.data;
+          if (decided)
+            for (const d of decided.decisions || [])
+              S.verdicts[d.id] = {
+                action: d.action,
+                note: d.note || "",
+                comments: d.comments || [],
+                cuts: d.cuts || [],
+              };
+          else if (draft && typeof draft === "object") S.verdicts = draft;
+          takes.length = 0;
+          scripts.length = 0;
+          P.takes.forEach((m, i) => {
+            scripts[i] = transcriptOf(m);
+          });
+          render();
+          // every take is read at once; each fills in as it is decoded
+          const round = ++rounds;
+          await Promise.all(
+            P.takes.map(async (m, i) => {
+              let entry;
+              try {
+                entry = await read(m);
+              } catch (error) {
+                entry = { error };
+              }
+              if (round !== rounds) return;
+              takes[i] = entry;
+              if (i === S.sel) {
+                S.keepScroll = true;
+                render();
+              } else {
+                document.querySelector(`[data-pick="${i}"]`)?.replaceWith(pickFor(m, i));
+                drawWave(document.querySelector(`canvas[data-mini="${i}"]`), entry, token("--pinrail-faint"));
+              }
+            }),
+          );
+        },
+        onSubmitted() {
+          pause();
+          render();
+        },
+        onViolations(errors) {
+          plugin.handOverLabel(`Check: ${errors[0]?.message ?? "the decision"}`);
+        },
+        onCollect() {
+          const data = decisionData();
+          if (data.undecided.length && !S.armed) {
+            S.armed = true;
+            status();
+            return;
+          }
+          return data;
+        },
+        onAppearance() {
+          drawAll();
+        },
+      });
+      tick();
+
+      /* What the previous round decided for an item: its decision's
+   `decisions: [{ id, action, note }]` and `undecided: [id]`. The previous
+   round may come from an earlier release, so its shape is checked. */
+      function previousVerdict(previous, id) {
+        const data = previous && previous.decision && previous.decision.data;
+        if (!data || typeof data !== "object") return null;
+        const d = (Array.isArray(data.decisions) ? data.decisions : []).find((x) => x && x.id === id);
+        if (d) return { action: d.action, note: d.note || "" };
+        if (Array.isArray(data.undecided) && data.undecided.includes(id)) return { action: "undecided", note: "" };
+        return null;
+      }
+    </script>
+  </body>
+</html>

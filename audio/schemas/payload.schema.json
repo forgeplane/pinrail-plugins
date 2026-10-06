@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audio review request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["takes"],
+  "$defs": {
+    "attachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$attachment"],
+      "properties": {
+        "$attachment": { "type": "string", "minLength": 1, "maxLength": 120 }
+      },
+      "description": "A file sent beside the payload with --attach, by its name."
+    },
+    "ms": { "type": "integer", "minimum": 0, "description": "Milliseconds from the start of the take." },
+    "word": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "start_ms", "end_ms"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1, "maxLength": 80, "description": "The word as written, punctuation and all." },
+        "start_ms": { "$ref": "#/$defs/ms" },
+        "end_ms": { "$ref": "#/$defs/ms" }
+      }
+    }
+  },
+  "properties": {
+    "notes": {
+      "type": "string",
+      "maxLength": 10000,
+      "description": "Markdown: what this round is, and what to listen for."
+    },
+    "script": {
+      "type": "string",
+      "maxLength": 20000,
+      "description": "The text every take reads, shown when a take has no transcript of its own."
+    },
+    "takes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "file"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 80, "description": "What the take is called: a voice, a variant, a cut." },
+          "file": {
+            "$ref": "#/$defs/attachment",
+            "description": "The audio, sent with --attach: WAV, MP3, M4A/AAC, Ogg (Vorbis or Opus) or FLAC."
+          },
+          "details": {
+            "type": "array",
+            "maxItems": 8,
+            "items": { "type": "string", "minLength": 1, "maxLength": 40 },
+            "description": "Short facts shown beside the name: a voice id, a speed, a model."
+          },
+          "reasoning": {
+            "type": "string",
+            "maxLength": 4000,
+            "description": "Markdown: what this take tries, and what to listen for."
+          },
+          "transcript": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "What is said and when, highlighted as the take plays. Segments (sentences, lines) with ids let comments name them; words let a comment anchor to a word. Give segments, words, or segments with their words.",
+            "minProperties": 1,
+            "properties": {
+              "segments": {
+                "type": "array",
+                "maxItems": 2000,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["text", "start_ms", "end_ms"],
+                  "properties": {
+                    "id": { "type": "string", "minLength": 1, "maxLength": 40, "description": "Returned in comments and cuts that touch this segment, for re-synthesising it." },
+                    "text": { "type": "string", "maxLength": 4000 },
+                    "start_ms": { "$ref": "#/$defs/ms" },
+                    "end_ms": { "$ref": "#/$defs/ms" },
+                    "speaker": { "type": "string", "maxLength": 60 },
+                    "words": { "type": "array", "maxItems": 2000, "items": { "$ref": "#/$defs/word" } }
+                  }
+                }
+              },
+              "words": {
+                "type": "array",
+                "maxItems": 20000,
+                "items": { "$ref": "#/$defs/word" },
+                "description": "Every word in order, when there are no segments."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

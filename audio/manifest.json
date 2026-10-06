@@ -1,0 +1,116 @@
+{
+  "name": "audio",
+  "version": "1.0.0",
+  "title": "Audio review",
+  "description": "Audio takes, such as voices reading one script, jingle variants or podcast cuts, each with its waveform and, when given, its transcript in sync. Play and compare them at the same point, comment at a moment or over a stretch, mark what to cut, and pick a favourite, keep or drop each one.",
+  "use_when": "You made candidate audio (text-to-speech takes, voice-overs, jingles, podcast edits) and need a person to listen, pick one, and say exactly where to fix or cut, in milliseconds you can act on.",
+  "attachments": {
+    "accept": [
+      ".wav",
+      ".mp3",
+      ".m4a",
+      ".aac",
+      ".ogg",
+      ".oga",
+      ".opus",
+      ".flac",
+      "audio/wav",
+      "audio/x-wav",
+      "audio/mpeg",
+      "audio/mp4",
+      "audio/aac",
+      "audio/ogg",
+      "audio/flac"
+    ],
+    "max_size": 52428800,
+    "max_count": 12
+  },
+  "shortcuts": [
+    {
+      "keys": "space",
+      "does": "Play or pause"
+    },
+    {
+      "keys": "arrowleft",
+      "does": "Back one second",
+      "group": "Playback"
+    },
+    {
+      "keys": "arrowright",
+      "does": "Forward one second",
+      "group": "Playback"
+    },
+    {
+      "keys": "shift+arrowleft",
+      "does": "Back five seconds",
+      "group": "Playback"
+    },
+    {
+      "keys": "shift+arrowright",
+      "does": "Forward five seconds",
+      "group": "Playback"
+    },
+    {
+      "keys": "0",
+      "does": "Back to the start",
+      "group": "Playback"
+    },
+    {
+      "keys": "l",
+      "does": "Loop the selection",
+      "group": "Playback"
+    },
+    {
+      "keys": "p",
+      "does": "Hear the take with its cuts taken out",
+      "group": "Playback"
+    },
+    {
+      "keys": "j",
+      "does": "Next take, at the same point"
+    },
+    {
+      "keys": "k",
+      "does": "Previous take, at the same point"
+    },
+    {
+      "keys": "b",
+      "does": "Back to the take you were on, at the same point"
+    },
+    {
+      "keys": "i",
+      "does": "Start a selection at the playhead",
+      "group": "Marking"
+    },
+    {
+      "keys": "o",
+      "does": "End the selection at the playhead",
+      "group": "Marking"
+    },
+    {
+      "keys": "c",
+      "does": "Comment at the playhead, or on the selection",
+      "group": "Marking"
+    },
+    {
+      "keys": "backspace",
+      "does": "Cut the selection",
+      "group": "Marking"
+    },
+    {
+      "keys": "f",
+      "does": "Make this take the favourite",
+      "group": "Verdicts"
+    },
+    {
+      "keys": "s",
+      "does": "Keep this take",
+      "group": "Verdicts"
+    },
+    {
+      "keys": "x",
+      "does": "Drop this take",
+      "group": "Verdicts"
+    }
+  ]
+}

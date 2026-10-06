@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audio review decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decisions", "undecided"],
+  "$defs": {
+    "ms": { "type": "integer", "minimum": 0, "description": "Milliseconds from the start of the take, as the file plays." },
+    "text": { "type": "string", "maxLength": 4000, "description": "The transcript's words under it, verbatim." },
+    "words": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0 },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "The first and last word under it, inclusive, as indices into the take's words in order (across segments)."
+    },
+    "segments": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The ids of the transcript segments it touches."
+    }
+  },
+  "properties": {
+    "decisions": {
+      "type": "array",
+      "description": "A verdict per take the reviewer decided. At most one favourite.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "action"],
+        "properties": {
+          "id": { "type": "string" },
+          "action": { "enum": ["favorite", "keep", "drop"], "description": "favorite: the take to go ahead with. keep: still in the running. drop: set it aside." },
+          "duration_ms": { "$ref": "#/$defs/ms", "description": "The take's length as it was heard, the frame for every time below. Missing only when the take could not be read." },
+          "note": { "type": "string", "maxLength": 4000, "description": "About the take as a whole." },
+          "comments": {
+            "type": "array",
+            "description": "Things to fix, each at a moment (at_ms) or over a stretch (start_ms to end_ms), in time order.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["note"],
+              "oneOf": [
+                { "required": ["at_ms"], "not": { "anyOf": [{ "required": ["start_ms"] }, { "required": ["end_ms"] }] } },
+                { "required": ["start_ms", "end_ms"], "not": { "required": ["at_ms"] } }
+              ],
+              "properties": {
+                "at_ms": { "$ref": "#/$defs/ms" },
+                "start_ms": { "$ref": "#/$defs/ms" },
+                "end_ms": { "$ref": "#/$defs/ms" },
+                "text": { "$ref": "#/$defs/text" },
+                "words": { "$ref": "#/$defs/words" },
+                "segments": { "$ref": "#/$defs/segments" },
+                "note": { "type": "string", "minLength": 1, "maxLength": 2000 }
+              }
+            }
+          },
+          "cuts": {
+            "type": "array",
+            "description": "Stretches to remove, in time order and never overlapping. Apply them from the last to the first, so the earlier times still hold.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["start_ms", "end_ms"],
+              "properties": {
+                "start_ms": { "$ref": "#/$defs/ms" },
+                "end_ms": { "$ref": "#/$defs/ms" },
+                "text": { "$ref": "#/$defs/text" },
+                "words": { "$ref": "#/$defs/words" },
+                "segments": { "$ref": "#/$defs/segments" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "undecided": { "type": "array", "items": { "type": "string" }, "description": "Takes left without a verdict." }
+  }
+}

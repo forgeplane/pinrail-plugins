@@ -12,6 +12,7 @@ holds the other official plugins.
 | Plugin | For |
 |---|---|
 | [`artifact`](artifact/README.md) | an HTML page an agent designed, commented on element by element |
+| [`audio`](audio/README.md) | audio takes, such as voices reading one script, played and compared with their waveforms and transcripts |
 | [`calendar`](calendar/README.md) | times to arrange around what is already booked |
 | [`canvas`](canvas/README.md) | a set of designs on a canvas, the steps of a flow or variants of a screen, commented and approved frame by frame |
 | [`email`](email/README.md) | emails an agent wants to send, to edit, send, revise or discard |

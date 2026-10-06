@@ -1,0 +1,51 @@
+{#- The decision as an agent reads it back: the favourite first, then what is
+    kept and what is dropped, each take by name with the reviewer's note, the
+    comments in time order and the cuts, every time as m:ss.cc and in ms. -#}
+{%- macro t(ms) -%}
+{%- set s = (ms % 60000) // 1000 -%}{%- set cs = (ms % 1000) // 10 -%}
+{{ ms // 60000 }}:{{ "0" if s < 10 else "" }}{{ s }}.{{ "0" if cs < 10 else "" }}{{ cs }}
+{%- endmacro -%}
+{%- macro where(x) -%}
+{%- if x.at_ms is defined -%}at {{ t(x.at_ms) }} ({{ x.at_ms }} ms)
+{%- else -%}{{ t(x.start_ms) }}–{{ t(x.end_ms) }} ({{ x.start_ms }}–{{ x.end_ms }} ms)
+{%- endif -%}
+{%- if x.text %} “{{ x.text }}”{% endif -%}
+{%- if x.words %}{% if x.words[0] == x.words[1] %} word {{ x.words[0] }}{% else %} words {{ x.words[0] }}–{{ x.words[1] }}{% endif %}{% endif -%}
+{%- if x.segments %} in {% for s in x.segments %}`{{ s }}`{% if not loop.last %}, {% endif %}{% endfor %}{% endif -%}
+{%- endmacro -%}
+{%- macro take(item) -%}
+- **{{ item.payload.name if item.payload else item.id }}** (`{{ item.id }}`, {{ t(item.duration_ms) }})
+{%- if item.note %}
+  > {{ item.note }}
+{%- endif %}
+{%- for c in item.comments or [] %}
+  - {{ where(c) }}: {{ c.note }}
+{%- endfor %}
+{%- for c in item.cuts or [] %}
+  - cut {{ where(c) }}
+{%- endfor %}
+{%- endmacro -%}
+{%- set favourite = items | selectattr("action", "equalto", "favorite") | list -%}
+{%- set kept = items | selectattr("action", "equalto", "keep") | list -%}
+{%- set dropped = items | selectattr("action", "equalto", "drop") | list -%}
+{%- if favourite %}
+## Favourite
+{% for item in favourite %}
+{{ take(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if kept %}
+## Kept
+{% for item in kept %}
+{{ take(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if dropped %}
+## Dropped
+{% for item in dropped %}
+{{ take(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if data.undecided %}
+Undecided: {% for id in data.undecided %}`{{ id }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif -%}
