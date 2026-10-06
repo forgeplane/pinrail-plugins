@@ -1,0 +1,28 @@
+{
+  "title": "Loading spinner",
+  "payload": {
+    "subject": "Loading spinner",
+    "notes": "Two spinners for the empty state of the inbox.",
+    "stage": {
+      "width": 200,
+      "height": 120,
+      "background": "#ffffff"
+    },
+    "variants": [
+      {
+        "id": "A",
+        "name": "Arc",
+        "reasoning": "One arc that speeds up and slows down as it turns.",
+        "html": "<div class=\"arc\"></div>",
+        "css": ".arc { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #e4e7ee; border-top-color: #2f6fed; animation: turn 900ms cubic-bezier(.5, .1, .5, .9) infinite; }\n@keyframes turn { to { transform: rotate(360deg); } }"
+      },
+      {
+        "id": "B",
+        "name": "Dots",
+        "reasoning": "Three dots rising one after the other, 160 ms apart. The delays are negative, so the loop starts in step.",
+        "html": "<div class=\"dots\"><i></i><i></i><i></i></div>",
+        "css": ".dots { display: flex; gap: 8px; }\n.dots i { width: 10px; height: 10px; border-radius: 50%; background: #2f6fed; animation: rise 1200ms ease-in-out infinite; }\n.dots i:nth-child(1) { animation-delay: -320ms; }\n.dots i:nth-child(2) { animation-delay: -160ms; }\n@keyframes rise { 0%, 60%, 100% { transform: none; opacity: .4; } 30% { transform: translateY(-10px); opacity: 1; } }"
+      }
+    ]
+  }
+}

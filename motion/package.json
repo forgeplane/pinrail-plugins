@@ -1,0 +1,13 @@
+{
+  "name": "pinrail-plugin-motion",
+  "private": true,
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "esbuild scripts/lottie.mjs --bundle --format=esm --minify --legal-comments=eof --outfile=view/vendor/lottie.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25",
+    "lottie-web": "5.12.2"
+  }
+}

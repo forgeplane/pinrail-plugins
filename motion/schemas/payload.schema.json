@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Motion review request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["variants"],
+  "$defs": {
+    "attachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$attachment"],
+      "properties": {
+        "$attachment": { "type": "string", "minLength": 1, "maxLength": 120 }
+      },
+      "description": "A file sent beside the payload with --attach, by its name."
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The box the animation plays in, in CSS pixels. The view scales it to fit, up to twice its size.",
+      "properties": {
+        "width": { "type": "integer", "minimum": 16, "maximum": 4000 },
+        "height": { "type": "integer", "minimum": 16, "maximum": 4000 },
+        "background": { "type": "string", "maxLength": 80, "description": "A CSS colour behind the animation, such as the page it will sit on. Default white." }
+      }
+    }
+  },
+  "properties": {
+    "subject": {
+      "type": "string",
+      "maxLength": 160,
+      "description": "What the animations are for, e.g. Save button: press, saving, saved."
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 10000,
+      "description": "Markdown: what this round is, and what to watch."
+    },
+    "stage": {
+      "$ref": "#/$defs/stage",
+      "description": "The stage every variant plays on, unless it gives its own. Default 400 × 240 for CSS, the Lottie's own size for Lottie."
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name"],
+        "oneOf": [
+          { "required": ["html"], "not": { "required": ["lottie"] } },
+          { "required": ["lottie"], "not": { "anyOf": [{ "required": ["html"] }, { "required": ["css"] }] } }
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "reasoning": { "type": "string", "maxLength": 4000, "description": "Markdown: the idea, and what to look for." },
+          "html": {
+            "type": "string",
+            "maxLength": 200000,
+            "description": "A CSS variant: the markup, placed in the body of a page of its own, centred on the stage. <style> elements in it are kept; scripts, links and frames are removed, and nothing is fetched, so images and fonts go in as data: URIs."
+          },
+          "css": {
+            "type": "string",
+            "maxLength": 200000,
+            "description": "The CSS variant's styles, @keyframes and animation rules. Every animation must run from the moment the page loads: hover, focus and scripts do not happen on the stage. For a loop, stagger with negative animation-delay so the first cycle is already in step."
+          },
+          "lottie": {
+            "description": "A Lottie variant: Bodymovin JSON, as a .json file sent with --attach, or inline when it is small. Played by lottie-web's SVG player, without expressions.",
+            "anyOf": [
+              { "$ref": "#/$defs/attachment" },
+              { "type": "object", "required": ["fr", "ip", "op", "layers"], "not": { "required": ["$attachment"] } }
+            ]
+          },
+          "duration_ms": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 120000,
+            "description": "How long the timeline is, in ms. Default: when the last animation ends (one cycle of a loop) for CSS, from ip to op for Lottie."
+          },
+          "loops": {
+            "type": "boolean",
+            "description": "Whether it repeats in use, like a spinner: side by side it comes round again rather than holding its last frame. Default: true for CSS with an infinite animation, false otherwise."
+          },
+          "poster_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "The moment the rail shows it at, in ms. Default half-way."
+          },
+          "stage": { "$ref": "#/$defs/stage" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+# the build: npm run build bundles lottie-web into the view
+/view/vendor/
+# what the tests leave behind
+/test-results/

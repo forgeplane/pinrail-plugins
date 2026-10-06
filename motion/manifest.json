@@ -1,0 +1,110 @@
+{
+  "name": "motion",
+  "version": "1.0.0",
+  "title": "Motion review",
+  "description": "Animation variants, as CSS or Lottie, each on a stage with a timeline to play, scrub and step frame by frame, at a quarter speed and up, alone or side by side in sync. Pick a favourite, keep or drop the rest, and comment at a moment or over a stretch of the animation.",
+  "use_when": "You made candidate animations (a loading state, a button's feedback, a transition) as CSS keyframes or Lottie JSON and need a person to choose one and say, at what moment, what should move differently.",
+  "attachments": {
+    "accept": [
+      ".json",
+      "application/json"
+    ],
+    "max_size": 10485760,
+    "max_count": 8
+  },
+  "shortcuts": [
+    {
+      "keys": "space",
+      "does": "Play or pause",
+      "group": "Playback"
+    },
+    {
+      "keys": "arrowleft",
+      "does": "Back one frame",
+      "group": "Playback"
+    },
+    {
+      "keys": "arrowright",
+      "does": "Forward one frame",
+      "group": "Playback"
+    },
+    {
+      "keys": "shift+arrowleft",
+      "does": "Back 100 ms",
+      "group": "Playback"
+    },
+    {
+      "keys": "shift+arrowright",
+      "does": "Forward 100 ms",
+      "group": "Playback"
+    },
+    {
+      "keys": "home",
+      "does": "To the start",
+      "group": "Playback"
+    },
+    {
+      "keys": "end",
+      "does": "To the end",
+      "group": "Playback"
+    },
+    {
+      "keys": "-",
+      "does": "Slower, down to 0.25×",
+      "group": "Playback"
+    },
+    {
+      "keys": "=",
+      "does": "Faster, up to 1×",
+      "group": "Playback"
+    },
+    {
+      "keys": "l",
+      "does": "Loop",
+      "group": "Playback"
+    },
+    {
+      "keys": "v",
+      "does": "Side by side, in sync",
+      "group": "Playback"
+    },
+    {
+      "keys": "i",
+      "does": "Mark where a range starts",
+      "group": "Comments"
+    },
+    {
+      "keys": "o",
+      "does": "Mark where a range ends",
+      "group": "Comments"
+    },
+    {
+      "keys": "c",
+      "does": "Comment at the playhead, or on the range",
+      "group": "Comments"
+    },
+    {
+      "keys": "j",
+      "does": "Next variant"
+    },
+    {
+      "keys": "k",
+      "does": "Previous variant"
+    },
+    {
+      "keys": "f",
+      "does": "Make this variant the favourite",
+      "group": "Verdicts"
+    },
+    {
+      "keys": "s",
+      "does": "Keep this variant on the shortlist",
+      "group": "Verdicts"
+    },
+    {
+      "keys": "x",
+      "does": "Drop this variant",
+      "group": "Verdicts"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Motion review decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decisions", "undecided"],
+  "properties": {
+    "decisions": {
+      "type": "array",
+      "description": "A verdict per variant the reviewer decided. At most one favourite.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "action"],
+        "properties": {
+          "id": { "type": "string" },
+          "action": { "enum": ["favorite", "keep", "drop"], "description": "favorite: the one to take forward. keep: still on the shortlist. drop: set it aside." },
+          "note": { "type": "string", "maxLength": 4000, "description": "What to change, or why." },
+          "duration_ms": { "type": "number", "description": "The variant's timeline as the reviewer saw it, which each comment's start and end are fractions of." },
+          "comments": {
+            "type": "array",
+            "description": "Changes asked for at a moment of the animation, or over a stretch of it, in time order.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["start_ms", "start", "note"],
+              "properties": {
+                "start_ms": { "type": "integer", "minimum": 0, "description": "The moment, or the start of the stretch, in ms from the start of the variant's timeline." },
+                "end_ms": { "type": "integer", "minimum": 0, "description": "The end of the stretch, for a comment over a range. Absent for a moment." },
+                "start": { "type": "number", "minimum": 0, "maximum": 1, "description": "start_ms as a fraction of duration_ms." },
+                "end": { "type": "number", "minimum": 0, "maximum": 1, "description": "end_ms as a fraction of duration_ms." },
+                "frame": { "type": "integer", "description": "For a Lottie, the frame at start_ms, in the file's own numbering (ip is its first)." },
+                "end_frame": { "type": "integer", "description": "For a Lottie, the frame at end_ms." },
+                "active": {
+                  "type": "array",
+                  "maxItems": 12,
+                  "description": "What was animating then. For CSS, each animation by its element and @keyframes name; for Lottie, each layer by name.",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "selector": { "type": "string", "description": "The element, as a CSS selector within the variant's markup: .ring, .dots > i:nth-of-type(2)." },
+                      "animation": { "type": "string", "description": "The @keyframes name." },
+                      "from": { "type": "number", "minimum": 0, "maximum": 1, "description": "How far through the @keyframes at start_ms: 0.4 is its 40% keyframe position." },
+                      "to": { "type": "number", "minimum": 0, "maximum": 1, "description": "How far through the @keyframes at end_ms, when the stretch ends in the same cycle." },
+                      "layer": { "type": "string", "description": "The Lottie layer's name (nm)." }
+                    }
+                  }
+                },
+                "compared_with": { "type": "array", "items": { "type": "string" }, "description": "The variants that played beside it when the comment was written." },
+                "note": { "type": "string", "minLength": 1, "maxLength": 2000 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "undecided": { "type": "array", "items": { "type": "string" }, "description": "Variants left without a verdict." }
+  }
+}

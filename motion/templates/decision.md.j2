@@ -1,0 +1,51 @@
+{#- The decision as an agent reads it back: the favourite first, then what is
+    kept and what is dropped, each variant with the reviewer's note and the
+    changes asked for at moments of its timeline, in ms and as a share of it,
+    with what was animating then. -#}
+{%- macro pc(x) -%}{{ (x * 100) | round | int }}%{%- endmacro -%}
+{%- macro when(c) -%}
+{%- if c.end_ms is defined -%}{{ c.start_ms }}–{{ c.end_ms }} ms ({{ (c.start * 100) | round | int }}–{{ pc(c.end) }})
+{%- else -%}at {{ c.start_ms }} ms ({{ pc(c.start) }})
+{%- endif -%}
+{%- if c.frame is defined %}, frame{% if c.end_frame is defined %}s {{ c.frame }}–{{ c.end_frame }}{% else %} {{ c.frame }}{% endif %}{% endif -%}
+{%- endmacro -%}
+{%- macro during(c) -%}
+{%- for a in c.active or [] %}{% if loop.first %}during {% else %}, {% endif %}{% if a.layer is defined %}layer “{{ a.layer }}”{% else %}`{{ a.selector }}` {{ a.animation }}{% if a.from is defined %} {{ pc(a.from) }}{% endif %}{% if a.to is defined %}{% if a.from is not defined %} {% endif %}→{{ pc(a.to) }}{% endif %}{% endif %}{% endfor -%}
+{%- if c.compared_with %}{% if c.active %} · {% endif %}beside {% for id in c.compared_with %}`{{ id }}`{% if not loop.last %}, {% endif %}{% endfor %}{% endif -%}
+{%- endmacro -%}
+{%- macro variant(item) -%}
+- **{{ item.payload.name if item.payload else item.id }}** (`{{ item.id }}`{% if item.duration_ms is defined %}, {{ item.duration_ms }} ms{% endif %})
+{%- if item.note %}
+  > {{ item.note }}
+{%- endif %}
+{%- for c in item.comments or [] %}
+  - {{ when(c) }}: {{ c.note }}
+{%- if c.active or c.compared_with %}
+    {{ during(c) }}
+{%- endif %}
+{%- endfor %}
+{%- endmacro -%}
+{%- set favourite = items | selectattr("action", "equalto", "favorite") | list -%}
+{%- set kept = items | selectattr("action", "equalto", "keep") | list -%}
+{%- set dropped = items | selectattr("action", "equalto", "drop") | list -%}
+{%- if favourite %}
+## Favourite
+{% for item in favourite %}
+{{ variant(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if kept %}
+## Kept on the shortlist
+{% for item in kept %}
+{{ variant(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if dropped %}
+## Dropped
+{% for item in dropped %}
+{{ variant(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if data.undecided %}
+Undecided: {% for id in data.undecided %}`{{ id }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif -%}

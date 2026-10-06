@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Motion review</title>
+    <link rel="stylesheet" href="/sdk/v1/pinrail-plugin.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      button {
+        font: inherit;
+      }
+      kbd {
+        font: 10.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .shell {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100%;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+      }
+      .top h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .top .subject {
+        color: var(--pinrail-dim);
+        font-size: 12.5px;
+      }
+      .tally {
+        margin-left: auto;
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .tally b {
+        color: var(--pinrail-text);
+        font-variant-numeric: tabular-nums;
+      }
+      .work {
+        display: grid;
+        grid-template-columns: 236px 1fr;
+        min-height: 0;
+      }
+
+      /* the rail: every variant, held at its poster frame, played on hover */
+      .rail {
+        overflow-y: auto;
+        border-right: 1px solid var(--pinrail-border);
+        padding: 12px;
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        background: var(--pinrail-bg-panel);
+      }
+      .rail-label {
+        margin: 4px 6px 6px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+      .pick {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 7px 10px;
+        padding: 8px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        color: var(--pinrail-text);
+        cursor: pointer;
+      }
+      .pick:hover {
+        background: var(--pinrail-bg-hover);
+      }
+      .pick[aria-current="true"] {
+        background: var(--pinrail-bg-raised);
+        border-color: var(--pinrail-border-strong);
+      }
+      .pick:focus-visible {
+        outline: 2px solid var(--pinrail-accent);
+        outline-offset: 1px;
+      }
+      .pick-name {
+        font-size: 13px;
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-left: 2px;
+      }
+      .pick-meta {
+        grid-column: 1 / -1;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        padding-left: 2px;
+        margin-top: -3px;
+      }
+      .thumb {
+        grid-column: 1 / -1;
+        position: relative;
+        aspect-ratio: 16 / 9;
+        border-radius: 7px;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+      }
+      .pair {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        z-index: 1;
+        display: none;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 7px 2px 5px;
+        border-radius: 6px;
+        background: color-mix(in oklab, var(--pinrail-bg-raised) 88%, transparent);
+        box-shadow: 0 0 0 1px var(--pinrail-border);
+        font: 500 11px var(--pinrail-sans);
+        color: var(--pinrail-dim);
+        cursor: pointer;
+      }
+      .pair input {
+        margin: 0;
+        accent-color: var(--pinrail-accent);
+      }
+      .comparing .pair {
+        display: inline-flex;
+      }
+
+      .verdict-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 7px;
+        border-radius: 99px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .v-favorite {
+        background: color-mix(in oklab, #d4a017 22%, transparent);
+        color: color-mix(in oklab, #b8860b 80%, var(--pinrail-text));
+      }
+      .v-keep {
+        background: var(--pinrail-accent-bg);
+        color: var(--pinrail-accent);
+      }
+      .v-drop {
+        background: color-mix(in oklab, var(--pinrail-faint) 18%, transparent);
+        color: var(--pinrail-faint);
+        text-decoration: line-through;
+      }
+      .v-none,
+      .v-undecided {
+        color: var(--pinrail-faint);
+        background: none;
+        padding-inline: 0;
+      }
+
+      .sheet {
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .sheet-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 22px 28px 28px;
+        display: grid;
+        gap: 16px;
+      }
+      .notes {
+        color: var(--pinrail-dim);
+        font-size: 13px;
+        line-height: 1.6;
+        padding: 12px 14px;
+        border: 1px dashed var(--pinrail-border);
+        border-radius: 10px;
+      }
+      .notes p {
+        margin: 0 0 6px;
+      }
+      .notes p:last-child {
+        margin: 0;
+      }
+      .variant-head {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+      }
+      .variant-head h2 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: -0.02em;
+      }
+      .variant-id {
+        font: 12px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .previous {
+        flex-basis: 100%;
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .reasoning {
+        max-width: 72ch;
+        color: var(--pinrail-dim);
+        font-size: 14px;
+        line-height: 1.65;
+        margin-top: -6px;
+      }
+      .reasoning p {
+        margin: 0 0 8px;
+      }
+      .reasoning p:last-child {
+        margin: 0;
+      }
+      .label {
+        margin: 0 0 8px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+
+      /* the stage: one pane, or up to four side by side */
+      .stage {
+        display: grid;
+        gap: 12px;
+      }
+      .stage.compare {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .pane {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 6px;
+        min-width: 0;
+      }
+      .pane-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+        min-width: 0;
+        cursor: pointer;
+      }
+      .pane-head b {
+        color: var(--pinrail-text);
+        font-weight: 600;
+      }
+      .pane-head .mono {
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .pane[aria-current="true"] .pane-head b {
+        color: var(--pinrail-accent);
+      }
+      .stage:not(.compare) .pane-head {
+        display: none;
+      }
+      .box {
+        position: relative;
+        height: clamp(240px, 40vh, 420px);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+      }
+      .stage.compare .box {
+        height: clamp(150px, 24vh, 260px);
+        cursor: pointer;
+      }
+      .box::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+        pointer-events: none;
+      }
+      .stage.compare .pane[aria-current="true"] .box::after {
+        box-shadow: inset 0 0 0 2px var(--pinrail-accent);
+      }
+      .thumb::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+        pointer-events: none;
+      }
+      .fit {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform-origin: 0 0;
+      }
+      .fit > iframe,
+      .fit > .lottie {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        pointer-events: none;
+      }
+      .box .scale {
+        position: absolute;
+        right: 10px;
+        bottom: 8px;
+        font: 10.5px var(--pinrail-mono);
+        color: #6b6f7a;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1px 6px;
+        border-radius: 5px;
+      }
+      .broken {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        text-align: center;
+        color: var(--pinrail-dim);
+        font-size: 13px;
+        background: var(--pinrail-bg-raised);
+      }
+
+      /* transport */
+      .transport {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 8px;
+      }
+      .tb {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 30px;
+        min-width: 30px;
+        padding: 0 9px;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 8px;
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 500 12px var(--pinrail-sans);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .tb:hover {
+        background: var(--pinrail-bg-hover);
+      }
+      .tb[aria-pressed="true"] {
+        background: var(--pinrail-accent-bg);
+        border-color: color-mix(in oklab, var(--pinrail-accent) 50%, var(--pinrail-border));
+        color: var(--pinrail-accent);
+      }
+      .tb.play {
+        width: 38px;
+        padding: 0;
+        background: var(--pinrail-text);
+        border-color: var(--pinrail-text);
+        color: var(--pinrail-bg);
+      }
+      .tb.play:hover {
+        background: color-mix(in oklab, var(--pinrail-text) 85%, var(--pinrail-bg));
+      }
+      .tb.primary {
+        background: var(--pinrail-button-bg);
+        border-color: var(--pinrail-button-bg);
+        color: #fff;
+        font-weight: 600;
+      }
+      .tb.primary kbd {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.18);
+        border-color: transparent;
+        box-shadow: none;
+      }
+      .tb:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .clock {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        min-width: 200px;
+        padding: 0 6px;
+        font: 12px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        font-variant-numeric: tabular-nums;
+      }
+      .clock b {
+        color: var(--pinrail-text);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .seg button {
+        height: 28px;
+        padding: 0 8px;
+        border: 0;
+        background: var(--pinrail-bg);
+        color: var(--pinrail-dim);
+        font: 11.5px var(--pinrail-mono);
+        cursor: pointer;
+      }
+      .seg button + button {
+        border-left: 1px solid var(--pinrail-border);
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--pinrail-accent-bg);
+        color: var(--pinrail-accent);
+        font-weight: 600;
+      }
+      .pinrail-spacer {
+        flex: 1;
+      }
+      .rm-note {
+        flex-basis: 100%;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+
+      /* the timeline: a ruler, a lane per variant, and in a single view a lane per animation */
+      .tl {
+        display: grid;
+        grid-template-columns: 160px 1fr;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 10px;
+        background: var(--pinrail-bg-raised);
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .tl-labels {
+        border-right: 1px solid var(--pinrail-border);
+        min-width: 0;
+      }
+      .tl-labels > div {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 10px;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .tl-labels > div > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tl-labels .lane-name {
+        color: var(--pinrail-text);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .tl-labels .lane-name[aria-current="true"] {
+        color: var(--pinrail-accent);
+      }
+      .tl-labels .sub {
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        padding-left: 18px;
+      }
+      .tracks {
+        position: relative;
+        cursor: col-resize;
+        touch-action: none;
+        margin: 0 16px 0 12px;
+      }
+      .row {
+        position: relative;
+      }
+      .row-ruler {
+        height: 26px;
+      }
+      .row-lane {
+        height: 30px;
+      }
+      .row-sub {
+        height: 20px;
+      }
+      .tick-mark {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        border-left: 1px solid var(--pinrail-border);
+      }
+      .tick-mark span {
+        position: absolute;
+        top: 6px;
+        left: 4px;
+        font: 10px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        white-space: nowrap;
+      }
+      .tick-mark.minor {
+        height: 6px;
+      }
+      .tick-mark.last span {
+        left: auto;
+        right: 4px;
+      }
+      .bar {
+        position: absolute;
+        top: 9px;
+        height: 12px;
+        border-radius: 4px;
+        background: color-mix(in oklab, var(--pinrail-accent) 20%, transparent);
+        box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--pinrail-accent) 45%, transparent);
+      }
+      .bar.focus {
+        background: color-mix(in oklab, var(--pinrail-accent) 34%, transparent);
+      }
+      .bar.more {
+        background: repeating-linear-gradient(
+          90deg,
+          color-mix(in oklab, var(--pinrail-accent) 16%, transparent) 0 6px,
+          transparent 6px 10px
+        );
+        box-shadow: none;
+      }
+      .bar-end {
+        position: absolute;
+        top: 9px;
+        font: 10px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        transform: translateX(-100%) translateX(-4px);
+        white-space: nowrap;
+      }
+      .seg-bar {
+        position: absolute;
+        top: 6px;
+        height: 8px;
+        border-radius: 3px;
+        background: color-mix(in oklab, var(--pinrail-dim) 38%, transparent);
+      }
+      .seg-bar.loop {
+        background: repeating-linear-gradient(
+          90deg,
+          color-mix(in oklab, var(--pinrail-dim) 38%, transparent) 0 8px,
+          color-mix(in oklab, var(--pinrail-dim) 18%, transparent) 8px 12px
+        );
+      }
+      .iter {
+        position: absolute;
+        top: 4px;
+        height: 12px;
+        border-left: 1.5px solid var(--pinrail-bg-raised);
+      }
+      .playhead {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 0;
+        border-left: 2px solid var(--pinrail-danger);
+        margin-left: -1px;
+        pointer-events: none;
+        z-index: 3;
+      }
+      .playhead::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -6px;
+        border: 5px solid transparent;
+        border-top: 7px solid var(--pinrail-danger);
+      }
+      .range {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        background: color-mix(in oklab, var(--pinrail-accent) 12%, transparent);
+        border-inline: 1px solid color-mix(in oklab, var(--pinrail-accent) 60%, transparent);
+        pointer-events: none;
+        z-index: 1;
+      }
+      .mk {
+        position: absolute;
+        top: 6px;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        width: 18px;
+        height: 18px;
+        margin-left: -9px;
+        border: 0;
+        border-radius: 50%;
+        padding: 0;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 10px var(--pinrail-mono);
+        cursor: pointer;
+        box-shadow: 0 0 0 2px var(--pinrail-bg-raised);
+      }
+      .mk-span {
+        position: absolute;
+        top: 7px;
+        z-index: 1;
+        height: 16px;
+        border-radius: 8px;
+        background: color-mix(in oklab, var(--pinrail-accent) 30%, transparent);
+        pointer-events: none;
+      }
+      .mk[aria-current="true"] {
+        background: var(--pinrail-text);
+      }
+      .tl-hint {
+        grid-column: 1 / -1;
+        padding: 6px 10px;
+        border-top: 1px solid var(--pinrail-border);
+        font-size: 11.5px;
+        color: var(--pinrail-faint);
+      }
+
+      /* comments and the verdict */
+      .below {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+        gap: 18px;
+        align-items: start;
+      }
+      .composer {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        margin-bottom: 8px;
+        border-radius: 12px;
+        background: var(--pinrail-bg-raised);
+        box-shadow: 0 0 0 1px var(--pinrail-border-strong);
+      }
+      .composer-head {
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .composer-head b {
+        color: var(--pinrail-text);
+      }
+      textarea.field-note {
+        width: 100%;
+        min-height: 60px;
+        resize: vertical;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 13px/1.5 var(--pinrail-sans);
+        box-sizing: border-box;
+      }
+      textarea.field-note:focus {
+        outline: none;
+        border-color: var(--pinrail-accent);
+      }
+      .composer-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        align-items: center;
+      }
+      .composer-actions .k {
+        margin-right: auto;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .pinrail-btn {
+        padding: 5px 11px;
+        border-radius: 7px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .pinrail-btn-primary {
+        background: var(--pinrail-button-bg);
+        border-color: var(--pinrail-button-bg);
+        color: #fff;
+      }
+      .pinrail-btn.quiet {
+        border-color: transparent;
+        background: none;
+        color: var(--pinrail-dim);
+        font-weight: 500;
+      }
+      .comments {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .comments li {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: start;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: var(--pinrail-bg-raised);
+        border: 1px solid var(--pinrail-border);
+        font-size: 13.5px;
+      }
+      .comments li[aria-current="true"] {
+        border-color: var(--pinrail-accent);
+      }
+      .comments .num {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 11px var(--pinrail-mono);
+      }
+      .comments .when {
+        display: block;
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-text);
+        margin-bottom: 2px;
+      }
+      .comments .what {
+        display: block;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        margin-top: 3px;
+      }
+      .comments .acts {
+        display: flex;
+        gap: 2px;
+      }
+      .pinrail-empty {
+        color: var(--pinrail-faint);
+        font-size: 13px;
+        padding: 4px 2px;
+        margin: 0;
+      }
+      .decide {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+      .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .choice {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 13px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .choice[aria-pressed="true"][data-action="favorite"] {
+        background: color-mix(in oklab, #d4a017 22%, var(--pinrail-bg));
+        border-color: #d4a017;
+      }
+      .choice[aria-pressed="true"][data-action="keep"] {
+        background: var(--pinrail-accent-bg);
+        border-color: var(--pinrail-accent);
+        color: var(--pinrail-accent);
+      }
+      .choice[aria-pressed="true"][data-action="drop"] {
+        background: var(--pinrail-bg-hover);
+        color: var(--pinrail-faint);
+        text-decoration: line-through;
+      }
+      .choice:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .nav {
+        display: flex;
+        gap: 6px;
+      }
+      .nav button {
+        padding: 6px 10px;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        font: 12px var(--pinrail-mono);
+        cursor: pointer;
+      }
+      #note {
+        width: 100%;
+        min-height: 72px;
+        resize: vertical;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font: 13.5px/1.5 var(--pinrail-sans);
+        box-sizing: border-box;
+      }
+
+      @media (max-width: 860px) {
+        .work {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
+        .rail {
+          grid-auto-flow: column;
+          grid-auto-columns: 170px;
+          overflow-x: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--pinrail-border);
+        }
+        .rail-label {
+          display: none;
+        }
+        .below {
+          grid-template-columns: 1fr;
+        }
+        .stage.compare {
+          grid-template-columns: 1fr;
+        }
+        .tl {
+          grid-template-columns: 100px 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="/sdk/v1/pinrail-plugin.js"></script>
+    <script src="/sdk/v1/markdown.js"></script>
+    <div class="shell" id="app">
+      <div class="top"><h1>Loading…</h1></div>
+    </div>
+    <script type="module" src="motion.js"></script>
+  </body>
+</html>
