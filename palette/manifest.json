@@ -1,0 +1,42 @@
+{
+  "name": "palette",
+  "version": "1.0.0",
+  "title": "Palette review",
+  "description": "Candidate colour systems, each painted on a sample app screen in light and dark, with WCAG contrast measured on the pairs that matter. Pick a favourite, keep or drop the rest, comment on a token, and set a new value for one.",
+  "use_when": "You proposed colour palettes or design tokens for a product (light and dark themes) and need a person to pick one, shortlist or drop the rest, and say what to change in individual tokens, down to a new value.",
+  "shortcuts": [
+    {
+      "keys": "j",
+      "does": "Next palette"
+    },
+    {
+      "keys": "k",
+      "does": "Previous palette"
+    },
+    {
+      "keys": "m",
+      "does": "Show light and dark, light only, or dark only",
+      "group": "Screen"
+    },
+    {
+      "keys": "e",
+      "does": "Show the sample with or without your new values",
+      "group": "Screen"
+    },
+    {
+      "keys": "f",
+      "does": "Make this palette the favourite",
+      "group": "Verdicts"
+    },
+    {
+      "keys": "s",
+      "does": "Keep this palette on the shortlist",
+      "group": "Verdicts"
+    },
+    {
+      "keys": "x",
+      "does": "Drop this palette",
+      "group": "Verdicts"
+    }
+  ]
+}

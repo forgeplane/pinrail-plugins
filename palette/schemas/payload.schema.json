@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Palette review request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["subject", "palettes"],
+  "$defs": {
+    "color": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "Any CSS colour: #rrggbb, #rgb, rgb(), hsl(), oklch(). Opaque colours read best; a translucent one is measured over the background of the same mode."
+    },
+    "role": {
+      "enum": [
+        "background", "surface", "surface-muted", "border", "border-strong",
+        "text", "text-muted", "primary", "on-primary", "accent", "on-accent",
+        "success", "warning", "danger", "info", "focus"
+      ],
+      "description": "What the token paints in the sample screen. background: the page. surface: cards and the top bar. surface-muted: table heads and quiet panels. border: dividers. border-strong: input outlines. text, text-muted: body and secondary text. primary / on-primary: the main button, links, the active tab, and the text on that button. accent / on-accent: badges and the avatar. success, warning, danger, info: status messages. focus: the focus ring."
+    },
+    "roleOf": {
+      "type": "object",
+      "required": ["role"],
+      "properties": { "role": { "type": "string" } }
+    }
+  },
+  "properties": {
+    "notes": {
+      "type": "string",
+      "maxLength": 10000,
+      "description": "Markdown: what this round is, and what to look at."
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 60, "description": "The product the palettes are for. The sample screen shows it in its top bar." },
+        "description": { "type": "string", "maxLength": 400, "description": "A line on the product and the feel it is after." }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "maxItems": 24,
+      "description": "Contrast pairs to measure beside the standard ones, in every palette that has both tokens.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "fg", "bg"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "fg": { "type": "string", "minLength": 1, "description": "The foreground: a token's name, or a role." },
+          "bg": { "type": "string", "minLength": 1, "description": "The background: a token's name, or a role." },
+          "min": { "type": "number", "minimum": 1, "maximum": 21, "description": "The least ratio that passes. Default 4.5, WCAG AA for body text; 3 for large text and UI parts." }
+        }
+      }
+    },
+    "palettes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "tokens"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "reasoning": { "type": "string", "maxLength": 4000, "description": "Markdown: the idea behind the palette." },
+          "tokens": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "description": "The palette's colour tokens, in the order to list them. The five roles background, surface, text, primary and on-primary must each be played by one token.",
+            "allOf": [
+              { "contains": { "$ref": "#/$defs/roleOf", "properties": { "role": { "const": "background" } } } },
+              { "contains": { "$ref": "#/$defs/roleOf", "properties": { "role": { "const": "surface" } } } },
+              { "contains": { "$ref": "#/$defs/roleOf", "properties": { "role": { "const": "text" } } } },
+              { "contains": { "$ref": "#/$defs/roleOf", "properties": { "role": { "const": "primary" } } } },
+              { "contains": { "$ref": "#/$defs/roleOf", "properties": { "role": { "const": "on-primary" } } } }
+            ],
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name"],
+              "anyOf": [
+                { "required": ["value"] },
+                { "required": ["light", "dark"] }
+              ],
+              "properties": {
+                "name": { "type": "string", "minLength": 1, "maxLength": 80, "description": "The token's name as your code knows it, e.g. color.primary or --brand-500. Comments and edits come back by this name." },
+                "role": { "$ref": "#/$defs/role" },
+                "light": { "$ref": "#/$defs/color", "description": "The value in the light theme." },
+                "dark": { "$ref": "#/$defs/color", "description": "The value in the dark theme." },
+                "value": { "$ref": "#/$defs/color", "description": "One value for both themes, instead of light and dark." },
+                "description": { "type": "string", "maxLength": 200 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Palette review decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decisions", "undecided"],
+  "$defs": {
+    "mode": { "enum": ["light", "dark", "both"] }
+  },
+  "properties": {
+    "decisions": {
+      "type": "array",
+      "description": "A verdict per palette the reviewer decided. At most one favourite.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "action"],
+        "properties": {
+          "id": { "type": "string", "description": "The palette's id." },
+          "action": { "enum": ["favorite", "keep", "drop"], "description": "favorite: the one to take forward. keep: still on the shortlist. drop: set it aside." },
+          "note": { "type": "string", "maxLength": 4000, "description": "On the palette as a whole: what to change, or why it goes." },
+          "comments": {
+            "type": "array",
+            "description": "Remarks pinned to one token of the palette.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["token", "note"],
+              "properties": {
+                "token": { "type": "string", "description": "The token's name, as the payload gave it." },
+                "role": { "type": "string", "description": "The role the token plays, when it has one." },
+                "mode": { "$ref": "#/$defs/mode", "description": "The theme the reviewer was looking at: light, dark, or both for a token with one value." },
+                "where": { "type": "string", "maxLength": 80, "description": "The part of the sample screen the comment was made on, e.g. Primary button." },
+                "note": { "type": "string", "minLength": 1, "maxLength": 2000 }
+              }
+            }
+          },
+          "edits": {
+            "type": "array",
+            "description": "New values the reviewer set for tokens, to apply as they are: one per token and theme.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["token", "mode", "from", "to"],
+              "properties": {
+                "token": { "type": "string", "description": "The token's name, as the payload gave it." },
+                "role": { "type": "string" },
+                "mode": { "$ref": "#/$defs/mode", "description": "Which value to replace: light, dark, or both for a token sent with one value." },
+                "from": { "type": "string", "description": "The value as the payload sent it." },
+                "to": { "type": "string", "minLength": 1, "maxLength": 80, "description": "The new value, as #rrggbb unless the reviewer typed another CSS colour." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "undecided": { "type": "array", "items": { "type": "string" }, "description": "Palettes left without a verdict." }
+  }
+}

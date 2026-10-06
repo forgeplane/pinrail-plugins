@@ -1,0 +1,2079 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Palette review</title>
+    <link rel="stylesheet" href="/sdk/v1/pinrail-plugin.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .shell {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100%;
+      }
+      .top {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        padding: 11px 20px;
+        border-bottom: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+      }
+      .top .subject {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .top .about {
+        color: var(--pinrail-dim);
+        font-size: 12.5px;
+      }
+      .tally {
+        margin-left: auto;
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .tally b {
+        color: var(--pinrail-text);
+        font-variant-numeric: tabular-nums;
+      }
+      .work {
+        display: grid;
+        grid-template-columns: 236px 1fr;
+        min-height: 0;
+      }
+
+      /* the rail: every palette as two strips of its main colours */
+      .rail {
+        overflow-y: auto;
+        border-right: 1px solid var(--pinrail-border);
+        padding: 12px;
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        background: var(--pinrail-bg-panel);
+      }
+      .rail-label,
+      .label {
+        margin: 4px 6px 6px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+      .label {
+        margin: 0 0 8px;
+      }
+      .pick {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 7px 10px;
+        width: 100%;
+        padding: 9px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: none;
+        color: var(--pinrail-text);
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+      }
+      .pick:hover {
+        background: var(--pinrail-bg-hover);
+      }
+      .pick[aria-current="true"] {
+        background: var(--pinrail-bg-raised);
+        border-color: var(--pinrail-border-strong);
+      }
+      .pick:focus-visible {
+        outline: 2px solid var(--pinrail-accent);
+        outline-offset: 1px;
+      }
+      .pick-name {
+        font-size: 13px;
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-left: 2px;
+      }
+      .strips {
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 3px;
+      }
+      .strip {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        height: 16px;
+        border-radius: 5px;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+      }
+      .strip span {
+        display: block;
+      }
+      .pick-meta {
+        grid-column: 1 / -1;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+        padding-left: 2px;
+      }
+      .pick-meta .bad {
+        color: var(--pinrail-danger);
+      }
+
+      .verdict-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 7px;
+        border-radius: 99px;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .v-favorite {
+        background: color-mix(in oklab, #d4a017 22%, transparent);
+        color: color-mix(in oklab, #b8860b 80%, var(--pinrail-text));
+      }
+      .v-keep {
+        background: var(--pinrail-accent-bg);
+        color: var(--pinrail-accent);
+      }
+      .v-drop {
+        background: color-mix(in oklab, var(--pinrail-faint) 18%, transparent);
+        color: var(--pinrail-faint);
+        text-decoration: line-through;
+      }
+      .v-none {
+        color: var(--pinrail-faint);
+        background: none;
+        padding-inline: 0;
+      }
+
+      .sheet {
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .sheet-inner {
+        position: relative;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 22px 28px 28px;
+        display: grid;
+        gap: 18px;
+      }
+      .notes {
+        color: var(--pinrail-dim);
+        font-size: 13px;
+        line-height: 1.6;
+        padding: 12px 14px;
+        border: 1px dashed var(--pinrail-border);
+        border-radius: 10px;
+      }
+      .notes p {
+        margin: 0 0 6px;
+      }
+      .notes p:last-child {
+        margin: 0;
+      }
+      .head {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+      }
+      .head h2 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: -0.02em;
+      }
+      .head .pid {
+        font: 12px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .previous {
+        flex-basis: 100%;
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .reasoning {
+        max-width: 72ch;
+        color: var(--pinrail-dim);
+        font-size: 14px;
+        line-height: 1.65;
+        margin-top: -6px;
+      }
+      .reasoning p {
+        margin: 0 0 8px;
+      }
+      .reasoning p:last-child {
+        margin: 0;
+      }
+
+      /* the bar above the sample screens */
+      .screenbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+      }
+      .seg {
+        display: inline-flex;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 9px;
+        background: var(--pinrail-bg-raised);
+        box-shadow: inset 0 0 0 1px var(--pinrail-border);
+      }
+      .seg button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border: 0;
+        border-radius: 6px;
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .seg button:hover {
+        color: var(--pinrail-text);
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        box-shadow: 0 0 0 1px var(--pinrail-border-strong);
+      }
+      .seg kbd,
+      .toggle kbd {
+        font: 10.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .toggle[aria-pressed="true"] {
+        border-color: var(--pinrail-accent);
+        color: var(--pinrail-accent);
+        background: var(--pinrail-accent-bg);
+      }
+      .screenbar .hint {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--pinrail-faint);
+      }
+
+      /* the sample screens, painted in the palette */
+      .screens {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+        gap: 16px;
+        align-items: start;
+      }
+      .screen-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 2px 7px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .screen-label .fails {
+        margin-left: auto;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-danger);
+      }
+      .screen-label .passes {
+        margin-left: auto;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .mock {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--p-background);
+        color: var(--p-text);
+        box-shadow:
+          0 0 0 1px var(--pinrail-border),
+          0 10px 30px -18px rgba(0, 0, 0, 0.35);
+        font: 13px/1.45 var(--pinrail-sans);
+      }
+      .mock [data-el] {
+        cursor: default;
+      }
+      .pickable .mock [data-el] {
+        cursor: pointer;
+      }
+      .mock .hot {
+        outline: 2px dashed var(--pinrail-accent);
+        outline-offset: 2px;
+      }
+      .mock .lit {
+        outline: 2px solid var(--pinrail-accent);
+        outline-offset: 2px;
+      }
+      .m-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--p-surface);
+        border-bottom: 1px solid var(--p-border);
+      }
+      .m-logo {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        background: var(--p-primary);
+        flex: none;
+      }
+      .m-name {
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .m-tabs {
+        display: flex;
+        gap: 12px;
+        margin-left: 6px;
+      }
+      .m-tab {
+        color: var(--p-text-muted);
+        padding: 2px 0;
+      }
+      .m-tab.on {
+        color: var(--p-primary);
+        font-weight: 600;
+        box-shadow: inset 0 -2px var(--p-primary);
+      }
+      .m-avatar {
+        margin-left: auto;
+        width: 26px;
+        height: 26px;
+        flex: none;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--p-accent);
+        color: var(--p-on-accent);
+        font: 700 10.5px var(--pinrail-sans);
+      }
+      .m-page {
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+      }
+      .m-h1,
+      .m-page .m-muted {
+        width: fit-content;
+      }
+      .m-h1 {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        line-height: 1.25;
+      }
+      .m-muted {
+        color: var(--p-text-muted);
+      }
+      .m-alerts {
+        display: grid;
+        gap: 6px;
+      }
+      .m-alert {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 12.5px;
+      }
+      .m-alert svg,
+      .m-alert .pinrail-icon {
+        flex: none;
+      }
+      .m-card {
+        background: var(--p-surface);
+        border: 1px solid var(--p-border);
+        border-radius: 10px;
+        padding: 14px;
+        display: grid;
+        gap: 11px;
+      }
+      .m-card-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .m-title {
+        font-weight: 650;
+        font-size: 14.5px;
+      }
+      .m-badge {
+        padding: 1px 8px;
+        border-radius: 99px;
+        background: var(--p-accent);
+        color: var(--p-on-accent);
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .m-table {
+        border: 1px solid var(--p-border);
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 12.5px;
+      }
+      .m-tr {
+        display: grid;
+        grid-template-columns: 44px 1fr 64px;
+        gap: 8px;
+        padding: 6px 10px;
+      }
+      .m-tr + .m-tr {
+        border-top: 1px solid var(--p-border);
+      }
+      .m-th {
+        background: var(--p-surface-muted);
+        color: var(--p-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .m-tr span:last-child {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .m-link {
+        color: var(--p-primary);
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        justify-self: start;
+      }
+      .m-fields {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 10px;
+      }
+      .m-field {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+        font-size: 12px;
+      }
+      .m-field > span {
+        color: var(--p-text-muted);
+      }
+      .m-input {
+        padding: 6px 9px;
+        border-radius: 7px;
+        border: 1px solid var(--p-border-strong);
+        background: var(--p-surface);
+        color: var(--p-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 13px;
+      }
+      .m-input.focused {
+        border-color: var(--p-focus);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-focus) 38%, transparent);
+      }
+      .m-input.idle {
+        color: var(--p-text-muted);
+      }
+      .m-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .m-btn {
+        padding: 7px 14px;
+        border-radius: 7px;
+        font-weight: 600;
+        font-size: 13px;
+        border: 1px solid transparent;
+      }
+      .m-btn.primary {
+        background: var(--p-primary);
+        color: var(--p-on-primary);
+      }
+      .m-btn.secondary {
+        background: var(--p-surface);
+        color: var(--p-text);
+        border-color: var(--p-border-strong);
+      }
+
+      .pins {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .pin {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border-radius: 50%;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 10.5px var(--pinrail-mono);
+        box-shadow:
+          0 0 0 2px var(--pinrail-bg),
+          0 2px 8px rgba(0, 0, 0, 0.3);
+        pointer-events: auto;
+        cursor: pointer;
+        border: 0;
+        padding: 0;
+      }
+
+      /* tokens and contrast */
+      .tables {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 18px;
+        align-items: start;
+      }
+      table.grid {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 12.5px;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      table.grid th {
+        text-align: left;
+        font: 600 10.5px var(--pinrail-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+        padding: 8px 10px;
+        background: var(--pinrail-bg-raised);
+        border-bottom: 1px solid var(--pinrail-border);
+      }
+      table.grid td {
+        padding: 5px 10px;
+        border-top: 1px solid var(--pinrail-border);
+        vertical-align: middle;
+      }
+      table.grid tr:first-child td {
+        border-top: 0;
+      }
+      .tok {
+        display: grid;
+        gap: 1px;
+        padding: 3px 0;
+        border: 0;
+        background: none;
+        color: var(--pinrail-text);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .tok b {
+        font: 500 12px var(--pinrail-mono);
+      }
+      .tok .role {
+        font-size: 11px;
+        color: var(--pinrail-faint);
+      }
+      .tok:disabled {
+        cursor: default;
+      }
+      .sw {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 3px 6px 3px 3px;
+        margin-left: -3px;
+        border: 0;
+        border-radius: 7px;
+        background: none;
+        color: var(--pinrail-dim);
+        font: 11.5px var(--pinrail-mono);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .sw:hover:not(:disabled) {
+        background: var(--pinrail-bg-hover);
+        color: var(--pinrail-text);
+      }
+      .sw:disabled {
+        cursor: default;
+      }
+      .chip {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pinrail-text) 18%, transparent);
+        flex: none;
+      }
+      .chip.bad {
+        background: repeating-linear-gradient(45deg, var(--pinrail-danger) 0 3px, transparent 3px 6px) !important;
+      }
+      .sw .was {
+        text-decoration: line-through;
+        color: var(--pinrail-faint);
+      }
+      .sw .now {
+        color: var(--pinrail-accent);
+        font-weight: 600;
+      }
+      .sw .arrow {
+        color: var(--pinrail-faint);
+      }
+      .both {
+        font-size: 11px;
+        color: var(--pinrail-faint);
+        margin-left: 4px;
+      }
+      .count {
+        display: inline-grid;
+        place-items: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 10px var(--pinrail-mono);
+      }
+      .ratio {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 3px 6px 3px 3px;
+        margin-left: -3px;
+        border: 0;
+        border-radius: 7px;
+        background: none;
+        color: var(--pinrail-text);
+        font: 12px var(--pinrail-mono);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .ratio:hover:not(:disabled) {
+        background: var(--pinrail-bg-hover);
+      }
+      .ratio:disabled {
+        cursor: default;
+      }
+      .sample {
+        display: inline-grid;
+        place-items: center;
+        width: 30px;
+        height: 20px;
+        border-radius: 5px;
+        font: 700 11px var(--pinrail-sans);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pinrail-text) 14%, transparent);
+      }
+      .lvl {
+        font: 600 10px var(--pinrail-mono);
+        letter-spacing: 0.04em;
+        padding: 1px 6px;
+        border-radius: 99px;
+      }
+      .lvl.pass {
+        background: color-mix(in oklab, var(--pinrail-success) 16%, transparent);
+        color: var(--pinrail-success);
+      }
+      .lvl.fail {
+        background: color-mix(in oklab, var(--pinrail-danger) 16%, transparent);
+        color: var(--pinrail-danger);
+      }
+      .pair {
+        display: grid;
+        gap: 1px;
+      }
+      .pair small {
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .min {
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .na {
+        color: var(--pinrail-faint);
+      }
+
+      /* the comment and new-value pop-over */
+      .pop {
+        position: absolute;
+        z-index: 5;
+        width: 340px;
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--pinrail-bg-raised);
+        box-shadow:
+          0 0 0 1px var(--pinrail-border-strong),
+          0 14px 34px -12px rgba(0, 0, 0, 0.45);
+      }
+      .pop-head {
+        display: grid;
+        gap: 2px;
+        font-size: 12.5px;
+        color: var(--pinrail-dim);
+      }
+      .pop-head b {
+        font: 600 12.5px var(--pinrail-mono);
+        color: var(--pinrail-text);
+      }
+      .pop-choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .pop-choices button {
+        padding: 2px 8px;
+        border-radius: 99px;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        font: 11.5px var(--pinrail-mono);
+        cursor: pointer;
+      }
+      .pop-choices button[aria-pressed="true"] {
+        border-color: var(--pinrail-accent);
+        color: var(--pinrail-accent);
+        background: var(--pinrail-accent-bg);
+      }
+      .pop textarea {
+        width: 100%;
+        min-height: 58px;
+        resize: vertical;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 13px/1.5 var(--pinrail-sans);
+        box-sizing: border-box;
+      }
+      .pop textarea:focus,
+      .pop input[type="text"]:focus {
+        outline: none;
+        border-color: var(--pinrail-accent);
+      }
+      .pop .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .pop .row .k {
+        width: 44px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .pop input[type="color"] {
+        width: 30px;
+        height: 26px;
+        padding: 0;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 6px;
+        background: none;
+        cursor: pointer;
+      }
+      .pop input[type="text"] {
+        flex: 1;
+        min-width: 0;
+        padding: 5px 8px;
+        border-radius: 7px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 12px var(--pinrail-mono);
+      }
+      .pop input[type="text"].invalid {
+        border-color: var(--pinrail-danger);
+      }
+      .pop .reset {
+        padding: 3px 7px;
+        border: 0;
+        border-radius: 6px;
+        background: none;
+        color: var(--pinrail-faint);
+        font: 11px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .pop .reset:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+      .pop-checks {
+        display: grid;
+        gap: 3px;
+        margin: 0;
+        padding: 8px 0 0;
+        list-style: none;
+        border-top: 1px solid var(--pinrail-border);
+        font-size: 11.5px;
+        color: var(--pinrail-dim);
+      }
+      .pop-checks li {
+        display: flex;
+        gap: 6px;
+        align-items: baseline;
+      }
+      .pop-checks .v {
+        margin-left: auto;
+        font-family: var(--pinrail-mono);
+        white-space: nowrap;
+      }
+      .pop-checks .v .up {
+        color: var(--pinrail-success);
+      }
+      .pop-checks .v .down {
+        color: var(--pinrail-danger);
+      }
+      .pop-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        align-items: center;
+      }
+      .pop-actions .k {
+        margin-right: auto;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .pinrail-btn {
+        padding: 5px 11px;
+        border-radius: 7px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 12px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .pinrail-btn-primary {
+        background: var(--pinrail-accent);
+        border-color: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+      }
+      .pinrail-btn.quiet {
+        border-color: transparent;
+        background: none;
+        color: var(--pinrail-dim);
+        font-weight: 500;
+      }
+
+      /* comments and new values, then the verdict */
+      .asks {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .asks li {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: start;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: var(--pinrail-bg-raised);
+        border: 1px solid var(--pinrail-border);
+        font-size: 13.5px;
+      }
+      .asks li.flash {
+        border-color: var(--pinrail-accent);
+      }
+      .asks .num {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--pinrail-accent);
+        color: var(--pinrail-bg);
+        font: 700 11px var(--pinrail-mono);
+      }
+      .asks .num.edit {
+        border-radius: 6px;
+        background: none;
+        color: var(--pinrail-accent);
+        box-shadow: inset 0 0 0 1px var(--pinrail-accent);
+      }
+      .asks .what {
+        font: 11.5px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .asks .change {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: 12px var(--pinrail-mono);
+      }
+      .asks-empty {
+        margin: 0;
+        color: var(--pinrail-faint);
+        font-size: 13px;
+        padding: 4px 2px;
+        text-align: left;
+      }
+
+      .decide {
+        display: grid;
+        gap: 10px;
+        padding-top: 4px;
+      }
+      .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .choice {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border-strong);
+        background: var(--pinrail-bg);
+        color: var(--pinrail-text);
+        font: 600 13px var(--pinrail-sans);
+        cursor: pointer;
+      }
+      .choice kbd {
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-faint);
+      }
+      .choice[aria-pressed="true"][data-action="favorite"] {
+        background: color-mix(in oklab, #d4a017 22%, var(--pinrail-bg));
+        border-color: #d4a017;
+      }
+      .choice[aria-pressed="true"][data-action="keep"] {
+        background: var(--pinrail-accent-bg);
+        border-color: var(--pinrail-accent);
+        color: var(--pinrail-accent);
+      }
+      .choice[aria-pressed="true"][data-action="drop"] {
+        background: var(--pinrail-bg-hover);
+        color: var(--pinrail-faint);
+        text-decoration: line-through;
+      }
+      .choice:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .choices .nav {
+        margin-left: auto;
+        display: flex;
+        gap: 6px;
+      }
+      .choices .nav button {
+        padding: 7px 11px;
+        border-radius: 9px;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        font: 12px var(--pinrail-mono);
+        cursor: pointer;
+      }
+      #note {
+        width: 100%;
+        min-height: 64px;
+        resize: vertical;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font: 13.5px/1.5 var(--pinrail-sans);
+        box-sizing: border-box;
+      }
+
+      @media (max-width: 820px) {
+        .work {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
+        .rail {
+          grid-auto-flow: column;
+          grid-auto-columns: 180px;
+          overflow-x: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--pinrail-border);
+        }
+        .rail-label {
+          display: none;
+        }
+        .sheet-inner {
+          padding: 16px;
+        }
+        .pop {
+          width: min(340px, calc(100% - 32px));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="/sdk/v1/pinrail-plugin.js"></script>
+    <script src="/sdk/v1/markdown.js"></script>
+    <div class="shell" id="app"></div>
+    <script type="module">
+      const esc = Pinrail.escape;
+      const ACTIONS = { favorite: "Favourite", keep: "Keep", drop: "Drop" };
+      const KEYS = { favorite: "f", keep: "s", drop: "x" };
+      const MODES = ["light", "dark"];
+      const ROLE_LABEL = {
+        background: "background",
+        surface: "surface",
+        "surface-muted": "surface, muted",
+        border: "border",
+        "border-strong": "border, strong",
+        text: "text",
+        "text-muted": "text, muted",
+        primary: "primary",
+        "on-primary": "on primary",
+        accent: "accent",
+        "on-accent": "on accent",
+        success: "success",
+        warning: "warning",
+        danger: "danger",
+        info: "info",
+        focus: "focus",
+      };
+      // The pairs every palette is measured on, where it has both tokens.
+      // `tint:<role>` is the status colour washed into the surface, as the alerts show it.
+      const STANDARD_CHECKS = [
+        { label: "Body text", fg: "text", bg: "background", min: 4.5 },
+        { label: "Text on cards", fg: "text", bg: "surface", min: 4.5 },
+        { label: "Secondary text", fg: "text-muted", bg: "surface", min: 4.5 },
+        { label: "Primary button", fg: "on-primary", bg: "primary", min: 4.5 },
+        { label: "Links on cards", fg: "primary", bg: "surface", min: 4.5 },
+        { label: "Badge", fg: "on-accent", bg: "accent", min: 4.5 },
+        { label: "Table head", fg: "text-muted", bg: "surface-muted", min: 4.5 },
+        { label: "Input outline", fg: "border-strong", bg: "surface", min: 3 },
+        { label: "Focus ring", fg: "focus", bg: "surface", min: 3 },
+        { label: "Success message", fg: "success", bg: "tint:success", min: 4.5 },
+        { label: "Warning message", fg: "warning", bg: "tint:warning", min: 4.5 },
+        { label: "Error message", fg: "danger", bg: "tint:danger", min: 4.5 },
+        { label: "Info message", fg: "info", bg: "tint:info", min: 4.5 },
+      ];
+      const STATUS_DEFAULT = {
+        light: { success: "#1e7a4c", warning: "#8a5a00", danger: "#b3261e", info: "#2458b3" },
+        dark: { success: "#5fd39a", warning: "#e9b95c", danger: "#ff8597", info: "#8aa8ff" },
+      };
+
+      /* ------------------------------------------------------------ colour */
+
+      // Any CSS colour the browser knows, read back as sRGB through a 1×1 canvas.
+      const cx = Object.assign(document.createElement("canvas"), { width: 1, height: 1 }).getContext("2d", {
+        willReadFrequently: true,
+      });
+      const parsed = new Map();
+      function parse(css) {
+        if (typeof css !== "string" || !css.trim()) return null;
+        if (parsed.has(css)) return parsed.get(css);
+        let out = null;
+        cx.fillStyle = "#010203";
+        cx.fillStyle = css.trim();
+        const took = cx.fillStyle !== "#010203" || /^#010203$/i.test(css.trim());
+        if (took) {
+          cx.clearRect(0, 0, 1, 1);
+          cx.fillRect(0, 0, 1, 1);
+          const [r, g, b, a] = cx.getImageData(0, 0, 1, 1).data;
+          out = { r, g, b, a: a / 255 };
+        }
+        parsed.set(css, out);
+        return out;
+      }
+      const hex = (c) => "#" + [c.r, c.g, c.b].map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+      const mix = (a, b, t) => ({
+        r: a.r * t + b.r * (1 - t),
+        g: a.g * t + b.g * (1 - t),
+        b: a.b * t + b.b * (1 - t),
+        a: 1,
+      });
+      const over = (c, bg) => (c.a >= 1 ? c : mix(c, bg, c.a));
+      function luminance(c) {
+        const ch = (v) => {
+          v /= 255;
+          return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
+      }
+      // WCAG 2 contrast, cut (never rounded up) to two decimals
+      function contrast(a, b) {
+        const [x, y] = [luminance(a), luminance(b)].sort((m, n) => n - m);
+        return Math.floor(((x + 0.05) / (y + 0.05)) * 100) / 100;
+      }
+      function level(ratio) {
+        return ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA large" : "fail";
+      }
+      const normal = (css) => {
+        const c = parse(css);
+        return c ? (c.a < 1 ? css.trim().toLowerCase() : hex(c)) : null;
+      };
+
+      /* ------------------------------------------------------------ state */
+
+      const S = { sel: 0, verdicts: {}, armed: false, mode: "both", showEdits: true, editing: null, keepScroll: false };
+      let P = null;
+      const palette = () => P.palettes[S.sel];
+      const verdictOf = (id) => S.verdicts[id] || null;
+      const commentsOf = (id) => verdictOf(id)?.comments || [];
+      const editsOf = (id) => verdictOf(id)?.edits || [];
+      const tokenNamed = (p, name) => p.tokens.find((t) => t.name === name) || null;
+      const tokenFor = (p, role) => p.tokens.find((t) => t.role === role) || null;
+      const single = (t) => t.value !== undefined && (t.light === undefined || t.dark === undefined);
+      const original = (t, mode) => (mode === "light" ? (t.light ?? t.value) : (t.dark ?? t.value));
+      const modesOf = (t) => (single(t) ? ["both"] : MODES);
+      const savedEdit = (p, t, mode) =>
+        editsOf(p.id).find((e) => e.token === t.name && (e.mode === mode || e.mode === "both"));
+      function pending(p, t, mode) {
+        const E = S.editing;
+        if (!E || E.pid !== p.id || E.token !== t.name) return null;
+        const v = E.values[mode] ?? E.values.both;
+        return v && parse(v) ? v : null;
+      }
+      /* The value a token has in a mode: as sent ("original"), with the reviewer's
+   new values ("proposed"), or as the screen shows it now ("shown"), where
+   the value being typed always shows and saved ones follow the toggle. */
+      function valueOf(p, t, mode, layer) {
+        if (layer === "original") return original(t, mode);
+        const typed = pending(p, t, mode);
+        if (typed) return typed;
+        const saved = layer === "proposed" || S.showEdits ? savedEdit(p, t, mode) : null;
+        return saved ? saved.to : original(t, mode);
+      }
+
+      /* The palette in one mode, by role: every role the sample screen paints,
+   taken from its token or, when the palette has none, mixed from the others. */
+      function paint(p, mode, layer = "shown") {
+        const base = mode === "light" ? { r: 255, g: 255, b: 255, a: 1 } : { r: 0, g: 0, b: 0, a: 1 };
+        const raw = {};
+        for (const role of Object.keys(ROLE_LABEL)) {
+          const t = tokenFor(p, role);
+          const c = t ? parse(valueOf(p, t, mode, layer)) : null;
+          if (c) raw[role] = c;
+        }
+        const bg = raw.background ? over(raw.background, base) : base;
+        const R = { background: bg };
+        const put = (role, fallback) => {
+          R[role] = raw[role] ? over(raw[role], role === "background" ? base : bg) : fallback();
+        };
+        put("surface", () => bg);
+        put("text", () => (mode === "light" ? { r: 20, g: 20, b: 24, a: 1 } : { r: 236, g: 236, b: 240, a: 1 }));
+        put("surface-muted", () => mix(R.text, R.surface, 0.05));
+        put("border", () => mix(R.text, R.surface, 0.13));
+        put("border-strong", () => R.border);
+        put("text-muted", () => mix(R.text, R.surface, 0.68));
+        put("primary", () => R.text);
+        put("on-primary", () => R.surface);
+        put("accent", () => R.primary);
+        put("on-accent", () => R["on-primary"]);
+        put("focus", () => R.primary);
+        for (const s of ["success", "warning", "danger", "info"]) put(s, () => parse(STATUS_DEFAULT[mode][s]));
+        for (const s of ["success", "warning", "danger", "info"]) {
+          R[`tint:${s}`] = mix(R[s], R.surface, mode === "light" ? 0.1 : 0.14);
+          R[`edge:${s}`] = mix(R[s], R.surface, 0.32);
+        }
+        return R;
+      }
+
+      /* A check's side (a token's name, a role, or tint:<role>) as the token behind it. */
+      function sideToken(p, ref) {
+        const byName = tokenNamed(p, ref);
+        if (byName) return byName;
+        return tokenFor(p, ref.startsWith("tint:") ? ref.slice(5) : ref);
+      }
+      function colourOf(p, R, ref, mode, layer) {
+        const byName = tokenNamed(p, ref);
+        if (byName && !byName.role) {
+          const c = parse(valueOf(p, byName, mode, layer));
+          return c ? over(c, R.background) : null;
+        }
+        return R[byName ? byName.role : ref] || null;
+      }
+      function checksFor(p) {
+        const custom = (P.checks || []).map((c) => ({ ...c, min: c.min ?? 4.5, custom: true }));
+        return [...STANDARD_CHECKS, ...custom]
+          .filter((c) => {
+            const f = sideToken(p, c.fg),
+              b = sideToken(p, c.bg);
+            return f && b && (!c.bg.startsWith("tint:") || tokenFor(p, "surface"));
+          })
+          .map((c) => ({ ...c, fgToken: sideToken(p, c.fg), bgToken: sideToken(p, c.bg) }));
+      }
+      function measure(p, c, mode, layer = "shown", R = paint(p, mode, layer)) {
+        const f = colourOf(p, R, c.fg, mode, layer),
+          b = colourOf(p, R, c.bg, mode, layer);
+        if (!f || !b) return null;
+        const ratio = contrast(f, b);
+        return { ratio, pass: ratio >= c.min, fg: f, bg: b };
+      }
+      function failsOf(p, layer = "shown") {
+        let n = 0;
+        const checks = checksFor(p);
+        for (const mode of MODES) {
+          const R = paint(p, mode, layer);
+          for (const c of checks) {
+            const m = measure(p, c, mode, layer, R);
+            if (m && !m.pass) n++;
+          }
+        }
+        return n;
+      }
+
+      /* ------------------------------------------------------------ the decision */
+
+      function decisionData() {
+        const decisions = [],
+          undecided = [];
+        for (const p of P.palettes) {
+          const v = verdictOf(p.id);
+          const note = v?.note ? v.note.trim() : "";
+          const comments = v?.comments || [];
+          const edits = v?.edits || [];
+          const action = v?.action || (comments.length || edits.length ? "keep" : null);
+          if (!action) {
+            undecided.push(p.id);
+            continue;
+          }
+          const d = { id: p.id, action };
+          if (note) d.note = note;
+          if (comments.length)
+            d.comments = comments.map(({ token, role, mode, where, note }) => ({
+              token,
+              ...(role ? { role } : {}),
+              ...(mode ? { mode } : {}),
+              ...(where ? { where } : {}),
+              note,
+            }));
+          if (edits.length)
+            d.edits = edits.map(({ token, role, mode, from, to }) => ({
+              token,
+              ...(role ? { role } : {}),
+              mode,
+              from,
+              to,
+            }));
+          decisions.push(d);
+        }
+        return { decisions, undecided };
+      }
+      const shown = (v) =>
+        v && !v.action && ((v.comments || []).length || (v.edits || []).length) ? { ...v, action: "keep" } : v;
+      const chip = (v) =>
+        v && v.action && ACTIONS[v.action]
+          ? `<span class="verdict-chip v-${v.action}">${v.action === "favorite" ? "★ " : ""}${ACTIONS[v.action]}</span>`
+          : `<span class="verdict-chip v-none">—</span>`;
+
+      function status() {
+        if (plugin.readonly) return;
+        const d = decisionData();
+        const fav = d.decisions.find((x) => x.action === "favorite");
+        const kept = d.decisions.filter((x) => x.action === "keep").length;
+        const dropped = d.decisions.filter((x) => x.action === "drop").length;
+        const edits = d.decisions.reduce((n, x) => n + (x.edits?.length || 0), 0);
+        const parts = [];
+        if (fav) parts.push(`★ ${P.palettes.find((p) => p.id === fav.id)?.name ?? fav.id}`);
+        if (kept) parts.push(`${kept} kept`);
+        if (dropped) parts.push(`${dropped} dropped`);
+        if (edits) parts.push(`${edits} new value${edits === 1 ? "" : "s"}`);
+        const label = S.armed
+          ? `Hand over with ${d.undecided.length} undecided`
+          : parts.length
+            ? `Hand over: ${parts.join(", ")}`
+            : "Hand over";
+        plugin.handOverLabel(label);
+      }
+      const saveDraft = () => plugin.draft({ verdicts: S.verdicts, sel: S.sel, mode: S.mode });
+
+      /* ------------------------------------------------------------ rendering */
+
+      function renderTop() {
+        const d = decisionData();
+        const count = (a) => d.decisions.filter((x) => x.action === a).length;
+        return `<div class="top">
+      <span class="subject">${esc(P.subject.name)}</span>
+      ${P.subject.description ? `<span class="about">${esc(P.subject.description)}</span>` : ""}
+      <div class="tally" aria-live="polite">
+        <span><b>${count("favorite")}</b> favourite</span><span><b>${count("keep")}</b> kept</span><span><b>${count("drop")}</b> dropped</span><span><b>${d.undecided.length}</b> undecided</span>
+      </div>
+    </div>`;
+      }
+
+      function renderPick(p, i) {
+        const strip = (mode) => {
+          const R = paint(p, mode);
+          return `<span class="strip" aria-hidden="true">${["background", "surface", "text", "primary", "accent", "danger"].map((r) => `<span style="background:${hex(R[r])}"></span>`).join("")}</span>`;
+        };
+        const fails = failsOf(p);
+        const edits = editsOf(p.id).length,
+          comments = commentsOf(p.id).length;
+        const meta = [fails ? `<span class="bad">${fails} fail${fails === 1 ? "" : "s"}</span>` : "contrast ok"];
+        if (comments) meta.push(`${comments} comment${comments === 1 ? "" : "s"}`);
+        if (edits) meta.push(`${edits} new`);
+        return `<button type="button" class="pick" data-pick="${i}" aria-current="${i === S.sel}">
+      <span class="pick-name">${esc(p.name)}</span>${chip(shown(verdictOf(p.id)))}
+      <span class="strips">${strip("light")}${strip("dark")}</span>
+      <span class="pick-meta">${meta.join(" · ")}</span>
+    </button>`;
+      }
+
+      function renderRail() {
+        return `<nav class="rail" aria-label="Palettes">
+      <p class="rail-label">${P.palettes.length} palette${P.palettes.length === 1 ? "" : "s"}</p>
+      ${P.palettes.map(renderPick).join("")}
+    </nav>`;
+      }
+
+      /* One element of the sample screen: what it is called in a comment, and the
+   roles it is painted with, the first one the likeliest to be meant. */
+      const el = (label, roles) => `data-el="${label}" data-roles="${roles}"`;
+
+      function renderMock(p, mode) {
+        const R = paint(p, mode);
+        const vars = Object.entries(R)
+          .filter(([k]) => !k.includes(":"))
+          .map(([k, c]) => `--p-${k}:${hex(c)}`)
+          .join(";");
+        const alert = (s, label, icon, text) =>
+          `<div class="m-alert" ${el(label, s)} style="background:${hex(R[`tint:${s}`])};color:${hex(R[s])};box-shadow:inset 0 0 0 1px ${hex(R[`edge:${s}`])}">${Pinrail.icon(icon, { size: 14 })}<span>${text}</span></div>`;
+        const name = esc(P.subject.name);
+        return `<div class="mock" data-mode="${mode}" style="${vars}" ${el("Page", "background text")}>
+      <div class="m-top" ${el("Top bar", "surface border")}>
+        <span class="m-logo" ${el("Logo", "primary")}></span>
+        <span class="m-name" ${el("Product name", "text")}>${name}</span>
+        <span class="m-tabs"><span class="m-tab on" ${el("Current tab", "primary")}>Trips</span><span class="m-tab" ${el("Tab", "text-muted")}>Map</span><span class="m-tab" ${el("Tab", "text-muted")}>Saved</span></span>
+        <span class="m-avatar" ${el("Avatar", "accent on-accent")}>MA</span>
+      </div>
+      <div class="m-page">
+        <div>
+          <div class="m-h1" ${el("Heading", "text")}>Good morning, Maya</div>
+          <div class="m-muted" ${el("Secondary text", "text-muted")}>3 trips this month · 2 need a permit</div>
+        </div>
+        <div class="m-alerts">
+          ${alert("success", "Success message", "circle-check", "Permit for Coastal loop approved")}
+          ${alert("warning", "Warning message", "triangle-alert", "High winds forecast on Saturday")}
+          ${alert("danger", "Error message", "circle-alert", "Ridge trail closed after the storm")}
+          ${alert("info", "Info message", "info", "Sunset is at 20:42 on day two")}
+        </div>
+        <div class="m-card" ${el("Card", "surface border")}>
+          <div class="m-card-head"><span class="m-title" ${el("Card title", "text")}>Coastal loop</span><span class="m-badge" ${el("Badge", "accent on-accent")}>New</span></div>
+          <div class="m-muted" ${el("Secondary text", "text-muted")}>38 km over 3 days · moderate</div>
+          <div class="m-table" ${el("Table", "border")}>
+            <div class="m-tr m-th" ${el("Table head", "surface-muted text-muted")}><span>Day</span><span>Stage</span><span>km</span></div>
+            <div class="m-tr" ${el("Table row", "text")}><span>1</span><span>Harbour to Point Reyes</span><span>14.2</span></div>
+            <div class="m-tr" ${el("Table row", "text")}><span>2</span><span>Point Reyes to the dunes</span><span>12.6</span></div>
+          </div>
+          <span class="m-link" ${el("Link", "primary")}>View the route</span>
+          <div class="m-fields">
+            <label class="m-field"><span>Trip name</span><span class="m-input focused" ${el("Focused input", "focus border-strong")}>Coastal loop, May</span></label>
+            <label class="m-field"><span>Start</span><span class="m-input idle" ${el("Input", "border-strong surface")}>12 May</span></label>
+          </div>
+          <div class="m-actions">
+            <span class="m-btn primary" ${el("Primary button", "primary on-primary")}>Save trip</span>
+            <span class="m-btn secondary" ${el("Secondary button", "border-strong surface text")}>Cancel</span>
+          </div>
+        </div>
+      </div>
+      <div class="pins"></div>
+    </div>`;
+      }
+
+      function renderScreens(p) {
+        const modes = S.mode === "both" ? MODES : [S.mode];
+        const checks = checksFor(p);
+        return modes
+          .map((mode) => {
+            const R = paint(p, mode);
+            const fails = checks.filter((c) => {
+              const m = measure(p, c, mode, "shown", R);
+              return m && !m.pass;
+            }).length;
+            return `<div class="screen">
+        <div class="screen-label">${Pinrail.icon(mode === "light" ? "sun" : "moon", { size: 13 })}${mode === "light" ? "Light" : "Dark"}
+          ${fails ? `<span class="fails">${fails} of ${checks.length} below</span>` : `<span class="passes">${checks.length} of ${checks.length} pass</span>`}</div>
+        ${renderMock(p, mode)}
+      </div>`;
+          })
+          .join("");
+      }
+
+      function swatch(p, t, mode) {
+        const ro = plugin.readonly ? "disabled" : "";
+        const from = original(t, mode === "both" ? "light" : mode);
+        const saved = savedEdit(p, t, mode === "both" ? "light" : mode);
+        const ok = parse(from);
+        const label = `${t.name}${mode === "both" ? "" : ", " + mode}`;
+        const c = (v) => {
+          const x = parse(v);
+          return x
+            ? `<span class="chip" style="background:${esc(v)}"></span>`
+            : `<span class="chip bad" title="Not a colour"></span>`;
+        };
+        const body = saved
+          ? `${c(from)}<span class="was">${esc(from)}</span><span class="arrow">→</span>${c(saved.to)}<span class="now">${esc(saved.to)}</span>`
+          : `${c(from)}<span>${esc(from)}</span>${ok ? "" : `<span class="na">not a colour</span>`}`;
+        return `<button type="button" class="sw" data-token="${esc(t.name)}" data-mode="${mode}" aria-label="${plugin.readonly ? "" : "Comment on or change "}${esc(label)}" ${ro}>${body}</button>`;
+      }
+
+      function renderTokens(p) {
+        const counts = {};
+        for (const c of commentsOf(p.id)) counts[c.token] = (counts[c.token] || 0) + 1;
+        const rows = p.tokens
+          .map(
+            (t) => `<tr>
+      <td><button type="button" class="tok" data-token="${esc(t.name)}" ${plugin.readonly ? "disabled" : ""}><b>${esc(t.name)}</b><span class="role">${t.role ? esc(ROLE_LABEL[t.role]) : t.description ? esc(t.description) : "not on the screen"}</span></button></td>
+      ${single(t) ? `<td colspan="2">${swatch(p, t, "both")}<span class="both">both themes</span></td>` : `<td>${swatch(p, t, "light")}</td><td>${swatch(p, t, "dark")}</td>`}
+      <td>${counts[t.name] ? `<span class="count" title="${counts[t.name]} comment${counts[t.name] === 1 ? "" : "s"}">${counts[t.name]}</span>` : ""}</td>
+    </tr>`,
+          )
+          .join("");
+        return `<section aria-label="Tokens"><p class="label">Tokens</p>
+      <table class="grid tokens"><thead><tr><th>Token</th><th>Light</th><th>Dark</th><th></th></tr></thead><tbody>${rows}</tbody></table></section>`;
+      }
+
+      function ratioCell(p, c, mode) {
+        const m = measure(p, c, mode);
+        if (!m) return `<span class="na">—</span>`;
+        const lvl = level(m.ratio);
+        const tag = m.pass ? (c.min < 4.5 ? "pass" : lvl) : "fail";
+        const ro = plugin.readonly ? "disabled" : "";
+        const tokenMode = single(c.fgToken) ? "both" : mode;
+        return `<button type="button" class="ratio" data-token="${esc(c.fgToken.name)}" data-mode="${tokenMode}" data-where="${esc(c.label)}" aria-label="${esc(c.label)}, ${mode}: ${m.ratio} to 1, ${m.pass ? "passes" : "fails"}" ${ro}>
+      <span class="sample" style="background:${hex(m.bg)};color:${hex(m.fg)}">Aa</span>${m.ratio.toFixed(2)}<span class="lvl ${m.pass ? "pass" : "fail"}">${tag}</span></button>`;
+      }
+
+      function renderChecks(p) {
+        const rows = checksFor(p)
+          .map(
+            (c) => `<tr>
+      <td><span class="pair">${esc(c.label)}<small>${esc(c.fgToken.name)} on ${esc(c.bg.startsWith("tint:") ? c.bgToken.name + " tint" : c.bgToken.name)}</small></span></td>
+      <td class="min">${c.min}</td>
+      <td>${ratioCell(p, c, "light")}</td><td>${ratioCell(p, c, "dark")}</td>
+    </tr>`,
+          )
+          .join("");
+        return `<section aria-label="Contrast"><p class="label">Contrast, WCAG 2</p>
+      <table class="grid checks"><thead><tr><th>Pair</th><th>Min</th><th>Light</th><th>Dark</th></tr></thead><tbody id="checks-body">${rows}</tbody></table></section>`;
+      }
+
+      function renderAsks(p) {
+        const comments = commentsOf(p.id),
+          edits = editsOf(p.id);
+        const ro = plugin.readonly;
+        const where = (c) =>
+          [c.mode && c.mode !== "both" ? c.mode : c.mode === "both" ? "both themes" : "", c.where]
+            .filter(Boolean)
+            .join(" · ");
+        const items = [
+          ...comments.map(
+            (
+              c,
+              i,
+            ) => `<li data-ask="c${i}"><span class="num">${i + 1}</span><span>${esc(c.note)}<br><span class="what">${esc(c.token)}${where(c) ? " · " + esc(where(c)) : ""}</span></span>
+        <span>${ro ? "" : `<button type="button" class="pinrail-btn quiet" data-remove-comment="${i}">Remove</button>`}</span></li>`,
+          ),
+          ...edits.map(
+            (
+              e,
+              i,
+            ) => `<li data-ask="e${i}"><span class="num edit">${Pinrail.icon("pipette", { size: 12 })}</span><span><span class="change"><span class="chip" style="background:${esc(e.from)}"></span>${esc(e.from)} → <span class="chip" style="background:${esc(e.to)}"></span>${esc(e.to)}</span><br><span class="what">${esc(e.token)} · ${e.mode === "both" ? "both themes" : e.mode}</span></span>
+        <span>${ro ? "" : `<button type="button" class="pinrail-btn quiet" data-remove-edit="${i}">Undo</button>`}</span></li>`,
+          ),
+        ];
+        return `<section aria-label="Comments and new values"><p class="label">Comments and new values</p>
+      ${items.length ? `<ol class="asks">${items.join("")}</ol>` : `<p class="asks-empty">${ro ? "None." : "Click anything on the screen, a value in the tokens, or a ratio, to comment on that colour or set a new one."}</p>`}</section>`;
+      }
+
+      function renderPop(p) {
+        const E = S.editing;
+        if (!E || E.pid !== p.id) return "";
+        const t = tokenNamed(p, E.token);
+        const rows = modesOf(t)
+          .map((mode) => {
+            const from = original(t, mode === "both" ? "light" : mode);
+            const now = E.values[mode] ?? from;
+            const ok = parse(now);
+            const label = mode === "both" ? "Both" : mode === "light" ? "Light" : "Dark";
+            return `<div class="row"><span class="k">${label}</span>
+        <input type="color" data-pick-value="${mode}" value="${ok ? hex(ok) : "#000000"}" aria-label="${label} value of ${esc(t.name)}, picker">
+        <input type="text" data-value="${mode}" value="${esc(now)}" spellcheck="false" aria-label="${label} value of ${esc(t.name)}" class="${ok ? "" : "invalid"}">
+        <button type="button" class="reset" data-reset="${mode}" title="Back to ${esc(from)}">Reset</button></div>`;
+          })
+          .join("");
+        const modeSeg =
+          t && !single(t)
+            ? `<div class="seg" role="group" aria-label="The comment is about">${["light", "dark", "both"].map((m) => `<button type="button" data-cmode="${m}" aria-pressed="${E.mode === m}">${m === "both" ? "Both" : m === "light" ? "Light" : "Dark"}</button>`).join("")}</div>`
+            : "";
+        return `<div class="pop" id="pop" role="dialog" aria-label="Comment on ${esc(E.token)}">
+      <div class="pop-head"><b>${esc(E.token)}</b><span>${[t.role ? ROLE_LABEL[t.role] : "", E.where].filter(Boolean).map(esc).join(" · ")}</span></div>
+      ${E.choices.length > 1 ? `<div class="pop-choices" role="group" aria-label="Which colour">${E.choices.map((n) => `<button type="button" data-choose="${esc(n)}" aria-pressed="${n === E.token}">${esc(n)}</button>`).join("")}</div>` : ""}
+      ${modeSeg}
+      <textarea id="pop-note" aria-label="Comment on ${esc(E.token)}" placeholder="What should change? e.g. warmer, less saturated, darker in dark">${esc(E.note || "")}</textarea>
+      <div class="pop-values"><p class="label" style="margin:0 0 6px">New value</p>${rows}</div>
+      <ul class="pop-checks" id="pop-checks">${renderPopChecks(p)}</ul>
+      <div class="pop-actions"><span class="k">↵ save · esc</span><button type="button" class="pinrail-btn quiet" data-pop="cancel">Cancel</button><button type="button" class="pinrail-btn pinrail-btn-primary" data-pop="save">Save</button></div>
+    </div>`;
+      }
+
+      /* The pairs the token is in, as sent and as they would be with what is typed. */
+      function renderPopChecks(p) {
+        const E = S.editing;
+        const t = tokenNamed(p, E.token);
+        const mine = checksFor(p).filter((c) => c.fgToken === t || c.bgToken === t);
+        if (!mine.length) return `<li>Not in any contrast pair.</li>`;
+        return mine
+          .map((c) => {
+            const vals = MODES.map((mode) => {
+              const a = measure(p, c, mode, "original"),
+                b = measure(p, c, mode, "proposed");
+              if (!a || !b) return "";
+              const mark = (m) => `${m.ratio.toFixed(2)}${m.pass ? "" : "✕"}`;
+              return a.ratio === b.ratio
+                ? `${mode[0].toUpperCase()} ${mark(a)}`
+                : `${mode[0].toUpperCase()} ${mark(a)}→<span class="${b.ratio > a.ratio ? "up" : "down"}">${mark(b)}</span>`;
+            })
+              .filter(Boolean)
+              .join(" · ");
+            return `<li><span>${esc(c.label)}</span><span class="v">${vals}</span></li>`;
+          })
+          .join("");
+      }
+
+      function renderSheet() {
+        const p = palette();
+        const v = verdictOf(p.id) || {};
+        const prev = previousVerdict(plugin.previous, p.id);
+        const prevEdits =
+          (plugin.previous?.decision?.data?.decisions || []).find((d) => d.id === p.id)?.edits?.length || 0;
+        const ro = plugin.readonly ? "disabled" : "";
+        const edits = editsOf(p.id).length;
+        return `<main class="sheet" id="sheet" aria-labelledby="palette-name"><div class="sheet-inner" id="sheet-inner">
+      ${P.notes ? `<div class="notes">${Pinrail.markdown(P.notes)}</div>` : ""}
+      <header class="head">
+        <h2 id="palette-name">${esc(p.name)}</h2>
+        <span class="pid">${esc(p.id)} · ${S.sel + 1} of ${P.palettes.length} · ${p.tokens.length} tokens</span>
+        ${prev ? `<div class="previous">Last round: ${chip(prev)} ${prev.note ? "— " + esc(prev.note) : ""}${prevEdits ? ` · ${prevEdits} new value${prevEdits === 1 ? "" : "s"} asked for` : ""}</div>` : ""}
+      </header>
+      ${p.reasoning ? `<div class="reasoning">${Pinrail.markdown(p.reasoning)}</div>` : ""}
+
+      <div class="screenbar">
+        <div class="seg" role="group" aria-label="Themes shown">
+          ${[
+            ["both", "Light and dark"],
+            ["light", "Light"],
+            ["dark", "Dark"],
+          ]
+            .map(([m, l]) => `<button type="button" data-mode-show="${m}" aria-pressed="${S.mode === m}">${l}</button>`)
+            .join("")}
+          <kbd style="align-self:center;padding:0 6px">m</kbd>
+        </div>
+        ${edits ? `<button type="button" class="toggle" data-toggle-edits aria-pressed="${S.showEdits}">${Pinrail.icon("pipette", { size: 13 })}${S.showEdits ? "Showing" : "Show"} ${edits} new value${edits === 1 ? "" : "s"} <kbd>e</kbd></button>` : ""}
+        ${plugin.readonly ? "" : `<span class="hint">Click anything on the screen to comment on its colour</span>`}
+      </div>
+      <section class="screens ${plugin.readonly ? "" : "pickable"}" id="screens" aria-label="${esc(p.name)} on a sample screen">${renderScreens(p)}</section>
+
+      ${renderAsks(p)}
+      <div class="tables">${renderTokens(p)}${renderChecks(p)}</div>
+
+      <section class="decide" aria-label="Your verdict on ${esc(p.name)}">
+        <div class="choices" role="group" aria-label="Verdict">
+          ${Object.entries(ACTIONS)
+            .map(
+              ([a, label]) =>
+                `<button type="button" class="choice" data-action="${a}" aria-pressed="${v.action === a}" ${ro}>${a === "favorite" ? "★ " : ""}${label} <kbd>${KEYS[a]}</kbd></button>`,
+            )
+            .join("")}
+          <span class="nav"><button type="button" data-step="-1" aria-label="Previous palette">← k</button><button type="button" data-step="1" aria-label="Next palette">j →</button></span>
+        </div>
+        <textarea id="note" aria-label="Note on ${esc(p.name)}" placeholder="${v.action === "drop" ? "Why it goes (optional)" : "On the palette as a whole (optional)"}" ${ro}>${esc(v.note || "")}</textarea>
+      </section>
+      ${renderPop(p)}
+    </div></main>`;
+      }
+
+      function render() {
+        if (!P) return;
+        const sheet = document.getElementById("sheet");
+        const scroll = sheet ? sheet.scrollTop : 0;
+        const railEl = document.querySelector(".rail");
+        const railScroll = railEl ? railEl.scrollTop : 0;
+        const focusNote = document.activeElement?.id === "note";
+        document.getElementById("app").innerHTML =
+          `${renderTop()}<div class="work">${renderRail()}${renderSheet()}</div>`;
+        if (S.keepScroll) document.getElementById("sheet").scrollTop = scroll;
+        document.querySelector(".rail").scrollTop = railScroll;
+        S.keepScroll = false;
+        afterPaint();
+        if (S.editing) {
+          placePop();
+          document.getElementById("pop")?.scrollIntoView({ block: "nearest" });
+          document.getElementById("pop-note")?.focus({ preventScroll: true });
+        }
+        if (focusNote) document.getElementById("note")?.focus();
+        status();
+      }
+
+      /* While a value is typed, only the screens, the ratios and the pop-over's pairs change. */
+      function refreshPreview() {
+        const p = palette();
+        document.getElementById("screens").innerHTML = renderScreens(p);
+        document.getElementById("checks-body").outerHTML = renderChecks(p).match(
+          /<tbody id="checks-body">[\s\S]*<\/tbody>/,
+        )[0];
+        const pc = document.getElementById("pop-checks");
+        if (pc) pc.innerHTML = renderPopChecks(p);
+        afterPaint();
+      }
+
+      function afterPaint() {
+        placePins();
+        if (S.editing?.anchor) {
+          const { el: label, mode } = S.editing.anchor;
+          document.querySelectorAll(`.mock[data-mode="${mode}"] [data-el="${CSS.escape(label)}"]`).forEach((n, i) => {
+            if (i === (S.editing.anchor.nth || 0)) n.classList.add("lit");
+          });
+        }
+      }
+
+      /* A numbered pin on each element a comment was made on. */
+      function placePins() {
+        const p = palette();
+        document.querySelectorAll(".mock").forEach((mock) => {
+          const box = mock.querySelector(".pins");
+          const r0 = mock.getBoundingClientRect();
+          box.innerHTML = commentsOf(p.id)
+            .map((c, i) => {
+              if (!c.where || (c.mode !== "both" && c.mode && c.mode !== mock.dataset.mode)) return "";
+              const target = [...mock.querySelectorAll(`[data-el="${CSS.escape(c.where)}"]`)][c.nth || 0];
+              if (!target) return "";
+              const r = target.getBoundingClientRect();
+              return `<button type="button" class="pin" data-pin="${i}" aria-label="Comment ${i + 1}" style="left:${Math.min(r.right - r0.left - 2, r0.width - 12)}px;top:${Math.max(r.top - r0.top + 2, 12)}px">${i + 1}</button>`;
+            })
+            .join("");
+        });
+      }
+
+      function placePop() {
+        const pop = document.getElementById("pop");
+        const inner = document.getElementById("sheet-inner");
+        if (!pop || !inner) return;
+        const E = S.editing;
+        let anchor = null;
+        if (E.anchor)
+          anchor = [
+            ...document.querySelectorAll(`.mock[data-mode="${E.anchor.mode}"] [data-el="${CSS.escape(E.anchor.el)}"]`),
+          ][E.anchor.nth || 0];
+        if (!anchor && E.from) anchor = document.querySelector(E.from);
+        const box = inner.getBoundingClientRect();
+        const r = (anchor || inner).getBoundingClientRect();
+        const w = pop.offsetWidth;
+        let x = r.right - box.left + 12;
+        if (x + w > box.width - 8) x = r.left - box.left - w - 12;
+        if (x < 8) x = Math.max(8, Math.min(r.left - box.left, box.width - w - 8));
+        const below = x >= r.left - box.left && x < r.right - box.left;
+        const y = below ? r.bottom - box.top + 8 : r.top - box.top - 8;
+        pop.style.left = `${x}px`;
+        pop.style.top = `${Math.max(8, y)}px`;
+      }
+
+      /* ------------------------------------------------------------ acting */
+
+      function openPop({ token, mode, where = "", anchor = null, choices = null, from = null }) {
+        if (plugin.readonly) return;
+        const p = palette();
+        const t = tokenNamed(p, token);
+        if (!t) return;
+        const values = {};
+        for (const m of modesOf(t)) {
+          const e = savedEdit(p, t, m === "both" ? "light" : m);
+          if (e) values[m] = e.to;
+        }
+        S.editing = {
+          pid: p.id,
+          token,
+          mode: single(t) ? "both" : mode || "both",
+          where,
+          anchor,
+          choices: choices || [token],
+          from,
+          values,
+          note: S.editing?.pid === p.id ? S.editing.note : "",
+        };
+        S.keepScroll = true;
+        render();
+      }
+
+      function closePop() {
+        const from = S.editing?.from;
+        S.editing = null;
+        S.keepScroll = true;
+        render();
+        if (from) document.querySelector(from)?.focus({ preventScroll: true });
+      }
+
+      function savePop() {
+        const E = S.editing;
+        if (!E) return;
+        const p = palette();
+        const t = tokenNamed(p, E.token);
+        const v = verdictOf(p.id) || { action: null };
+        const comments = [...(v.comments || [])];
+        let edits = [...(v.edits || [])];
+        const note = (document.getElementById("pop-note")?.value ?? E.note ?? "").trim();
+        if (note)
+          comments.push({
+            token: t.name,
+            ...(t.role ? { role: t.role } : {}),
+            mode: E.mode,
+            ...(E.where ? { where: E.where } : {}),
+            ...(E.anchor?.nth ? { nth: E.anchor.nth } : {}),
+            note,
+          });
+        for (const mode of modesOf(t)) {
+          const typed = E.values[mode];
+          if (typed === undefined) continue;
+          const from = original(t, mode === "both" ? "light" : mode);
+          edits = edits.filter((e) => !(e.token === t.name && e.mode === mode));
+          const to = normal(typed);
+          if (to && to !== normal(from))
+            edits.push({
+              token: t.name,
+              ...(t.role ? { role: t.role } : {}),
+              mode,
+              from,
+              to: /^#|^[a-z]+$/i.test(typed.trim()) ? to : typed.trim(),
+            });
+        }
+        // the order the tokens are listed in, light before dark
+        const at = (e) => p.tokens.findIndex((x) => x.name === e.token) * 3 + ["light", "dark", "both"].indexOf(e.mode);
+        edits.sort((a, b) => at(a) - at(b));
+        S.verdicts[p.id] = { ...v, comments, edits };
+        S.armed = false;
+        S.editing = null;
+        S.keepScroll = true;
+        saveDraft();
+        render();
+        if (E.from) document.querySelector(E.from)?.focus({ preventScroll: true });
+      }
+
+      function select(i) {
+        S.sel = (i + P.palettes.length) % P.palettes.length;
+        S.editing = null;
+        render();
+        document.getElementById("sheet").scrollTop = 0;
+        document.querySelector(`[data-pick="${S.sel}"]`)?.scrollIntoView({ block: "nearest" });
+        saveDraft();
+      }
+      function setVerdict(action) {
+        if (plugin.readonly) return;
+        const id = palette().id;
+        const cur = verdictOf(id);
+        if (cur?.action === action) S.verdicts[id] = { ...cur, action: null };
+        else {
+          if (action === "favorite")
+            for (const [other, v] of Object.entries(S.verdicts))
+              if (v.action === "favorite") S.verdicts[other] = { ...v, action: "keep" };
+          S.verdicts[id] = { ...(cur || {}), action };
+        }
+        S.armed = false;
+        S.keepScroll = true;
+        saveDraft();
+        render();
+      }
+      function cycleMode() {
+        const order = ["both", "light", "dark"];
+        S.mode = order[(order.indexOf(S.mode) + 1) % order.length];
+        S.keepScroll = true;
+        render();
+        saveDraft();
+      }
+      function handOver() {
+        if (S.editing) savePop();
+        const data = decisionData();
+        if (data.undecided.length && !S.armed) {
+          S.armed = true;
+          status();
+          return;
+        }
+        return data;
+      }
+
+      const plugin = Pinrail.connect({
+        onInit({ review, draft }) {
+          P = review.payload;
+          S.verdicts = {};
+          S.sel = 0;
+          S.editing = null;
+          S.armed = false;
+          const decided = review.decision?.data;
+          if (decided)
+            for (const d of decided.decisions || [])
+              S.verdicts[d.id] = {
+                action: d.action,
+                note: d.note || "",
+                comments: d.comments || [],
+                edits: d.edits || [],
+              };
+          else if (draft && typeof draft === "object" && draft.verdicts) {
+            S.verdicts = draft.verdicts;
+            if (Number.isInteger(draft.sel) && draft.sel < P.palettes.length) S.sel = draft.sel;
+            if (["both", "light", "dark"].includes(draft.mode)) S.mode = draft.mode;
+          }
+          render();
+        },
+        onSubmitted() {
+          S.editing = null;
+          render();
+        },
+        onViolations(errors) {
+          plugin.handOverLabel(`Check: ${errors[0]?.message ?? "the decision"}`);
+        },
+        onCollect() {
+          return handOver();
+        },
+      });
+
+      new ResizeObserver(() => {
+        if (P) {
+          placePins();
+          if (S.editing) placePop();
+        }
+      }).observe(document.getElementById("app"));
+
+      /* ------------------------------------------------------------ events */
+
+      document.addEventListener("click", (e) => {
+        if (!P) return;
+        const t = e.target.closest ? e.target : null;
+        if (!t) return;
+        const pop = t.closest("[data-pop]");
+        if (pop) return pop.dataset.pop === "save" ? savePop() : closePop();
+        const choose = t.closest("[data-choose]");
+        if (choose) {
+          S.editing.note = document.getElementById("pop-note").value;
+          const { mode, where, anchor, choices, from } = S.editing;
+          return openPop({ token: choose.dataset.choose, mode, where, anchor, choices, from });
+        }
+        const cmode = t.closest("[data-cmode]");
+        if (cmode) {
+          S.editing.mode = cmode.dataset.cmode;
+          S.editing.note = document.getElementById("pop-note").value;
+          S.keepScroll = true;
+          return render();
+        }
+        const reset = t.closest("[data-reset]");
+        if (reset) {
+          const tok = tokenNamed(palette(), S.editing.token),
+            mode = reset.dataset.reset;
+          const from = original(tok, mode === "both" ? "light" : mode);
+          S.editing.values[mode] = from;
+          const input = document.querySelector(`[data-value="${mode}"]`);
+          input.value = from;
+          input.classList.remove("invalid");
+          document.querySelector(`[data-pick-value="${mode}"]`).value = hex(parse(from) || { r: 0, g: 0, b: 0 });
+          return refreshPreview();
+        }
+        if (t.closest("#pop")) return;
+        const pin = t.closest("[data-pin]");
+        if (pin) {
+          const li = document.querySelector(`[data-ask="c${pin.dataset.pin}"]`);
+          li?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          li?.classList.add("flash");
+          setTimeout(() => li?.classList.remove("flash"), 1200);
+          return;
+        }
+        const mockEl = t.closest(".mock [data-el]");
+        if (mockEl) {
+          if (plugin.readonly) return;
+          const p = palette();
+          const mock = mockEl.closest(".mock");
+          const label = mockEl.dataset.el;
+          const choices = mockEl.dataset.roles
+            .split(" ")
+            .map((r) => tokenFor(p, r)?.name)
+            .filter(Boolean);
+          if (!choices.length) return;
+          const nth = [...mock.querySelectorAll(`[data-el="${CSS.escape(label)}"]`)].indexOf(mockEl);
+          return openPop({
+            token: choices[0],
+            mode: mock.dataset.mode,
+            where: label,
+            anchor: { el: label, mode: mock.dataset.mode, nth },
+            choices: [...new Set(choices)],
+          });
+        }
+        if (S.editing && !t.closest("[data-token]")) return closePop();
+        const tokenBtn = t.closest("[data-token]");
+        if (tokenBtn) {
+          const where = tokenBtn.dataset.where || "";
+          const sel = tokenBtn.classList.contains("ratio")
+            ? `.ratio[data-token="${CSS.escape(tokenBtn.dataset.token)}"][data-mode="${tokenBtn.dataset.mode}"][data-where="${CSS.escape(where)}"]`
+            : `.${tokenBtn.classList[0]}[data-token="${CSS.escape(tokenBtn.dataset.token)}"]${tokenBtn.dataset.mode ? `[data-mode="${tokenBtn.dataset.mode}"]` : ""}`;
+          return openPop({
+            token: tokenBtn.dataset.token,
+            mode: tokenBtn.dataset.mode || (S.mode === "both" ? "both" : S.mode),
+            where: where ? `Contrast: ${where}` : "",
+            from: sel,
+          });
+        }
+        const removeC = t.closest("[data-remove-comment]");
+        if (removeC) {
+          const id = palette().id,
+            v = verdictOf(id);
+          S.verdicts[id] = { ...v, comments: v.comments.filter((_, i) => i !== Number(removeC.dataset.removeComment)) };
+          S.keepScroll = true;
+          saveDraft();
+          return render();
+        }
+        const removeE = t.closest("[data-remove-edit]");
+        if (removeE) {
+          const id = palette().id,
+            v = verdictOf(id);
+          S.verdicts[id] = { ...v, edits: v.edits.filter((_, i) => i !== Number(removeE.dataset.removeEdit)) };
+          S.keepScroll = true;
+          saveDraft();
+          return render();
+        }
+        const showMode = t.closest("[data-mode-show]");
+        if (showMode) {
+          S.mode = showMode.dataset.modeShow;
+          S.keepScroll = true;
+          render();
+          return saveDraft();
+        }
+        if (t.closest("[data-toggle-edits]")) {
+          S.showEdits = !S.showEdits;
+          S.keepScroll = true;
+          return render();
+        }
+        const pick = t.closest("[data-pick]");
+        if (pick) return select(Number(pick.dataset.pick));
+        const choice = t.closest("[data-action]");
+        if (choice) return setVerdict(choice.dataset.action);
+        const step = t.closest("[data-step]");
+        if (step) return select(S.sel + Number(step.dataset.step));
+      });
+
+      document.addEventListener("pointerover", (e) => {
+        if (plugin.readonly) return;
+        const hot = e.target.closest?.(".mock [data-el]");
+        document.querySelectorAll(".mock .hot").forEach((n) => {
+          if (n !== hot) n.classList.remove("hot");
+        });
+        if (hot) hot.classList.add("hot");
+      });
+
+      document.addEventListener("input", (e) => {
+        if (!P || plugin.readonly) return;
+        const t = e.target;
+        if (t.id === "note") {
+          const id = palette().id;
+          S.verdicts[id] = { ...(verdictOf(id) || { action: null }), note: t.value };
+          S.armed = false;
+          plugin.draft({ verdicts: S.verdicts, sel: S.sel, mode: S.mode });
+          return;
+        }
+        if (!S.editing) return;
+        if (t.id === "pop-note") {
+          S.editing.note = t.value;
+          return;
+        }
+        if (t.dataset.value) {
+          S.editing.values[t.dataset.value] = t.value;
+          const ok = parse(t.value);
+          t.classList.toggle("invalid", !ok);
+          if (ok) document.querySelector(`[data-pick-value="${t.dataset.value}"]`).value = hex(ok);
+          return refreshPreview();
+        }
+        if (t.dataset.pickValue) {
+          S.editing.values[t.dataset.pickValue] = t.value;
+          const text = document.querySelector(`[data-value="${t.dataset.pickValue}"]`);
+          text.value = t.value;
+          text.classList.remove("invalid");
+          return refreshPreview();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.target.closest?.("#pop")) {
+          if (
+            e.key === "Enter" &&
+            !e.shiftKey &&
+            !e.metaKey &&
+            !e.ctrlKey &&
+            e.target.matches("textarea, input[type=text]")
+          ) {
+            e.preventDefault();
+            savePop();
+          }
+          if (e.key === "Escape") {
+            e.preventDefault();
+            closePop();
+          }
+          return;
+        }
+        if (!P || e.metaKey || e.ctrlKey || e.altKey) return;
+        if (e.target.closest?.("textarea, input")) return;
+        const key = e.key.toLowerCase();
+        if (key === "j") select(S.sel + 1);
+        else if (key === "k") select(S.sel - 1);
+        else if (key === "f") setVerdict("favorite");
+        else if (key === "s") setVerdict("keep");
+        else if (key === "x") setVerdict("drop");
+        else if (key === "m") cycleMode();
+        else if (key === "e" && editsOf(palette().id).length) {
+          S.showEdits = !S.showEdits;
+          S.keepScroll = true;
+          render();
+        } else if (key === "escape" && S.editing) closePop();
+        else return;
+        e.preventDefault();
+      });
+
+      /* What the previous round decided for an item: its decision's
+   `decisions: [{ id, action, note }]` and `undecided: [id]`. The previous
+   round may come from an earlier release, so its shape is checked. */
+      function previousVerdict(previous, id) {
+        const data = previous && previous.decision && previous.decision.data;
+        if (!data || typeof data !== "object") return null;
+        const d = (Array.isArray(data.decisions) ? data.decisions : []).find((x) => x && x.id === id);
+        if (d) return { action: d.action, note: d.note || "" };
+        if (Array.isArray(data.undecided) && data.undecided.includes(id)) return { action: "undecided", note: "" };
+        return null;
+      }
+    </script>
+  </body>
+</html>

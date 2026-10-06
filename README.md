@@ -19,6 +19,7 @@ holds the other official plugins.
 | [`logo`](logo/README.md) | candidate logo marks and icons, shown at every size |
 | [`model-3d`](model-3d/README.md) | candidate 3D models, viewed on a stage, with changes requested on their parts |
 | [`motion`](motion/README.md) | candidate animations, in CSS or Lottie, played frame by frame and side by side |
+| [`palette`](palette/README.md) | colour palettes or design tokens, light and dark, checked for contrast on the parts of a product |
 | [`trade`](trade/README.md) | a trade an agent proposes, on its candlestick chart with the entry, stop and targets to adjust |
 | [`visual-diff`](visual-diff/README.md) | before and after images of a revision, compared with a wipe, side by side, a fade or a difference highlight |
 

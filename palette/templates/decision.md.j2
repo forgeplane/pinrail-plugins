@@ -1,0 +1,40 @@
+{#- The decision as an agent reads it back: the favourite first, then what is
+    kept and what is dropped, each palette by name with the reviewer's note,
+    the new values to set, and the comments on its tokens. -#}
+{%- macro theme(mode) -%}{{ "both themes" if mode == "both" else mode }}{%- endmacro -%}
+{%- macro palette(item) -%}
+- **{{ item.payload.name if item.payload else item.id }}** (`{{ item.id }}`)
+{%- if item.note %}
+  > {{ item.note }}
+{%- endif %}
+{%- for e in item.edits or [] %}
+  - set `{{ e.token }}` ({{ theme(e.mode) }}): `{{ e.from }}` → `{{ e.to }}`
+{%- endfor %}
+{%- for c in item.comments or [] %}
+  - on `{{ c.token }}`{% if c.mode or c.where %} ({% if c.mode %}{{ theme(c.mode) }}{% endif %}{% if c.mode and c.where %}, {% endif %}{% if c.where %}{{ c.where }}{% endif %}){% endif %}: {{ c.note }}
+{%- endfor %}
+{%- endmacro -%}
+{%- set favourite = items | selectattr("action", "equalto", "favorite") | list -%}
+{%- set kept = items | selectattr("action", "equalto", "keep") | list -%}
+{%- set dropped = items | selectattr("action", "equalto", "drop") | list -%}
+{%- if favourite %}
+## Favourite
+{% for item in favourite %}
+{{ palette(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if kept %}
+## Kept on the shortlist
+{% for item in kept %}
+{{ palette(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if dropped %}
+## Dropped
+{% for item in dropped %}
+{{ palette(item) }}
+{%- endfor %}
+{% endif -%}
+{%- if data.undecided %}
+Undecided: {% for id in data.undecided %}`{{ id }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif -%}

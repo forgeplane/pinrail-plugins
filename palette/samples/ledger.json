@@ -1,0 +1,64 @@
+{
+  "title": "Ledger colours",
+  "payload": {
+    "notes": "A first direction for the Ledger colours.",
+    "subject": {
+      "name": "Ledger"
+    },
+    "palettes": [
+      {
+        "id": "A",
+        "name": "Ink",
+        "reasoning": "Near-black on paper, one blue.",
+        "tokens": [
+          {
+            "name": "--bg",
+            "role": "background",
+            "light": "#ffffff",
+            "dark": "#111214"
+          },
+          {
+            "name": "--surface",
+            "role": "surface",
+            "light": "#f6f7f9",
+            "dark": "#1a1b1e"
+          },
+          {
+            "name": "--text",
+            "role": "text",
+            "light": "#17181c",
+            "dark": "#ececef"
+          },
+          {
+            "name": "--text-muted",
+            "role": "text-muted",
+            "light": "#61646c",
+            "dark": "#9a9ca5"
+          },
+          {
+            "name": "--primary",
+            "role": "primary",
+            "light": "#2456d6",
+            "dark": "#7aa2ff"
+          },
+          {
+            "name": "--on-primary",
+            "role": "on-primary",
+            "light": "#ffffff",
+            "dark": "#0b1530"
+          },
+          {
+            "name": "--accent",
+            "role": "accent",
+            "value": "#ffcf5c"
+          },
+          {
+            "name": "--on-accent",
+            "role": "on-accent",
+            "value": "#3b2a00"
+          }
+        ]
+      }
+    ]
+  }
+}
