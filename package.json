@@ -1,0 +1,17 @@
+{
+  "name": "pinrail-plugins",
+  "private": true,
+  "description": "Pinrail's official plugins, tested under the pinrail-sdk harness",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.26.2",
+  "scripts": {
+    "test": "node --test */tests/*.test.cjs scripts/*.test.mjs && NODE_PATH=node_modules playwright test",
+    "format": "git ls-files -z '*.html' '*.js' '*.mjs' '*.cjs' '*.ts' '*.css' | xargs -0 prettier --write",
+    "format:check": "git ls-files -z '*.html' '*.js' '*.mjs' '*.cjs' '*.ts' '*.css' | xargs -0 prettier --check"
+  },
+  "devDependencies": {
+    "pinrail-sdk": "github:forgeplane/pinrail#main&path:sdk",
+    "@playwright/test": "^1.63.0",
+    "prettier": "^3.9.9"
+  }
+}

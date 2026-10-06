@@ -1,0 +1,6 @@
+# The SDK comes from the main branch of the app's repository until it is on
+# npm; pnpm-lock.yaml records the commit it was last taken from. Its prepack
+# script builds dist/markdown.js, which pnpm runs only for a dependency
+# allowed here.
+onlyBuiltDependencies:
+  - pinrail-sdk

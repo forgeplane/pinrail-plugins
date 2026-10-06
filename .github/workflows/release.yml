@@ -1,0 +1,66 @@
+# A tag named <name>-v<version> (email-v1.1.0) builds that plugin and
+# attaches its bundle, <name>-<version>.zip, to a GitHub release of the same
+# tag. Installing it then needs no toolchain: download the zip and install
+# it from disk.
+#
+#   pinrail plugins install ~/Downloads/email-1.1.0.zip
+#
+# The manifest's version must be the tag's, and the plugin's CHANGELOG.md
+# must have a section for it, which becomes the release notes, or the
+# release fails.
+name: release
+
+on:
+  push:
+    tags: ["*-v*"]
+
+# read-only, unless a job asks for more
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          # a release builds from nothing a cache could have changed
+          package-manager-cache: false
+      # the name becomes a path: a plugin's name, and a folder here
+      - name: Name and version from the tag
+        run: |
+          name="${GITHUB_REF_NAME%-v*}"
+          [[ "$name" =~ ^[a-z][a-z0-9_-]*$ && -f "$name/manifest.json" ]] || { echo "the tag names no plugin: $name"; exit 1; }
+          echo "PLUGIN=$name" >> "$GITHUB_ENV"
+          echo "VERSION=${GITHUB_REF_NAME##*-v}" >> "$GITHUB_ENV"
+      # before anything is built: a release says what changed
+      - name: The release notes
+        run: node scripts/release-notes.mjs "$PLUGIN" "$VERSION" > "$RUNNER_TEMP/notes.md"
+      - name: Build when the package has a build script
+        working-directory: ${{ env.PLUGIN }}
+        run: |
+          if [ -f package.json ] && node -e 'process.exit(require("./package.json").scripts?.build ? 0 : 1)'; then
+            npm ci && npm run build
+          fi
+          declared=$(node -e 'process.stdout.write(require("./manifest.json").version.trim())')
+          test "$declared" = "$VERSION" || { echo "manifest says $declared, tag says $VERSION"; exit 1; }
+      - name: The bundle, and nothing else
+        working-directory: ${{ env.PLUGIN }}
+        run: |
+          # Lucide's icons carry their licence with them
+          if [ -d view/icons ]; then cp ../licenses/lucide-icons.txt view/icons/LICENSE; fi
+          zip -r "../$PLUGIN-$VERSION.zip" . \
+            -x "node_modules/*" "src/*" "tests/*" "test/*" "fixtures/*" ".*" "*/.*" \
+               "package.json" "package-lock.json" "pnpm-lock.yaml" "yarn.lock" "bun.lockb" \
+               "tsconfig*.json" "vite.config.*" "vitest.config.*" "playwright.config.*"
+      - name: Release the bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "$PLUGIN-$VERSION.zip" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md"

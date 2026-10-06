@@ -1,0 +1,119 @@
+# Every plugin built where it has a build, checked as the app would check
+# it, and tested under the pinrail-sdk harness.
+#
+# The SDK and the CLI come from the newest commit of forgeplane/pinrail's
+# main branch, so a change there that breaks a plugin shows here on the next
+# run. While that repository is private, both need the
+# PINRAIL_READ_TOKEN secret: a fine-grained token with read access to its
+# contents. Once it is public, the secret can go.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# read-only, unless a job asks for more
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugins:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: "*/package-lock.json"
+      # pnpm, at the version package.json names
+      - name: pnpm
+        run: corepack enable
+      # the SDK at the newest commit of the app's main branch, not the one
+      # the lock file recorded; pnpm fetches it with git, which reads the
+      # token from here
+      - name: Install
+        env:
+          TOKEN: ${{ secrets.PINRAIL_READ_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            git config --global url."https://x-access-token:$TOKEN@github.com/forgeplane/pinrail".insteadOf "https://github.com/forgeplane/pinrail"
+          fi
+          # without the lock file, pnpm resolves the main branch again;
+          # `pnpm update` and `pnpm add` lose the folder a git dependency names
+          rm pnpm-lock.yaml
+          pnpm install
+          git config --global --unset-all url."https://x-access-token:$TOKEN@github.com/forgeplane/pinrail".insteadOf || true
+      # the views, scripts, tests and styles as Prettier formats them;
+      # `pnpm format` fixes them
+      - name: Format
+        run: pnpm run format:check
+      # the commit the SDK came from, so the CLI is built from the same one
+      - name: The Pinrail commit
+        id: pinrail
+        run: |
+          ref=$(grep -oE 'forgeplane/pinrail\.git#[0-9a-f]{40}' pnpm-lock.yaml | head -1 | cut -d'#' -f2)
+          test -n "$ref" || { echo "pnpm-lock.yaml names no commit of forgeplane/pinrail"; exit 1; }
+          echo "SDK and CLI from forgeplane/pinrail@$ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: forgeplane/pinrail
+          ref: ${{ steps.pinrail.outputs.ref }}
+          token: ${{ secrets.PINRAIL_READ_TOKEN }}
+          path: .pinrail
+          persist-credentials: false
+      # `pinrail plugins check` checks the plugins, so the CLI goes on the
+      # PATH first. It is built from the SDK's commit until a release carries
+      # the CLI on its own.
+      - name: Rust toolchain
+        working-directory: .pinrail
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          shared-key: pinrail-cli
+          cache-on-failure: true
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          workspaces: .pinrail/cli
+      - name: Build the CLI
+        run: |
+          cargo build --manifest-path .pinrail/cli/Cargo.toml --locked
+          echo "$PWD/.pinrail/cli/target/debug" >> "$GITHUB_PATH"
+      # each plugin with a build step, whose package.json has a build script
+      - name: Build the plugins that have a build
+        run: |
+          for dir in */; do
+            [ -f "$dir/manifest.json" ] && [ -f "$dir/package.json" ] || continue
+            node -e 'process.exit(require(process.argv[1]).scripts?.build ? 0 : 1)' "$PWD/$dir/package.json" || continue
+            (cd "$dir" && npm ci && npm run build)
+          done
+      # after the builds, which write the views that are not committed. The
+      # check refuses a plugin the app would refuse, and a recorded decision
+      # whose Markdown or summary is not what the app makes of it; an
+      # official plugin must also have nothing dropped.
+      - name: Check the plugins
+        run: |
+          for dir in */; do
+            [ -f "$dir/manifest.json" ] || continue
+            pinrail plugins check "$dir" --json > verdict.json || { cat verdict.json; exit 1; }
+            jq -e '.warnings == []' verdict.json > /dev/null || { echo "$dir: features dropped:"; jq '.warnings' verdict.json; exit 1; }
+          done
+          rm verdict.json
+      - name: Test
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm test
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: plugin-traces
+          path: test-results
+          if-no-files-found: ignore
