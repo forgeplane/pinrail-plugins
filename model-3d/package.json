@@ -1,0 +1,14 @@
+{
+  "name": "pinrail-plugin-model-3d",
+  "private": true,
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "esbuild scripts/three.mjs --bundle --format=esm --minify --legal-comments=eof --outfile=view/vendor/three.js",
+    "fixture": "node scripts/fixture.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25",
+    "three": "0.186.0"
+  }
+}
