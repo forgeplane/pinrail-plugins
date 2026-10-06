@@ -11,6 +11,7 @@ holds the other official plugins.
 
 | Plugin | For |
 |---|---|
+| [`artifact`](artifact/README.md) | an HTML page an agent designed, commented on element by element |
 
 ## Installing a plugin
 
