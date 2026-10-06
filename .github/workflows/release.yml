@@ -58,7 +58,7 @@ jobs:
           if [ -d view/icons ]; then cp ../../licenses/lucide-icons.txt view/icons/LICENSE; fi
           zip -r "$GITHUB_WORKSPACE/$PLUGIN-$VERSION.zip" . \
             -x "node_modules/*" "src/*" "tests/*" "test/*" "fixtures/*" ".*" "*/.*" \
-               "package.json" "package-lock.json" "pnpm-lock.yaml" "yarn.lock" "bun.lockb" \
+               "screenshot.png" "package.json" "package-lock.json" "pnpm-lock.yaml" "yarn.lock" "bun.lockb" \
                "tsconfig*.json" "vite.config.*" "vitest.config.*" "playwright.config.*"
       - name: Release the bundle
         env:
