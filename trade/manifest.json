@@ -1,0 +1,18 @@
+{
+  "name": "trade",
+  "version": "0.1.0",
+  "title": "Trade approval",
+  "description": "A trade an agent proposes, on the market's candlestick chart with its entry, stop and targets drawn in, beside the agent's reasoning. Approve it or reject it, with a note.",
+  "use_when": "You decided on a trade (to buy, sell, close or hold a position) and need a person to look at the chart and your reasoning and approve it before you place the order.",
+  "summary": {
+    "outcome": {
+      "verdict": {
+        "at": "/verdict",
+        "values": {
+          "approve": { "label": "approved", "tone": "success" },
+          "reject": { "label": "rejected", "tone": "danger" }
+        }
+      }
+    }
+  }
+}

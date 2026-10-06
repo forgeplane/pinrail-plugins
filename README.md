@@ -17,6 +17,7 @@ holds the other official plugins.
 | [`email`](email/README.md) | emails an agent wants to send, to edit, send, revise or discard |
 | [`logo`](logo/README.md) | candidate logo marks and icons, shown at every size |
 | [`model-3d`](model-3d/README.md) | candidate 3D models, viewed on a stage, with changes requested on their parts |
+| [`trade`](trade/README.md) | a trade an agent proposes, on its candlestick chart with the entry, stop and targets to adjust |
 
 ## Installing a plugin
 

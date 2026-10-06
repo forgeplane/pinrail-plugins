@@ -1,0 +1,17 @@
+{#- The decision as an agent reads it back: the verdict on the trade, what
+    the trade was, the stop and targets the person moved, and their note. -#}
+{%- set p = review.payload.proposal -%}
+**{{ "Approved" if data.verdict == "approve" else "Rejected" }}**: {{ p.side }} {{ review.payload.instrument.symbol }}
+{%- if p.size %} {{ p.size.quantity }} {{ p.size.unit }}{% endif %}, {{ p.order_type }}
+{%- if p.entry %} at {{ p.entry }}{% endif %}
+{%- if p.stop_loss %}, stop {{ p.stop_loss }}{% endif %}
+{%- if p.take_profit %}, targets {{ p.take_profit | join(", ") }}{% endif %}
+{% if data.stop_loss is defined %}
+The person moved the stop loss to **{{ data.stop_loss }}**.
+{%- endif %}
+{%- if data.take_profit is defined %}
+The person moved the targets to **{{ data.take_profit | join(", ") }}**.
+{%- endif %}
+{% if data.note %}
+> {{ data.note }}
+{% endif -%}

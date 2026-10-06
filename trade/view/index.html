@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Trade approval</title>
+    <link rel="stylesheet" href="/sdk/v1/pinrail-plugin.css" />
+    <script src="/sdk/v1/pinrail-plugin.js"></script>
+    <script src="vendor/markdown-it.min.js"></script>
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        height: 100%;
+      }
+
+      /* the market: what it is, its last price, and the chart */
+      .market {
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        min-width: 0;
+        min-height: 0;
+      }
+      .top {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        padding: 12px 16px 8px;
+      }
+      .top h1 {
+        margin: 0;
+        font: 600 16px var(--pinrail-mono);
+      }
+      .top .name {
+        color: var(--pinrail-dim);
+        font-size: 13px;
+      }
+      .top .last {
+        margin-left: auto;
+        font: 600 16px var(--pinrail-mono);
+        font-variant-numeric: tabular-nums;
+      }
+      .top .change {
+        font: 12px var(--pinrail-mono);
+      }
+      .up {
+        color: var(--pinrail-success);
+      }
+      .down {
+        color: var(--pinrail-danger);
+      }
+
+      .chart {
+        position: relative;
+        min-height: 0;
+        margin: 0 8px;
+        cursor: crosshair;
+        touch-action: none;
+      }
+      .chart canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .readout {
+        position: absolute;
+        left: 8px;
+        top: 4px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 10px;
+        font: 11px var(--pinrail-mono);
+        color: var(--pinrail-dim);
+        pointer-events: none;
+        font-variant-numeric: tabular-nums;
+      }
+      .readout b {
+        color: var(--pinrail-text);
+        font-weight: 500;
+      }
+      .chart.on-line {
+        cursor: ns-resize;
+      }
+      .chart.panning {
+        cursor: grabbing;
+      }
+
+      /* the toolbar: the timeframe, the range, the zoom, and the reset of the lines */
+      .tools {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        padding: 0 16px 8px;
+      }
+      .tools .label {
+        font: 600 10px var(--pinrail-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--pinrail-border);
+        border-radius: 7px;
+        overflow: hidden;
+      }
+      .seg button {
+        border: 0;
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 11.5px var(--pinrail-mono);
+        padding: 3px 9px;
+        cursor: pointer;
+      }
+      .seg button + button {
+        border-left: 1px solid var(--pinrail-border);
+      }
+      .seg button:hover {
+        color: var(--pinrail-text);
+        background: var(--pinrail-bg-hover);
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--pinrail-bg-raised);
+        color: var(--pinrail-text);
+        font-weight: 600;
+      }
+      .tools .reset {
+        margin-left: auto;
+        border: 1px solid var(--pinrail-border);
+        background: none;
+        color: var(--pinrail-dim);
+        font: 500 11.5px var(--pinrail-sans);
+        padding: 3px 10px;
+        border-radius: 7px;
+        cursor: pointer;
+      }
+      .tools .reset:hover:not(:disabled) {
+        color: var(--pinrail-text);
+        border-color: var(--pinrail-border-strong);
+      }
+      .tools .reset:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      [data-readonly="true"] .tools .reset {
+        display: none;
+      }
+      .foot {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        padding: 6px 16px 10px;
+        font-size: 11.5px;
+        color: var(--pinrail-faint);
+      }
+      .legend {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .legend i {
+        display: inline-block;
+        width: 14px;
+        height: 0;
+        border-top: 2px solid;
+      }
+      .legend i.dashed {
+        border-top-style: dashed;
+      }
+      .legend .swatch {
+        display: inline-block;
+        width: 10px;
+        height: 8px;
+        opacity: 0.35;
+        border-radius: 1px;
+      }
+      .source {
+        margin-left: auto;
+      }
+      [data-readonly="true"] .hint {
+        display: none;
+      }
+
+      /* the proposal, the reasoning and the verdict */
+      .side {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 0;
+        border-left: 1px solid var(--pinrail-border);
+        background: var(--pinrail-bg-panel);
+      }
+      .proposal {
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--pinrail-border);
+      }
+      .headline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .side-badge {
+        font: 700 12px var(--pinrail-mono);
+        letter-spacing: 0.06em;
+        padding: 3px 9px;
+        border-radius: 6px;
+        color: #fff;
+        text-transform: uppercase;
+      }
+      .side-badge.buy {
+        background: var(--pinrail-success);
+      }
+      .side-badge.sell {
+        background: var(--pinrail-danger);
+      }
+      .side-badge.close,
+      .side-badge.hold {
+        background: var(--pinrail-bg-hover);
+        color: var(--pinrail-text);
+      }
+      .headline .what {
+        font: 600 13px var(--pinrail-sans);
+      }
+      .figures {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 5px 12px;
+        margin: 0;
+        font-size: 12.5px;
+        align-items: baseline;
+      }
+      .figures dt {
+        color: var(--pinrail-dim);
+      }
+      .figures dd {
+        margin: 0;
+        font: 12.5px var(--pinrail-mono);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+      .figures dd.wide {
+        grid-column: span 2;
+      }
+      .figures .was {
+        color: var(--pinrail-faint);
+        text-decoration: line-through;
+        font-size: 11px;
+        margin-right: 6px;
+      }
+      .figures dd.away {
+        color: var(--pinrail-faint);
+        font-size: 11.5px;
+      }
+      .figures .stop {
+        color: var(--pinrail-danger);
+      }
+      .figures .target {
+        color: var(--pinrail-success);
+      }
+      .figures .entry {
+        color: var(--pinrail-accent);
+      }
+      .confidence {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--pinrail-dim);
+      }
+      .confidence .bar {
+        height: 6px;
+        border-radius: 3px;
+        background: var(--pinrail-bg-hover);
+        overflow: hidden;
+      }
+      .confidence .bar span {
+        display: block;
+        height: 100%;
+        background: var(--pinrail-accent);
+      }
+      .confidence b {
+        font: 600 12px var(--pinrail-mono);
+        color: var(--pinrail-text);
+      }
+
+      .reasoning {
+        overflow: auto;
+        padding: 4px 16px 16px;
+        font-size: 13.5px;
+        line-height: 1.55;
+      }
+      .reasoning h2.label {
+        margin: 10px 0 4px;
+        font: 600 10px var(--pinrail-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--pinrail-faint);
+      }
+      .reasoning table {
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 12.5px;
+      }
+      .reasoning th,
+      .reasoning td {
+        border: 1px solid var(--pinrail-border);
+        padding: 4px 8px;
+        text-align: left;
+      }
+      .reasoning th {
+        background: var(--pinrail-bg-raised);
+      }
+      .reasoning code {
+        font: 12px var(--pinrail-mono);
+        background: var(--pinrail-bg-raised);
+        padding: 1px 4px;
+        border-radius: 4px;
+      }
+      .reasoning blockquote {
+        margin: 10px 0;
+        padding: 2px 12px;
+        border-left: 3px solid var(--pinrail-border-strong);
+        color: var(--pinrail-dim);
+      }
+      .reasoning a {
+        color: var(--pinrail-accent);
+      }
+
+      .verdict {
+        padding: 10px 16px 14px;
+        border-top: 1px solid var(--pinrail-border);
+        display: grid;
+        gap: 8px;
+      }
+      .verdict .choices {
+        display: flex;
+        gap: 8px;
+      }
+      .verdict .choices button {
+        flex: 1;
+      }
+      .verdict .choices button[aria-pressed="true"].approve {
+        background: var(--pinrail-success);
+        color: #fff;
+        border-color: transparent;
+      }
+      .verdict .choices button[aria-pressed="true"].reject {
+        background: var(--pinrail-danger);
+        color: #fff;
+        border-color: transparent;
+      }
+      .verdict textarea {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 48px;
+        resize: vertical;
+        font: 13px var(--pinrail-sans);
+      }
+      .pinrail-errors {
+        color: var(--pinrail-danger);
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      .pinrail-errors:empty {
+        display: none;
+      }
+      .decided {
+        font-size: 13px;
+      }
+      .decided .body {
+        margin: 6px 0 0;
+        white-space: pre-wrap;
+      }
+      .decided .by {
+        color: var(--pinrail-dim);
+        font-size: 12px;
+      }
+
+      @media (max-width: 760px) {
+        body {
+          overflow: auto;
+        }
+        .shell {
+          grid-template-columns: 1fr;
+          grid-template-rows: 420px auto;
+          height: auto;
+        }
+        .side {
+          border-left: 0;
+          border-top: 1px solid var(--pinrail-border);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell" id="shell">
+      <section class="market">
+        <header class="top">
+          <h1 id="symbol"></h1>
+          <span class="name" id="name"></span>
+          <span class="last" id="last"></span>
+          <span class="change" id="change"></span>
+        </header>
+        <div class="tools">
+          <span class="label">Timeframe</span>
+          <div class="seg" id="timeframes" role="group" aria-label="Timeframe"></div>
+          <span class="label">Range</span>
+          <div class="seg" id="ranges" role="group" aria-label="Range"></div>
+          <div class="seg" role="group" aria-label="Zoom">
+            <button type="button" id="zoom-out" title="Zoom out">−</button>
+            <button type="button" id="zoom-in" title="Zoom in">+</button>
+          </div>
+          <div class="seg" role="group" aria-label="Overlays">
+            <button
+              type="button"
+              id="show-gaps"
+              aria-pressed="true"
+              title="Fair value gaps: where the first and third of three candles do not overlap"
+            >
+              FVG
+            </button>
+          </div>
+          <button
+            type="button"
+            class="reset"
+            id="reset-lines"
+            title="Put the stop and the targets back where the agent proposed them"
+            disabled
+          >
+            Reset lines
+          </button>
+        </div>
+        <div class="chart" id="chart">
+          <canvas id="canvas" role="img" aria-label="Candlestick chart"></canvas>
+          <div class="readout" id="readout"></div>
+        </div>
+        <footer class="foot">
+          <span class="legend"><i style="border-color: var(--pinrail-accent)"></i>Entry</span>
+          <span class="legend"><i style="border-color: var(--pinrail-danger)"></i>Stop</span>
+          <span class="legend"><i style="border-color: var(--pinrail-success)"></i>Target</span>
+          <span class="legend"><i class="dashed" style="border-color: var(--pinrail-faint)"></i>Level</span>
+          <span class="legend" id="gaps-legend"
+            ><b class="swatch" style="background: var(--pinrail-success)"></b
+            ><b class="swatch" style="background: var(--pinrail-danger)"></b>Fair value gap</span
+          >
+          <span class="hint">Drag the stop or a target to move it.</span>
+          <span class="source" id="source"></span>
+        </footer>
+      </section>
+      <aside class="side">
+        <div class="proposal" id="proposal"></div>
+        <div class="reasoning">
+          <h2 class="label">Reasoning</h2>
+          <div id="reasoning"></div>
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </aside>
+    </div>
+    <script src="view.js"></script>
+  </body>
+</html>

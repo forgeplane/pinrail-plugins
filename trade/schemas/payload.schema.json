@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Trade approval",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["instrument", "timeframe", "candles", "proposal", "reasoning"],
+  "$defs": {
+    "price": { "type": "number", "exclusiveMinimum": 0 }
+  },
+  "properties": {
+    "instrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol"],
+      "properties": {
+        "symbol": { "type": "string", "maxLength": 40, "description": "As the market names it, such as XAU/USD." },
+        "name": { "type": "string", "maxLength": 120, "description": "In words, such as Gold vs US dollar." },
+        "quote_currency": { "type": "string", "maxLength": 10, "description": "What prices are in, such as USD." },
+        "decimals": { "type": "integer", "minimum": 0, "maximum": 8, "description": "How many decimals to show prices with; 2 when absent." }
+      }
+    },
+    "timeframe": { "type": "string", "maxLength": 10, "description": "One candle's span, such as 15m, 1h, 4h or 1d." },
+    "source": { "type": "string", "maxLength": 200, "description": "Where the candles come from, shown under the chart, such as the broker's feed and when it was read." },
+    "candles": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 5000,
+      "description": "Oldest first. The last candle is the current one.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["t", "o", "h", "l", "c"],
+        "properties": {
+          "t": { "type": "string", "format": "date-time", "description": "When the candle opened." },
+          "o": { "$ref": "#/$defs/price" },
+          "h": { "$ref": "#/$defs/price" },
+          "l": { "$ref": "#/$defs/price" },
+          "c": { "$ref": "#/$defs/price" },
+          "v": { "type": "number", "minimum": 0, "description": "Volume, when the market reports it." }
+        }
+      }
+    },
+    "proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "order_type"],
+      "properties": {
+        "side": { "enum": ["buy", "sell", "close", "hold"], "description": "buy or sell: open a position. close: close the open one. hold: change nothing, and say why." },
+        "order_type": { "enum": ["market", "limit", "stop"] },
+        "entry": { "$ref": "#/$defs/price", "description": "The price to enter at; for a market order, the price you expect." },
+        "stop_loss": { "$ref": "#/$defs/price" },
+        "take_profit": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/price" },
+          "description": "One or more targets, nearest first."
+        },
+        "size": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["quantity", "unit"],
+          "properties": {
+            "quantity": { "type": "number", "exclusiveMinimum": 0 },
+            "unit": { "type": "string", "maxLength": 20, "description": "Such as oz, lots or contracts." }
+          }
+        },
+        "risk_percent": { "type": "number", "minimum": 0, "maximum": 100, "description": "The share of the account lost if the stop is hit." },
+        "valid_until": { "type": "string", "format": "date-time", "description": "When the proposal stops holding, for an order not placed by then." }
+      }
+    },
+    "reasoning": { "type": "string", "minLength": 1, "maxLength": 20000, "description": "Why this trade, now: Markdown." },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How sure you are, from 0 to 1." },
+    "levels": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "Prices worth seeing on the chart, such as support and resistance.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["price", "label"],
+        "properties": {
+          "price": { "$ref": "#/$defs/price" },
+          "label": { "type": "string", "maxLength": 60 },
+          "kind": { "enum": ["support", "resistance", "other"] }
+        }
+      }
+    }
+  }
+}

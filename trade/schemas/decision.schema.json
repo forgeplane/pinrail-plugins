@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Trade approval decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict"],
+  "properties": {
+    "verdict": {
+      "enum": ["approve", "reject"],
+      "description": "approve: place the trade, with the stop and targets below where they are given. reject: do not place it; the note says why."
+    },
+    "stop_loss": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Present when the person moved the stop: the stop loss to use instead of the proposed one."
+    },
+    "take_profit": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "type": "number", "exclusiveMinimum": 0 },
+      "description": "Present when the person moved a target: every target to use, in the proposal's order, instead of the proposed ones."
+    },
+    "note": { "type": "string", "maxLength": 4000, "description": "What the person said about it." }
+  }
+}
