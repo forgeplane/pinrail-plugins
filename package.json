@@ -1,7 +1,7 @@
 {
   "name": "pinrail-plugins",
   "private": true,
-  "description": "Pinrail's official plugins, tested under the pinrail-sdk harness",
+  "description": "Sample plugins for Pinrail, tested under the pinrail-sdk harness",
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.26.2",
   "scripts": {

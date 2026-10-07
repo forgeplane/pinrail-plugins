@@ -1,15 +1,15 @@
 # Pinrail plugins
 
-The official plugins for [Pinrail](https://pinrail.dev). A plugin defines
-one kind of review: the payload an agent sends, the decision the person
-gives back, and the view the person decides in.
+Sample plugins for [Pinrail](https://pinrail.dev), which show what a plugin
+can do. A plugin defines one kind of review: the payload an agent sends, the
+decision the person gives back, and the view the person decides in.
 
 ![The plugins in this repository, each showing a sample review](.github/plugins.png)
 
 Pinrail's core plugins, `list`, `feedback`, `code-review`, `image` and
 `markdown`, come with the app and live in its repository,
 [forgeplane/pinrail](https://github.com/forgeplane/pinrail). This repository
-holds the other official plugins.
+holds the sample plugins.
 
 | Plugin | For |
 |---|---|
@@ -147,7 +147,7 @@ version releases nothing.
 ## Writing your own plugin
 
 Plugins live in their own repositories, and this repository holds only the
-official ones. To write your own, start with
+samples. To write your own, start with
 [Writing a plugin](https://pinrail.dev/docs/building/writing/) and
 [Publishing a plugin](https://pinrail.dev/docs/building/publishing/).
 

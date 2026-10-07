@@ -65,8 +65,8 @@ jobs:
           done
       # after the builds, which write the views that are not committed. The
       # check refuses a plugin the app would refuse, and a recorded decision
-      # whose Markdown or summary is not what the app makes of it; an
-      # official plugin must also have nothing dropped.
+      # whose Markdown or summary is not what the app makes of it; a
+      # sample plugin must also have nothing dropped.
       - name: Check the plugins
         run: |
           for dir in plugins/*/; do
