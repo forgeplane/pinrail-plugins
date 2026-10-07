@@ -12,8 +12,8 @@ importers:
         specifier: ^1.63.0
         version: 1.63.0
       pinrail-sdk:
-        specifier: github:forgeplane/pinrail#main&path:sdk
-        version: git+https://github.com/forgeplane/pinrail.git#7c433a77879c3f364657312efa5f07ef9b895689&path:sdk(@playwright/test@1.63.0)
+        specifier: ^1.0.0
+        version: 1.0.0(@playwright/test@1.63.0)
       prettier:
         specifier: ^3.9.9
         version: 3.9.9
@@ -57,9 +57,8 @@ packages:
   mdurl@2.1.0:
     resolution: {integrity: sha512-1+HBaOx0zi/dQWht8rNv9MYf9qqpqL/kxI0hXImU6Y547zM6Sni8BQibt7ifgMcYtQg41ao3Ivd6cnSM86inpg==}
 
-  pinrail-sdk@git+https://github.com/forgeplane/pinrail.git#7c433a77879c3f364657312efa5f07ef9b895689&path:sdk:
-    resolution: {commit: 7c433a77879c3f364657312efa5f07ef9b895689, path: sdk, repo: https://github.com/forgeplane/pinrail.git, type: git}
-    version: 1.0.0
+  pinrail-sdk@1.0.0:
+    resolution: {integrity: sha512-MSZcd9nYt7qbc30ALAgucuNjdtRC4NbewlghLui1dUNpjqiisuZTwdOeW0CdbuSKdn3da4xWhTTMPlfRCAiA/w==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -134,7 +133,7 @@ snapshots:
 
   mdurl@2.1.0: {}
 
-  pinrail-sdk@git+https://github.com/forgeplane/pinrail.git#7c433a77879c3f364657312efa5f07ef9b895689&path:sdk(@playwright/test@1.63.0):
+  pinrail-sdk@1.0.0(@playwright/test@1.63.0):
     dependencies:
       '@fontsource-variable/inter': 5.3.0
       ajv: 8.20.0

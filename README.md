@@ -75,10 +75,11 @@ in a sandbox, and installing a plugin runs nothing. See
 
 ## Development
 
-The repository uses pnpm. The plugin SDK, `pinrail-sdk`, comes from the
-`main` branch of the app's repository until it is published on npm.
-`pnpm-lock.yaml` records the commit it was last taken from, and CI always
-takes the newest. Checking a plugin needs the `pinrail` command.
+The repository uses pnpm. The plugin SDK is
+[`pinrail-sdk`](https://www.npmjs.com/package/pinrail-sdk) from npm, at
+the version `pnpm-lock.yaml` records. Checking a plugin needs the
+`pinrail` command, which the Pinrail app installs; CI takes it from the
+app's latest release.
 
 ```sh
 pnpm install

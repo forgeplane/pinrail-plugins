@@ -11,7 +11,7 @@
     "format:check": "git ls-files -z '*.html' '*.js' '*.mjs' '*.cjs' '*.ts' '*.css' | xargs -0 prettier --check"
   },
   "devDependencies": {
-    "pinrail-sdk": "github:forgeplane/pinrail#main&path:sdk",
+    "pinrail-sdk": "^1.0.0",
     "@playwright/test": "^1.63.0",
     "prettier": "^3.9.9"
   }
