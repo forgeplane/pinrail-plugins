@@ -3,9 +3,6 @@
 #
 # The SDK is pinrail-sdk from npm, at the version pnpm-lock.yaml records,
 # and the CLI comes from the latest release of the app, forgeplane/pinrail.
-# While that repository is private, downloading the CLI needs the
-# PINRAIL_READ_TOKEN secret: a fine-grained token with read access to its
-# contents. Once it is public, the secret can go.
 name: ci
 
 on:
@@ -47,7 +44,7 @@ jobs:
       # PATH first: the one the app's latest release carries
       - name: Install the CLI
         env:
-          GH_TOKEN: ${{ secrets.PINRAIL_READ_TOKEN || github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release download --repo forgeplane/pinrail \
             --pattern pinrail-cli-x86_64-unknown-linux-gnu.tar.gz --dir "$RUNNER_TEMP"
