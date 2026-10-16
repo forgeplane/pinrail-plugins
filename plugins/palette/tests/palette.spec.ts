@@ -78,7 +78,7 @@ test("shows every palette in the rail, and the chosen one on the sample screen i
   await expect(f.locator(".mock")).toHaveAttribute("data-mode", "dark");
 
   // a declared key pressed while the app has focus is handed to the view
-  await plugin.sendKey("k");
+  await plugin.sendKey("p");
   await expect(f.locator("#palette-name")).toHaveText("Harbour");
 });
 
@@ -87,11 +87,11 @@ test("one favourite, keys to decide, and a warning before undecided palettes go 
   const f = plugin.frame;
   await f.locator("body").press("f"); // P1 favourite
   await expect(f.locator(".pick").nth(0).locator(".verdict-chip")).toHaveText("★ Favourite");
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await f.locator("body").press("x"); // P2 dropped
   await f.locator("#note").fill("Too corporate");
   await f.locator("#palette-name").click();
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await f.locator('.choice[data-action="favorite"]').click(); // P3 favourite: P1 steps down
   await expect(f.locator(".pick").nth(0).locator(".verdict-chip")).toHaveText("Keep");
   await expect(f.locator(".pick").nth(2).locator(".verdict-chip")).toHaveText("★ Favourite");
@@ -222,7 +222,7 @@ test("a draft comes back as it was left", async ({ page }) => {
   await f.locator("#pop-note").fill("Browner");
   await f.locator('#pop [data-value="light"]').fill("#7a4d00");
   await f.locator('#pop [data-pop="save"]').click();
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await f.locator("#note").fill("Maybe");
   await f.locator("#palette-name").click();
   await f.locator("body").press("m");
@@ -232,7 +232,7 @@ test("a draft comes back as it was left", async ({ page }) => {
   await expect(f.locator("#palette-name")).toHaveText("Harbour");
   await expect(f.locator("#note")).toHaveValue("Maybe");
   await expect(f.locator(".mock")).toHaveCount(1);
-  await f.locator("body").press("k");
+  await f.locator("body").press("p");
   await expect(f.locator(".pick").nth(0).locator(".verdict-chip")).toHaveText("★ Favourite");
   await expect(f.locator(".asks li")).toHaveCount(2);
   await expect(f.locator('.mock [data-el="Warning message"]')).toHaveCSS("color", "rgb(122, 77, 0)");

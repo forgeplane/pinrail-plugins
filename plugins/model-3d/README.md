@@ -79,7 +79,7 @@ submit with `--revises <id>`: each model shows the verdict it had last time.
 
 ## Keys
 
-`j` / `k` next and previous model · `1`–`9` the views · `t` turntable ·
+`n` / `p` next and previous model · `1`–`9` the views · `t` turntable ·
 `w` wireframe · `l` the next light · `f` favourite · `s` keep · `x` drop.
 
 ## Developing

@@ -34,11 +34,11 @@ test("one favourite, keys to decide, and a warning before undecided models go ba
   await f.locator("body").click({ position: { x: 600, y: 5 } });
 
   await f.locator("body").press("f"); // L1 favourite
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await f.locator("body").press("x"); // L2 dropped
   await f.locator("#note").fill("Cannot be aimed");
   await f.locator("body").click({ position: { x: 600, y: 5 } });
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await f.locator('.choice[data-action="favorite"]').click(); // L3 favourite: L1 steps down
   await expect(f.locator(".pick").nth(0).locator(".verdict-chip")).toHaveText("Keep");
   await expect(f.locator(".pick").nth(2).locator(".verdict-chip")).toHaveText("★ Favourite");

@@ -73,7 +73,7 @@ with `--revises <id>`: each mark shows the verdict it had last time.
 
 ## Keys
 
-`j` / `k` next and previous mark · `f` favourite · `s` keep · `x` drop.
+`n` / `p` next and previous mark · `f` favourite · `s` keep · `x` drop.
 
 ## Developing
 

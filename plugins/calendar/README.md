@@ -15,7 +15,7 @@ through a longer range; **List** shows every suggestion by item. A one-day
 calendar opens in the day view, a longer one in the week; the *Opening view*
 setting changes that, and the last view picked is kept.
 
-Keys: `d`, `w`, `l` for the views; `j` / `k` next and previous day or week;
+Keys: `d`, `w`, `l` for the views; `←` / `→` previous and next day or week;
 `t` back to the first day.
 
 Plain JavaScript and CSS, with no runtime dependencies and no build step. It

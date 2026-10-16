@@ -1285,10 +1285,10 @@ document.addEventListener("keydown", (e) => {
     case "v":
       if (V.length > 1) toggleCompare();
       break;
-    case "j":
+    case "n":
       stepVariant(1);
       break;
-    case "k":
+    case "p":
       stepVariant(-1);
       break;
     case "f":

@@ -152,9 +152,9 @@ test("the difference lights up what changed and finds the change nobody asked fo
 test("each request is marked fixed, partly or not fixed, by click or by key, with a note", async ({ page }) => {
   const { plugin, f } = await open(page);
   await page.keyboard.press("f"); // R1 fixed
-  await page.keyboard.press("n");
+  await page.keyboard.press("Shift+N");
   await f.locator('[data-outcome="fixed"][data-for="1"]').click(); // R2 fixed
-  await page.keyboard.press("n");
+  await page.keyboard.press("Shift+N");
   await expect(f.locator('.ask[aria-current="true"] .rid')).toHaveText("R3");
   await page.keyboard.press("x"); // R3 not fixed
   await f.locator('[data-note-for="2"]').fill("Still misspelled, now as “projcts”.");
@@ -164,11 +164,11 @@ test("each request is marked fixed, partly or not fixed, by click or by key, wit
   await expect(f.locator(".pick").nth(0).locator(".chip")).toHaveText("Another pass");
 
   await f.locator("#pair-name").click();
-  await page.keyboard.press("j");
+  await page.keyboard.press("n");
   await expect(f.locator("#pair-name")).toHaveText("Sign-up form");
   await page.keyboard.press("f");
-  await page.keyboard.press("n");
-  await page.keyboard.press("p");
+  await page.keyboard.press("Shift+N");
+  await page.keyboard.press("h");
   await expect(f.locator(".tally")).toContainText("3 fixed");
   await expect(f.locator(".tally")).toContainText("1 partly");
   await expect(f.locator(".tally")).toContainText("1 not fixed");
@@ -255,15 +255,15 @@ test("verdicts by key, a warning before undecided work goes back, and every requ
   const { plugin, f } = await open(page);
   // all three fixed and nothing found: accepted without a word
   await page.keyboard.press("f");
-  await page.keyboard.press("n");
+  await page.keyboard.press("Shift+N");
   await page.keyboard.press("f");
-  await page.keyboard.press("n");
+  await page.keyboard.press("Shift+N");
   await page.keyboard.press("f");
   await expect(f.locator('.choice[data-action="accept"]')).toHaveAttribute("aria-pressed", "true");
   await expect(f.locator('.choice[data-action="accept"]')).toHaveClass(/derived/);
   // said out loud, it holds even when a request is not fixed
   await page.keyboard.press("a");
-  await page.keyboard.press("p");
+  await page.keyboard.press("h");
   await expect(f.locator('.choice[data-action="accept"]')).toHaveAttribute("aria-pressed", "true");
   await expect(f.locator('.choice[data-action="accept"]')).not.toHaveClass(/derived/);
   await f.locator("#note").fill("Good enough to ship; tidy R3 later");
@@ -295,7 +295,7 @@ test("a pair checked part way goes back with the rest listed as unchecked", asyn
   await page.keyboard.press("f");
   // waiting for the rest, not yet a verdict
   await expect(f.locator(".pick").nth(0).locator(".chip")).toHaveText("—");
-  await page.keyboard.press("j");
+  await page.keyboard.press("n");
   await page.keyboard.press("r");
   await plugin.collect();
   await plugin.collect();

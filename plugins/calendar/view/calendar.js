@@ -272,9 +272,9 @@
     const paging = mode !== "list" && pages > 1;
     const nav = paging
       ? `<div class="pager" role="group" aria-label="${mode === "day" ? "Days" : "Weeks"}">
-        <button data-action="prev" aria-label="Previous ${mode}" title="Previous ${mode} (k)" ${page === 0 ? "disabled" : ""}>${Pinrail.icon("chevron-left", { size: 15 })}</button>
+        <button data-action="prev" aria-label="Previous ${mode}" title="Previous ${mode} (←)" ${page === 0 ? "disabled" : ""}>${Pinrail.icon("chevron-left", { size: 15 })}</button>
         <button data-action="first" class="pager-first" title="Back to the first day (t)" ${page === 0 ? "disabled" : ""}>First day</button>
-        <button data-action="next" aria-label="Next ${mode}" title="Next ${mode} (j)" ${page === pages - 1 ? "disabled" : ""}>${Pinrail.icon("chevron-right", { size: 15 })}</button>
+        <button data-action="next" aria-label="Next ${mode}" title="Next ${mode} (→)" ${page === pages - 1 ? "disabled" : ""}>${Pinrail.icon("chevron-right", { size: 15 })}</button>
       </div>`
       : "";
     const weekFrom = Math.floor(cursor / 7) * 7,
@@ -399,8 +399,8 @@
     if (key === "d") setView("day");
     else if (key === "w") setView("week");
     else if (key === "l") setView("list");
-    else if (key === "j") step(1);
-    else if (key === "k") step(-1);
+    else if (key === "arrowright") step(1);
+    else if (key === "arrowleft") step(-1);
     else if (key === "t") goFirst();
     else return;
     event.preventDefault();

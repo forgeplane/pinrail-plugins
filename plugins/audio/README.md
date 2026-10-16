@@ -8,7 +8,7 @@ variants, podcast cuts. You listen to each one the way you would in an editor:
   with the arrow keys, and its peak level;
 - its transcript beside it, when the agent sends one, lit word by word as it
   plays. Click a word to play from it, drag across words to select them;
-- the next take at the same point: <kbd>j</kbd> and <kbd>k</kbd> keep your
+- the next take at the same point: <kbd>n</kbd> and <kbd>p</kbd> keep your
   place, by the same word when both takes carry word timings, and <kbd>b</kbd>
   jumps back to the take you came from, so an A/B is one key.
 
@@ -17,7 +17,7 @@ variants, podcast cuts. You listen to each one the way you would in an editor:
 On a take you can **comment at a moment** (<kbd>c</kbd> at the playhead) or
 **over a stretch** (select it, then <kbd>c</kbd>), and **mark a stretch to
 cut** (select it, then <kbd>⌫</kbd>). Overlapping cuts join into one.
-*Without cuts* (<kbd>p</kbd>) plays the take as it would be with them removed.
+*Without cuts* (<kbd>h</kbd>) plays the take as it would be with them removed.
 Each take gets a verdict, **favourite**, **keep** or **drop**, with a note.
 There is one favourite at most, and a take you commented on or cut counts as
 kept unless you say otherwise.
@@ -92,11 +92,11 @@ pinrail submit audio --title "Field Notes intro — voice takes" --data takes.js
 ## Keys
 
 <kbd>space</kbd> play or pause · <kbd>←</kbd> / <kbd>→</kbd> a second back or
-forward, five with <kbd>shift</kbd> · <kbd>0</kbd> the start · <kbd>j</kbd> /
-<kbd>k</kbd> next and previous take · <kbd>b</kbd> the take you came from ·
+forward, five with <kbd>shift</kbd> · <kbd>0</kbd> the start · <kbd>n</kbd> /
+<kbd>p</kbd> next and previous take · <kbd>b</kbd> the take you came from ·
 <kbd>i</kbd> / <kbd>o</kbd> start and end a selection at the playhead ·
 <kbd>c</kbd> comment · <kbd>⌫</kbd> cut · <kbd>l</kbd> loop the selection ·
-<kbd>p</kbd> without cuts · <kbd>f</kbd> favourite · <kbd>s</kbd> keep ·
+<kbd>h</kbd> without cuts · <kbd>f</kbd> favourite · <kbd>s</kbd> keep ·
 <kbd>x</kbd> drop.
 
 ## Developing

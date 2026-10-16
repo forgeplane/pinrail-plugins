@@ -61,16 +61,16 @@
       "group": "Playback"
     },
     {
-      "keys": "p",
+      "keys": "h",
       "does": "Hear the take with its cuts taken out",
       "group": "Playback"
     },
     {
-      "keys": "j",
+      "keys": "n",
       "does": "Next take, at the same point"
     },
     {
-      "keys": "k",
+      "keys": "p",
       "does": "Previous take, at the same point"
     },
     {

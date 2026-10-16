@@ -49,7 +49,7 @@ Each draft gets a verdict. Send means this text, as it stands. Revise means do
 not send it, write it again from the instructions. Discard means drop it.
 Anything left undecided is reported as undecided and nothing is sent for it.
 
-Keys: `j` / `k` next and previous draft, `s` send, `r` revise, `x` discard,
+Keys: `n` / `p` next and previous draft, `s` send, `r` revise, `x` discard,
 `shift+s` send every draft still undecided, `e` put the cursor in the message.
 
 ## Decision

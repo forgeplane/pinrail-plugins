@@ -113,7 +113,7 @@ verdict it had last time.
 
 `space` play or pause · `←` / `→` a frame, with shift 100 ms · `home` / `end`
 · `-` / `=` slower and faster · `l` loop · `v` side by side · `i` / `o` mark a
-range · `c` comment · `j` / `k` next and previous variant · `f` favourite ·
+range · `c` comment · `n` / `p` next and previous variant · `f` favourite ·
 `s` keep · `x` drop.
 
 ## Developing

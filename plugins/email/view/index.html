@@ -2117,8 +2117,8 @@
         }
         const d = current();
         const key = event.key.toLowerCase();
-        if (key === "j") select(S.sel + 1);
-        else if (key === "k") select(S.sel - 1);
+        if (key === "n") select(S.sel + 1);
+        else if (key === "p") select(S.sel - 1);
         else if (readonly || !d) return;
         else if (key === "s" && event.shiftKey) sendRest();
         else if (key === "s") setVerdict(d.id, "send");

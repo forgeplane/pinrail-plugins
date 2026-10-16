@@ -154,12 +154,12 @@ test("day and week views: a day at full width, a strip of days, paging by week, 
   await expect(f.locator(".day-strip button.is-current")).toContainText("21");
   await expect(slot(p, "doctor-mon")).toBeVisible();
   await f.locator("h1").click();
-  await f.locator("body").press("j");
+  await f.locator("body").press("ArrowRight");
   await expect(f.locator(".day-strip button.is-current")).toContainText("22");
   await expect(slot(p, "tennis-tue")).toBeVisible();
   await f.locator(".day-strip button").filter({ hasText: "27" }).click();
-  await f.locator("body").press("j");
-  await f.locator("body").press("j");
+  await f.locator("body").press("ArrowRight");
+  await f.locator("body").press("ArrowRight");
   // into the second week: the strip follows
   await expect(f.locator(".day-strip button")).toHaveCount(3);
   await expect(f.locator(".day-strip button.is-current")).toContainText("29");

@@ -290,11 +290,11 @@ test("the rail opens each draft, the keys move and decide, and the verdict shows
   await f.locator("h1").click();
   await f.locator("body").press("s");
   await expect(f.locator('[data-pick-id="northwind"] .chip')).toHaveText("Send");
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await expect(f.locator('[data-draft="brightside"]')).toBeVisible();
   await f.locator("body").press("x");
   await expect(f.locator('[data-pick-id="brightside"] .chip')).toHaveText("Discard");
-  await f.locator("body").press("k");
+  await f.locator("body").press("p");
   await expect(f.locator('[data-draft="northwind"]')).toBeVisible();
 
   // e puts the cursor in the message; typing a j there types it

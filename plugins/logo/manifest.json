@@ -24,11 +24,11 @@
   },
   "shortcuts": [
     {
-      "keys": "j",
+      "keys": "n",
       "does": "Next mark"
     },
     {
-      "keys": "k",
+      "keys": "p",
       "does": "Previous mark"
     },
     {

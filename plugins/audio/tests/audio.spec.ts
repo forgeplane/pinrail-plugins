@@ -201,7 +201,7 @@ test("one favourite, verdicts by key, and the next take at the same word", async
     .filter({ hasText: /^Nguyen$/ })
     .click();
   await f.locator("body").press("f"); // Samantha favourite
-  await f.locator("body").press("j"); // Daniel, at his "Nguyen"
+  await f.locator("body").press("n"); // Daniel, at his "Nguyen"
   await expect(f.locator("#take-name")).toHaveText("Daniel");
   expect(await pos(f)).toBe(words("daniel")[8].start_ms);
   await expect(f.locator(".matched")).toContainText("Nguyen");
@@ -211,14 +211,14 @@ test("one favourite, verdicts by key, and the next take at the same word", async
   await f.locator("body").press("b"); // back to Samantha, same word
   await expect(f.locator("#take-name")).toHaveText("Samantha");
   expect(await pos(f)).toBe(words("samantha")[8].start_ms);
-  await f.locator("body").press("k"); // Karen, from the first take backwards
+  await f.locator("body").press("p"); // Karen, from the first take backwards
   await expect(f.locator("#take-name")).toHaveText("Karen");
   await f.locator('.choice[data-action="favorite"]').click(); // Karen favourite: Samantha steps down
   await expect(f.locator(".pick").nth(0).locator(".verdict-chip")).toHaveText("Keep");
   await expect(f.locator(".pick").nth(3).locator(".verdict-chip")).toHaveText("★ Favourite");
   await expect(f.locator(".tally")).toContainText("1 favourite");
   // a key pressed while the app, not the view, had focus
-  await plugin.sendKey("j");
+  await plugin.sendKey("n");
   await expect(f.locator("#take-name")).toHaveText("Samantha");
 
   await plugin.collect();
@@ -241,7 +241,7 @@ test("a draft comes back as it was left", async ({ page, context }) => {
   await f.locator("body").press("c");
   await f.locator("#mark-note").fill("A breath here");
   await f.locator("#mark-note").press("Enter");
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await f.locator("body").press("x");
   await expect.poll(async () => Object.keys((await plugin.lastDraft()) ?? {}).sort()).toEqual(["daniel", "samantha"]);
 
@@ -294,7 +294,7 @@ test("a take that cannot be read says so, and the others still play", async ({ p
   // a verdict still goes back, without a length
   await f.locator("#take-name").click();
   await f.locator("body").press("x");
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await expect(f.locator("#wave canvas.base")).toBeVisible();
   await f.locator("body").press("f");
   await plugin.collect();

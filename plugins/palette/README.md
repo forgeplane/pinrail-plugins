@@ -100,7 +100,7 @@ verdict it had last time and how many new values were asked for.
 
 ## Keys
 
-`j` / `k` next and previous palette · `m` light and dark, light, dark ·
+`n` / `p` next and previous palette · `m` light and dark, light, dark ·
 `e` with or without the new values · `f` favourite · `s` keep · `x` drop ·
 `↵` saves the pop-over, `esc` closes it.
 

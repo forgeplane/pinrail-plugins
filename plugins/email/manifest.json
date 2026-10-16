@@ -23,8 +23,8 @@
     }
   },
   "shortcuts": [
-    { "keys": "j", "does": "Next draft" },
-    { "keys": "k", "does": "Previous draft" },
+    { "keys": "n", "does": "Next draft" },
+    { "keys": "p", "does": "Previous draft" },
     { "keys": "s", "does": "Send this draft", "group": "Verdicts" },
     { "keys": "r", "does": "Ask for a revision", "group": "Verdicts" },
     { "keys": "x", "does": "Discard this draft", "group": "Verdicts" },

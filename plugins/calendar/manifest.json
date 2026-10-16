@@ -37,8 +37,8 @@
     { "keys": "d", "does": "Day view", "group": "Views" },
     { "keys": "w", "does": "Week view", "group": "Views" },
     { "keys": "l", "does": "List view", "group": "Views" },
-    { "keys": "j", "does": "Next day or week" },
-    { "keys": "k", "does": "Previous day or week" },
+    { "keys": "arrowright", "does": "Next day or week" },
+    { "keys": "arrowleft", "does": "Previous day or week" },
     { "keys": "t", "does": "Back to the first day" }
   ]
 }

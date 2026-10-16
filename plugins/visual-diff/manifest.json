@@ -19,11 +19,11 @@
   },
   "shortcuts": [
     {
-      "keys": "j",
+      "keys": "n",
       "does": "Next pair"
     },
     {
-      "keys": "k",
+      "keys": "p",
       "does": "Previous pair"
     },
     {
@@ -62,12 +62,12 @@
       "group": "Compare"
     },
     {
-      "keys": "n",
+      "keys": "shift+n",
       "does": "Next request",
       "group": "Requests"
     },
     {
-      "keys": "shift+n",
+      "keys": "shift+p",
       "does": "Previous request",
       "group": "Requests"
     },
@@ -77,7 +77,7 @@
       "group": "Requests"
     },
     {
-      "keys": "p",
+      "keys": "h",
       "does": "Mark the request partly fixed",
       "group": "Requests"
     },

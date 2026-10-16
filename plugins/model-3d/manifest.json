@@ -34,11 +34,11 @@
   },
   "shortcuts": [
     {
-      "keys": "j",
+      "keys": "n",
       "does": "Next model"
     },
     {
-      "keys": "k",
+      "keys": "p",
       "does": "Previous model"
     },
     {

@@ -79,7 +79,7 @@ test("shows every variant in the rail, the chosen one on the stage, and its anim
   // the Lottie came as a file the shell handed over
   const asked = (await plugin.messages()).filter((m: any) => m.type === "attachment").map((m: any) => m.name);
   expect(asked).toContain("tick.json");
-  await f.locator("body").press("k");
+  await f.locator("body").press("p");
   await expect(f.locator("#variant-name")).toHaveText("Badge");
   await expect(f.locator(".tl-labels .sub")).toHaveText(["Check", "Badge", "Button"]);
   await expect(f.locator(".stage .lottie svg")).toHaveCount(1);
@@ -210,7 +210,7 @@ test("a comment over a range, marked with i and o, or by shift-dragging the time
 
 test("a Lottie comment carries its frame and the layers on screen", async ({ page }) => {
   const { plugin, f } = await open(page);
-  await f.locator("body").press("k");
+  await f.locator("body").press("p");
   await expect(f.locator("#variant-name")).toHaveText("Badge");
   await at(f, 9);
   await expect(f.locator("#clock-f")).toHaveText("56% · frame 54");
@@ -281,11 +281,11 @@ test("one favourite, keys to decide, and a warning before undecided variants go 
   const { plugin, f } = await open(page);
   const body = f.locator("body");
   await body.press("f"); // V1 favourite
-  await body.press("j");
+  await body.press("n");
   await body.press("x"); // V2 dropped
   await f.locator("#note").fill("A progress bar promises a length");
   await body.click({ position: { x: 600, y: 5 } });
-  await body.press("j");
+  await body.press("n");
   await f.locator('.choice[data-action="favorite"]').click(); // V3 favourite: V1 steps down
   await expect(f.locator(".pick").nth(0).locator(".verdict-chip")).toHaveText("Keep");
   await expect(f.locator(".pick").nth(2).locator(".verdict-chip")).toHaveText("★ Favourite");
@@ -344,8 +344,8 @@ test("a decided round is read-only, and still plays, with its comments on the ti
   await expect(f.locator(".pick").nth(3).locator(".verdict-chip")).toHaveText("—");
   await expect(f.locator('.choice[data-action="keep"]')).toBeDisabled();
   await expect(f.locator('[data-t="comment"]')).toHaveCount(0);
-  await f.locator("body").press("j");
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
+  await f.locator("body").press("n");
   await expect(f.locator("#variant-name")).toHaveText("Morph");
   await expect(f.locator(".comments li")).toHaveCount(2);
   await expect(f.locator(".comments .when").first()).toHaveText("80–400 ms · 5–24%");

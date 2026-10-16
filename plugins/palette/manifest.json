@@ -6,11 +6,11 @@
   "use_when": "You proposed colour palettes or design tokens for a product (light and dark themes) and need a person to pick one, shortlist or drop the rest, and say what to change in individual tokens, down to a new value.",
   "shortcuts": [
     {
-      "keys": "j",
+      "keys": "n",
       "does": "Next palette"
     },
     {
-      "keys": "k",
+      "keys": "p",
       "does": "Previous palette"
     },
     {

@@ -959,7 +959,7 @@
         ["onion", "Onion skin"],
         ["diff", "Difference"],
       ];
-      const OUTCOMES = { fixed: ["Fixed", "f"], partly: ["Partly", "p"], not_fixed: ["Not fixed", "x"] };
+      const OUTCOMES = { fixed: ["Fixed", "f"], partly: ["Partly", "h"], not_fixed: ["Not fixed", "x"] };
       const ACTIONS = { accept: ["Accept", "a"], revise: ["Another pass", "r"] };
       const CHIP = {
         accept: "Accepted",
@@ -2034,18 +2034,18 @@
           if (ev.target.id === "amount" || S.mode === "side") return;
           const v = S.mode === "wipe" ? S.wipe : S.mode === "onion" ? S.fade : S.sens;
           setAmount(Math.round(v) + arrows[key] * (ev.shiftKey ? 10 : 2));
-        } else if (key === "j") selectPair(S.sel + 1);
-        else if (key === "k") selectPair(S.sel - 1);
+        } else if (key === "n") selectPair(S.sel + 1);
+        else if (key === "p") selectPair(S.sel - 1);
         else if (/^[1-4]$/.test(key)) setMode(MODES[Number(key) - 1][0]);
         else if (key === "v" && S.mode === "wipe") {
           S.dir = S.dir === "v" ? "h" : "v";
           S.keepScroll = true;
           draft();
           render();
-        } else if (key === "n") selectRequest(S.req + 1);
-        else if (key === "N") selectRequest(S.req - 1);
+        } else if (key === "N") selectRequest(S.req + 1);
+        else if (key === "P") selectRequest(S.req - 1);
         else if (key === "f") setOutcome(S.req, "fixed");
-        else if (key === "p") setOutcome(S.req, "partly");
+        else if (key === "h") setOutcome(S.req, "partly");
         else if (key === "x") setOutcome(S.req, "not_fixed");
         else if (key === "a") setAction("accept");
         else if (key === "r") setAction("revise");

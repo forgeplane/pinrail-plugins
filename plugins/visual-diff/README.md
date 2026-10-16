@@ -99,10 +99,10 @@ request shows what was said about it last time.
 
 ## Keys
 
-`j` / `k` next and previous pair · `1` wipe · `2` side by side · `3` onion
+`n` / `p` next and previous pair · `1` wipe · `2` side by side · `3` onion
 skin · `4` difference · `v` wipe across or down · `←` / `→` move the wipe,
-the fade or the sensitivity (`shift` for bigger steps) · `n` / `shift+n` next
-and previous request · `f` fixed · `p` partly · `x` not fixed · `a` accept ·
+the fade or the sensitivity (`shift` for bigger steps) · `shift+n` / `shift+p`
+next and previous request · `f` fixed · `h` partly · `x` not fixed · `a` accept ·
 `r` another pass. In the difference, `tab` reaches each changed area and
 `enter` comments on it.
 

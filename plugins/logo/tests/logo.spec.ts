@@ -46,12 +46,12 @@ test("one favourite, keys to decide, and a warning before undecided marks go bac
   await f.locator("body").click({ position: { x: 600, y: 5 } });
 
   await f.locator("body").press("f"); // M1 favourite
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
   await f.locator("body").press("x"); // M2 dropped
   await f.locator("#note").fill("Too much like a ring");
   await f.locator("body").click({ position: { x: 600, y: 5 } });
-  await f.locator("body").press("j");
-  await f.locator("body").press("j");
+  await f.locator("body").press("n");
+  await f.locator("body").press("n");
   await f.locator('.choice[data-action="favorite"]').click(); // M4 favourite: M1 steps down
   await expect(f.locator(".pick").nth(0).locator(".verdict-chip")).toHaveText("Keep");
   await expect(f.locator(".pick").nth(3).locator(".verdict-chip")).toHaveText("★ Favourite");
