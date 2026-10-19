@@ -1,0 +1,4 @@
+node_modules/
+# the build: npm run build writes view/, the page the app serves, and its assets
+/view/
+test-results/

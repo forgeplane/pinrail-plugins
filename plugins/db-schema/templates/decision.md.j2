@@ -1,0 +1,53 @@
+{#- The decision as an agent reads it back: what the verdict asks it to
+    do, the changes and questions on each part of the schema, and the
+    answers to its own questions, with the proposal it keeps for each one
+    left unanswered. The head (title, origin, who decided, the note to the
+    agent) is printed by the app before this. -#}
+{%- macro part(t) -%}
+{%- if not t -%}The whole schema
+{%- elif t.relationship -%}relationship `{{ t.relationship }}`
+{%- elif t.column -%}`{{ t.table }}.{{ t.column }}`
+{%- else -%}table `{{ t.table }}`
+{%- endif -%}
+{%- endmacro -%}
+{%- set changes = data.comments | selectattr("kind", "equalto", "change") | list -%}
+{%- set asked = data.comments | selectattr("kind", "equalto", "question") | list -%}
+{%- set questions = review.payload.questions or [] -%}
+{%- if data.verdict == "approve" -%}
+Approved.{% if changes %} Make the changes below, then apply the schema without another review.{% else %} Apply the schema.{% endif %}
+{%- else -%}
+Changes requested. Make the changes below and send the new version for review.
+{%- endif %}
+{%- if asked %} Answer the questions below first.{% endif %}
+{%- if changes %}
+
+## Changes
+{% for c in changes %}
+- {{ part(c.target) }}: {{ c.text }}
+{%- endfor %}
+{%- endif %}
+{%- if asked %}
+
+## Questions from the reviewer
+{% for c in asked %}
+- {{ part(c.target) }}: {{ c.text }}
+{%- endfor %}
+{%- endif %}
+{%- if data.answers %}
+
+## Answers to your questions
+{% for a in data.answers %}
+{%- for q in questions if q.id == a.id %}
+- {{ a.id }}, “{{ q.text }}”: {% if a.choice %}**{{ a.choice }}**{% if a.text %}. {{ a.text }}{% endif %}{% else %}{{ a.text }}{% endif %}
+{%- endfor %}
+{%- endfor %}
+{%- endif %}
+{%- if data.unanswered %}
+
+## Unanswered, so keep your proposal
+{% for id in data.unanswered %}
+{%- for q in questions if q.id == id %}
+- {{ id }}, “{{ q.text }}”: {{ q.proposal }}
+{%- endfor %}
+{%- endfor %}
+{%- endif %}

@@ -1,0 +1,39 @@
+{
+  "request": {
+    "counts": [
+      {
+        "label": "tables",
+        "count": 6,
+        "tone": "neutral"
+      },
+      {
+        "label": "questions",
+        "count": 3,
+        "tone": "neutral"
+      }
+    ]
+  },
+  "outcome": {
+    "counts": [
+      {
+        "label": "changes",
+        "count": 2,
+        "tone": "warning"
+      },
+      {
+        "label": "question",
+        "count": 1,
+        "tone": "info"
+      },
+      {
+        "label": "unanswered",
+        "count": 1,
+        "tone": "neutral"
+      }
+    ],
+    "verdict": {
+      "label": "changes requested",
+      "tone": "warning"
+    }
+  }
+}

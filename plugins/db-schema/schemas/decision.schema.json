@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Database schema decision",
+  "description": "The verdict on the schema, the comments on its tables, columns and relationships, and the answers to the agent's questions. On approve, the agent answers the person's questions, then applies the schema with any change the comments ask for. On revise, it makes the changes, answers the questions, and sends the new version. A question left unanswered means the agent keeps the choice it proposed.",
+  "type": "object",
+  "required": ["verdict", "comments", "answers", "unanswered"],
+  "additionalProperties": false,
+  "$defs": {
+    "target": {
+      "description": "The part of the schema a comment is about: a table, one of its columns, or a relationship.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["table"],
+          "additionalProperties": false,
+          "properties": {
+            "table": { "type": "string", "minLength": 1, "description": "The table's name, as the payload gives it" },
+            "column": { "type": "string", "minLength": 1, "description": "The column's name, for a comment on a column" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["relationship"],
+          "additionalProperties": false,
+          "properties": {
+            "relationship": { "type": "string", "minLength": 1, "description": "The relationship's id, as the payload gives it" }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "verdict": {
+      "enum": ["approve", "revise"],
+      "description": "approve: apply the schema, with the changes the comments ask for. revise: change the schema and send the new version for review."
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "target": { "$ref": "#/$defs/target", "description": "The part the comment is about. A comment without a target is about the whole schema." },
+          "kind": {
+            "enum": ["change", "question"],
+            "description": "change: change this part as the text says. question: answer it before you go on. A question does not ask for a new version on its own."
+          },
+          "text": { "type": "string", "minLength": 1, "maxLength": 4000 }
+        }
+      }
+    },
+    "answers": {
+      "type": "array",
+      "description": "The person's answers to the agent's questions.",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "additionalProperties": false,
+        "anyOf": [{ "required": ["choice"] }, { "required": ["text"] }],
+        "properties": {
+          "id": { "type": "string", "description": "The question's id, as the payload gives it" },
+          "choice": { "type": "string", "description": "The option the person chose, when the question offered options" },
+          "text": { "type": "string", "minLength": 1, "maxLength": 4000, "description": "The answer in the person's words" }
+        }
+      }
+    },
+    "unanswered": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The ids of the questions left unanswered. The agent keeps its proposal for each."
+    }
+  }
+}

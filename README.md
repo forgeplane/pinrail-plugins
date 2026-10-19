@@ -17,6 +17,7 @@ holds the sample plugins.
 | [`audio`](plugins/audio/README.md) | audio takes, such as voices reading one script, played and compared with their waveforms and transcripts |
 | [`calendar`](plugins/calendar/README.md) | times to arrange around what is already booked |
 | [`canvas`](plugins/canvas/README.md) | a set of designs on a canvas, the steps of a flow or variants of a screen, commented and approved frame by frame |
+| [`db-schema`](plugins/db-schema/README.md) | a database schema or a migration, drawn as a diagram, commented table by table, column by column and relationship by relationship |
 | [`email`](plugins/email/README.md) | emails an agent wants to send, to edit, send, revise or discard |
 | [`logo`](plugins/logo/README.md) | candidate logo marks and icons, shown at every size |
 | [`model-3d`](plugins/model-3d/README.md) | candidate 3D models, viewed on a stage, with changes requested on their parts |

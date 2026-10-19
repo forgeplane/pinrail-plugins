@@ -1,0 +1,125 @@
+{
+  "name": "db-schema",
+  "version": "0.1.0",
+  "title": "Database schema review",
+  "description": "A database schema, or a change to one, drawn as a diagram of its tables and relationships. Comment on a table, a column or a relationship, answer the agent's questions, and approve the schema or send it back.",
+  "use_when": "You designed a database schema or a migration, such as new tables, changed columns or new foreign keys, and need a person to approve it before you write or run the migration.",
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "direction": {
+        "type": "string",
+        "title": "Diagram direction",
+        "default": "left-to-right",
+        "oneOf": [
+          {
+            "const": "left-to-right",
+            "title": "Left to right"
+          },
+          {
+            "const": "top-to-bottom",
+            "title": "Top to bottom"
+          }
+        ]
+      },
+      "ranking": {
+        "type": "string",
+        "title": "Diagram layout",
+        "default": "network-simplex",
+        "oneOf": [
+          {
+            "const": "network-simplex",
+            "title": "Balanced"
+          },
+          {
+            "const": "tight-tree",
+            "title": "Tight tree"
+          },
+          {
+            "const": "longest-path",
+            "title": "Longest path"
+          }
+        ]
+      }
+    }
+  },
+  "summary": {
+    "request": {
+      "counts": [
+        {
+          "items": "/tables",
+          "label": "table",
+          "plural": "tables"
+        },
+        {
+          "items": "/questions",
+          "label": "question",
+          "plural": "questions"
+        }
+      ]
+    },
+    "outcome": {
+      "verdict": {
+        "at": "/verdict",
+        "values": {
+          "approve": {
+            "label": "approved",
+            "tone": "success"
+          },
+          "revise": {
+            "label": "changes requested",
+            "tone": "warning"
+          }
+        }
+      },
+      "counts": [
+        {
+          "items": "/comments",
+          "by": "kind",
+          "values": {
+            "change": {
+              "label": "change",
+              "plural": "changes",
+              "tone": "warning"
+            },
+            "question": {
+              "label": "question",
+              "plural": "questions",
+              "tone": "info"
+            }
+          },
+          "other": false
+        },
+        {
+          "items": "/unanswered",
+          "label": "unanswered"
+        }
+      ]
+    }
+  },
+  "shortcuts": [
+    {
+      "keys": "n",
+      "does": "Next table"
+    },
+    {
+      "keys": "p",
+      "does": "Previous table"
+    },
+    {
+      "keys": "c",
+      "does": "Comment a change on the selected part, or on the whole schema",
+      "group": "Comments"
+    },
+    {
+      "keys": "q",
+      "does": "Ask a question about the selected part, or the whole schema",
+      "group": "Comments"
+    },
+    {
+      "keys": "f",
+      "does": "Fit the diagram to the view",
+      "group": "Diagram"
+    }
+  ]
+}

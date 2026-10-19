@@ -1,0 +1,1008 @@
+/* The view's own rules. Colours come from the SDK's tokens, so the view
+   follows the app's light and dark theme. */
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+.dbs {
+  --erd-edge: var(--pinrail-border-strong);
+  --erd-added: var(--pinrail-success);
+  --erd-removed: var(--pinrail-danger);
+  --erd-changed: var(--pinrail-warning);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--pinrail-text);
+  background: var(--pinrail-bg);
+}
+
+.dbs svg.lucide {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+/* the bar */
+
+.dbs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--pinrail-border);
+  background: var(--pinrail-bg-panel);
+  flex-wrap: wrap;
+}
+.dbs-tabs {
+  display: flex;
+  gap: 2px;
+}
+.dbs-tabs .pinrail-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dbs-tabs .pinrail-btn[aria-selected="true"] {
+  background: var(--pinrail-bg-hover);
+  color: var(--pinrail-text);
+}
+.dbs-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.dbs-spacer {
+  flex: 1;
+}
+.dbs-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dbs-drawer-close,
+.dbs-scrim {
+  display: none;
+}
+@media (min-width: 761px) {
+  .dbs:not(.dbs-panel-open) .dbs-panel {
+    display: none;
+  }
+}
+.dbs-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+}
+
+/* the body: the diagram, and the panel beside it */
+
+.dbs-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.dbs-main {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.dbs-panel {
+  width: 340px;
+  flex: none;
+  overflow-y: auto;
+  border-left: 1px solid var(--pinrail-border);
+  background: var(--pinrail-bg-panel);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+.dbs-panel-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--pinrail-border);
+  background: var(--pinrail-bg-panel);
+}
+.dbs-panel-tab {
+  all: unset;
+  cursor: pointer;
+  padding: 9px 8px 8px;
+  font-size: 12px;
+  color: var(--pinrail-dim);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.dbs-panel-tab:hover {
+  color: var(--pinrail-text);
+}
+.dbs-panel-tab[aria-selected="true"] {
+  color: var(--pinrail-text);
+  border-bottom-color: var(--pinrail-accent);
+}
+.dbs-panel-tab:focus-visible {
+  outline: 2px solid var(--pinrail-accent);
+  outline-offset: -2px;
+}
+.dbs-tab-count {
+  color: var(--pinrail-faint);
+  margin-left: 2px;
+}
+.dbs-panel-body {
+  padding: 12px 14px 24px;
+}
+.dbs-panel-body > .dbs-question:first-child,
+.dbs-panel-body > .dbs-comment:first-child {
+  margin-top: 0;
+}
+.dbs-dialect {
+  margin: 0 0 8px;
+}
+.dbs-sql {
+  margin: 0;
+  height: 100%;
+  overflow: auto;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  font: 12px/1.55 var(--pinrail-mono);
+}
+
+/* the panel */
+
+.dbs-hint {
+  margin: 12px 0 4px;
+}
+.dbs-inspector h4 {
+  margin: 16px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pinrail-dim);
+}
+.dbs-section {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--pinrail-border);
+}
+.dbs-section:last-child {
+  border-bottom: 0;
+}
+.dbs-section h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline;
+}
+.dbs-section > h3 {
+  display: block;
+}
+.dbs-section h4 {
+  margin: 12px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pinrail-dim);
+}
+details.dbs-section > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style-position: outside;
+}
+details.dbs-section > summary h3 {
+  margin: 0;
+}
+.dbs-md > :first-child {
+  margin-top: 8px;
+}
+.dbs-md > :last-child {
+  margin-bottom: 0;
+}
+.dbs-md p {
+  margin: 6px 0;
+  line-height: 1.5;
+}
+.dbs-inspector-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dbs-part {
+  display: block;
+  margin-top: 4px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.dbs-close {
+  margin-left: auto;
+}
+.dbs-facts {
+  margin: 8px 0 0;
+  display: grid;
+  gap: 3px;
+}
+.dbs-facts > div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 8px;
+}
+.dbs-facts dt {
+  color: var(--pinrail-dim);
+}
+.dbs-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.dbs-facts s,
+.erd-old {
+  color: var(--pinrail-danger);
+  margin-right: 4px;
+}
+.dbs-indexes,
+.dbs-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.dbs-index {
+  padding: 8px 10px;
+  border: 1px solid var(--pinrail-border);
+  border-radius: 6px;
+  background: var(--pinrail-bg);
+}
+.dbs-index.dbs-added {
+  border-color: color-mix(in srgb, var(--erd-added) 50%, var(--pinrail-border));
+}
+.dbs-index.dbs-removed {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--erd-removed) 50%, var(--pinrail-border));
+}
+.dbs-index.dbs-removed .dbs-index-name {
+  text-decoration: line-through;
+}
+.dbs-index.dbs-changed {
+  border-color: color-mix(in srgb, var(--erd-changed) 50%, var(--pinrail-border));
+}
+.dbs-index-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+.dbs .dbs-index-name {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.dbs-tag {
+  font-size: 10.5px;
+  line-height: 16px;
+  padding: 0 5px;
+  border-radius: 3px;
+  color: var(--pinrail-dim);
+  background: var(--pinrail-bg-hover);
+}
+.dbs-index-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  margin: 8px 0 0;
+  align-items: baseline;
+}
+.dbs-index-facts dt {
+  font-size: 11px;
+  color: var(--pinrail-faint);
+}
+.dbs-index-facts dd {
+  margin: 0;
+  min-width: 0;
+}
+.dbs-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dbs .dbs-cols code {
+  font-size: 11px;
+  padding: 1px 5px;
+}
+.dbs .dbs-cols-included code {
+  color: var(--pinrail-dim);
+  border-style: dashed;
+}
+.dbs .dbs-where {
+  display: block;
+  font-size: 11px;
+  padding: 3px 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dbs-link {
+  all: unset;
+  cursor: pointer;
+  color: var(--pinrail-accent);
+  overflow-wrap: anywhere;
+}
+.dbs-link:hover {
+  text-decoration: underline;
+}
+.dbs-link:focus-visible {
+  outline: 2px solid var(--pinrail-accent);
+}
+
+.dbs-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dbs-question textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+.dbs-composer-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+
+.dbs-comment {
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--pinrail-border-strong);
+}
+.dbs-comment-change {
+  border-left-color: var(--pinrail-warning);
+}
+.dbs-comment-question {
+  border-left-color: var(--pinrail-info);
+}
+.dbs-comment-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+.dbs-comment-tools {
+  margin-left: auto;
+  display: flex;
+}
+.dbs-comment-tools .pinrail-btn {
+  padding: 2px 4px;
+}
+.dbs-comment-text {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.dbs-question {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--pinrail-border);
+  border-radius: 6px;
+  display: grid;
+  gap: 6px;
+}
+.dbs-question .dbs-md > :first-child {
+  margin-top: 0;
+}
+.dbs-answered {
+  border-color: var(--pinrail-info);
+}
+.dbs-question-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dbs-question-icon {
+  color: var(--pinrail-info);
+}
+.dbs-proposed {
+  color: var(--pinrail-faint);
+}
+.dbs-proposal {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* the diagram */
+
+.erd-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.erd-marker path,
+.erd-marker circle {
+  fill: var(--pinrail-bg);
+  stroke-width: 1.5;
+}
+.erd-marker-base path,
+.erd-marker-base circle {
+  stroke: var(--erd-edge);
+}
+.erd-marker-selected path,
+.erd-marker-selected circle {
+  stroke: var(--pinrail-accent);
+}
+.erd-marker-added path,
+.erd-marker-added circle {
+  stroke: var(--erd-added);
+}
+.erd-marker-removed path,
+.erd-marker-removed circle {
+  stroke: var(--erd-removed);
+}
+
+.dbs .react-flow {
+  --xy-background-color: var(--pinrail-bg);
+  --xy-background-pattern-color: var(--pinrail-border);
+}
+.dbs .react-flow__edge-path.erd-edge {
+  stroke-width: 1.5;
+}
+.erd-edge-base {
+  stroke: var(--erd-edge);
+}
+.erd-edge-selected {
+  stroke: var(--pinrail-accent) !important;
+  stroke-width: 2 !important;
+}
+.erd-edge-added {
+  stroke: var(--erd-added);
+}
+.erd-edge-removed {
+  stroke: var(--erd-removed);
+  stroke-dasharray: 5 4;
+}
+.erd-edge-label {
+  all: unset;
+  position: absolute;
+  pointer-events: all;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  border-radius: 4px;
+  background: var(--pinrail-bg-raised);
+  border: 1px solid var(--pinrail-border);
+  color: var(--pinrail-dim);
+}
+.erd-edge-label.erd-selected {
+  border-color: var(--pinrail-accent);
+  color: var(--pinrail-text);
+}
+
+.erd-table {
+  font-size: 12px;
+  background: var(--pinrail-bg-raised);
+  border: 1px solid var(--pinrail-border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+.erd-table.erd-selected {
+  outline: 2px solid var(--pinrail-accent);
+  outline-offset: 1px;
+}
+.erd-table.erd-added {
+  border-color: var(--erd-added);
+}
+.erd-table.erd-removed {
+  border-color: var(--erd-removed);
+  border-style: dashed;
+  opacity: 0.8;
+}
+.erd-table.erd-changed {
+  border-color: var(--erd-changed);
+}
+.erd-head,
+.erd-row,
+.erd-foot {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+}
+.erd-head {
+  height: 36px;
+  padding: 0 10px;
+  background: var(--pinrail-bg-panel);
+  border-bottom: 1px solid var(--pinrail-border);
+  font-weight: 600;
+  font-size: 13px;
+}
+.erd-added > .erd-head {
+  background: var(--pinrail-add-bg);
+}
+.erd-removed > .erd-head {
+  background: var(--pinrail-del-bg);
+}
+.erd-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erd-removed > .erd-head .erd-name {
+  text-decoration: line-through;
+}
+.erd-was {
+  font-weight: 400;
+  color: var(--pinrail-faint);
+  font-size: 11px;
+}
+.erd-row {
+  padding: 0 10px 0 6px;
+  font-family: var(--pinrail-mono);
+  font-size: 11.5px;
+}
+.erd-row + .erd-row {
+  border-top: 1px solid color-mix(in srgb, var(--pinrail-border) 50%, transparent);
+}
+.erd-head:hover,
+.erd-row:hover,
+.erd-foot:hover {
+  background: var(--pinrail-bg-hover);
+}
+.erd-row.erd-selected,
+.erd-head.erd-selected {
+  background: var(--pinrail-accent-bg);
+}
+.erd-row.erd-selected {
+  box-shadow: inset 2px 0 0 var(--pinrail-accent);
+}
+.erd-row.erd-added {
+  background: var(--pinrail-add-bg);
+}
+.erd-row.erd-removed {
+  background: var(--pinrail-del-bg);
+}
+.erd-row.erd-removed .erd-col,
+.erd-row.erd-removed .erd-type {
+  text-decoration: line-through;
+  color: var(--pinrail-dim);
+}
+.erd-row.erd-changed {
+  box-shadow: inset 2px 0 0 var(--erd-changed);
+}
+.erd-icon {
+  width: 14px;
+  display: inline-flex;
+  justify-content: center;
+}
+.erd-icon svg.lucide {
+  width: 12px;
+  height: 12px;
+}
+.erd-pk {
+  color: var(--pinrail-warning);
+}
+.erd-fk {
+  color: var(--pinrail-info);
+}
+.erd-col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erd-type {
+  margin-left: auto;
+  padding-left: 10px;
+  color: var(--pinrail-dim);
+  white-space: nowrap;
+  display: inline-flex;
+  gap: 2px;
+  align-items: baseline;
+}
+.erd-null {
+  color: var(--pinrail-faint);
+}
+.erd-unique {
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--pinrail-faint);
+  border: 1px solid var(--pinrail-border);
+  border-radius: 3px;
+  padding: 0 2px;
+  line-height: 1.2;
+}
+.erd-foot {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--pinrail-faint);
+  border-top: 1px solid var(--pinrail-border);
+}
+.erd-foot-change {
+  color: var(--erd-changed);
+}
+.erd-handle {
+  opacity: 0;
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  pointer-events: none;
+}
+.erd-change {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 0 5px;
+  border-radius: 3px;
+  line-height: 16px;
+  font-family: var(--pinrail-sans);
+}
+.erd-change-added {
+  color: var(--erd-added);
+  background: color-mix(in srgb, var(--erd-added) 14%, transparent);
+}
+.erd-change-removed {
+  color: var(--erd-removed);
+  background: color-mix(in srgb, var(--erd-removed) 14%, transparent);
+}
+.erd-change-changed {
+  color: var(--erd-changed);
+  background: color-mix(in srgb, var(--erd-changed) 14%, transparent);
+}
+.erd-marks {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 4px;
+}
+.erd-head .erd-marks {
+  margin-left: auto;
+}
+.erd-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-family: var(--pinrail-sans);
+  line-height: 1;
+}
+.erd-mark svg.lucide {
+  width: 11px;
+  height: 11px;
+}
+.erd-mark-question {
+  color: var(--pinrail-info);
+}
+.erd-mark-change {
+  color: var(--pinrail-warning);
+}
+.erd-mark-comment {
+  color: var(--pinrail-info);
+}
+
+/* narrow: the panel opens as a drawer over the diagram */
+
+@media (max-width: 760px) {
+  .dbs-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(360px, 88%);
+    z-index: 20;
+    transform: translateX(100%);
+    transition: transform 0.15s ease;
+    box-shadow: -4px 0 12px rgb(0 0 0 / 0.12);
+  }
+  .dbs-panel-open .dbs-panel {
+    transform: none;
+  }
+  .dbs-panel-open .dbs-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 19;
+    background: rgb(0 0 0 / 0.2);
+  }
+  .dbs-drawer-close {
+    display: inline-flex;
+    margin-left: auto;
+    align-self: center;
+  }
+}
+@media (max-width: 520px) {
+  .dbs-meta .erd-change {
+    display: none;
+  }
+}
+
+.dbs-kind {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 0 6px;
+  border-radius: 3px;
+  line-height: 18px;
+}
+.dbs-kind-change {
+  color: var(--pinrail-warning);
+  background: color-mix(in srgb, var(--pinrail-warning) 14%, transparent);
+}
+.dbs-kind-question {
+  color: var(--pinrail-info);
+  background: color-mix(in srgb, var(--pinrail-info) 14%, transparent);
+}
+
+.erd-controls-panel {
+  margin: 12px;
+}
+.erd-controls-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.erd-controls {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--pinrail-border);
+  border-radius: 8px;
+  background: var(--pinrail-bg-raised);
+  overflow: hidden;
+}
+.erd-control {
+  all: unset;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--pinrail-text);
+}
+.erd-control + .erd-control {
+  border-top: 1px solid var(--pinrail-border);
+}
+.erd-control:hover,
+.erd-control[aria-expanded="true"] {
+  background: var(--pinrail-bg-hover);
+}
+.erd-control:focus-visible {
+  outline: 2px solid var(--pinrail-accent);
+  outline-offset: -2px;
+}
+.dbs .erd-control svg.lucide {
+  width: 15px;
+  height: 15px;
+}
+.erd-menu {
+  position: absolute;
+  left: calc(100% + 8px);
+  bottom: 0;
+  z-index: 5;
+  min-width: 230px;
+  padding: 4px;
+  border: 1px solid var(--pinrail-border);
+  border-radius: 8px;
+  background: var(--pinrail-bg-raised);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+}
+.erd-menu-title {
+  padding: 6px 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pinrail-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.erd-menu-item {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.erd-menu-item:hover,
+.erd-menu-item:focus-visible {
+  background: var(--pinrail-bg-hover);
+}
+.erd-menu-icon {
+  display: inline-flex;
+  color: var(--pinrail-dim);
+}
+.erd-menu-item[aria-checked="true"] .erd-menu-icon {
+  color: var(--pinrail-accent);
+}
+.erd-menu-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  font-size: 12.5px;
+}
+.erd-menu-detail {
+  font-size: 11px;
+  color: var(--pinrail-faint);
+}
+.erd-menu-check {
+  width: 14px;
+  display: inline-flex;
+  color: var(--pinrail-accent);
+}
+
+.dbs-apply {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--pinrail-border);
+  cursor: pointer;
+}
+.dbs-apply input {
+  margin: 2px 0 0;
+}
+.dbs-apply > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dbs-apply .pinrail-faint {
+  font-size: 12px;
+}
+
+.dbs-about-head {
+  margin: 18px 0 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--pinrail-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pinrail-dim);
+}
+
+/* the comment box: the text, with its kind and the add button under it,
+   in one frame */
+.dbs-composer {
+  margin-top: 10px;
+  border: 1px solid var(--pinrail-border-strong);
+  border-radius: 8px;
+  background: var(--pinrail-bg);
+  transition: border-color 0.12s ease;
+}
+.dbs-composer:focus-within {
+  border-color: var(--pinrail-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pinrail-accent) 15%, transparent);
+}
+.dbs-composer textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 8px 10px 2px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  field-sizing: content;
+  max-height: 200px;
+  background: transparent;
+  color: var(--pinrail-text);
+  font: inherit;
+  line-height: 1.45;
+}
+.dbs-composer textarea::placeholder {
+  color: var(--pinrail-faint);
+}
+.dbs-composer .dbs-composer-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 6px;
+}
+.dbs-kinds {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border-radius: 6px;
+  background: var(--pinrail-bg-hover);
+}
+.dbs-kinds button {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: var(--pinrail-dim);
+  cursor: pointer;
+}
+.dbs .dbs-kinds svg.lucide {
+  width: 12px;
+  height: 12px;
+}
+.dbs-kinds button:hover {
+  color: var(--pinrail-text);
+}
+.dbs-kinds button:focus-visible {
+  outline: 2px solid var(--pinrail-accent);
+}
+.dbs-kinds button[aria-pressed="true"] {
+  background: var(--pinrail-bg-raised);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+.dbs-composer-change .dbs-kinds button[aria-pressed="true"] {
+  color: var(--pinrail-warning);
+}
+.dbs-composer-question .dbs-kinds button[aria-pressed="true"] {
+  color: var(--pinrail-info);
+}
+.dbs-composer-dictate {
+  margin-left: auto;
+  display: inline-flex;
+}
+.dbs-send {
+  all: unset;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pinrail-accent);
+  color: var(--pinrail-bg);
+  cursor: pointer;
+}
+.dbs .dbs-send svg.lucide {
+  width: 15px;
+  height: 15px;
+}
+.dbs-send:disabled {
+  background: var(--pinrail-bg-hover);
+  color: var(--pinrail-faint);
+  cursor: default;
+}
+.dbs-send:focus-visible {
+  outline: 2px solid var(--pinrail-accent);
+  outline-offset: 2px;
+}
+.dbs-comment .dbs-composer {
+  margin-top: 6px;
+}
+.dbs-box-cancel {
+  all: unset;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--pinrail-dim);
+  cursor: pointer;
+}
+.dbs-box-cancel:hover {
+  color: var(--pinrail-text);
+  background: var(--pinrail-bg-hover);
+}
+.dbs-box-cancel:focus-visible {
+  outline: 2px solid var(--pinrail-accent);
+}

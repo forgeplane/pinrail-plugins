@@ -1,0 +1,60 @@
+{
+  "title": "Schema for saved bookmarks and tags",
+  "payload": {
+    "summary": "Users save bookmarks and tag them. A tag belongs to one user, so two users can each have a tag called *reading* without sharing it.",
+    "dialect": "postgresql",
+    "tables": [
+      {
+        "name": "users",
+        "columns": [
+          { "name": "id", "type": "bigint", "primary_key": true, "default": "generated always as identity" },
+          { "name": "email", "type": "text", "unique": true },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ]
+      },
+      {
+        "name": "bookmarks",
+        "columns": [
+          { "name": "id", "type": "bigint", "primary_key": true, "default": "generated always as identity" },
+          { "name": "user_id", "type": "bigint" },
+          { "name": "url", "type": "text" },
+          { "name": "title", "type": "text", "nullable": true, "note": "Read from the page when it is saved. Empty when the page has no title." },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ],
+        "indexes": [{ "name": "bookmarks_user_url", "columns": ["user_id", "url"], "unique": true }]
+      },
+      {
+        "name": "tags",
+        "columns": [
+          { "name": "id", "type": "bigint", "primary_key": true, "default": "generated always as identity" },
+          { "name": "user_id", "type": "bigint" },
+          { "name": "name", "type": "text" }
+        ],
+        "indexes": [{ "name": "tags_user_name", "columns": ["user_id", "name"], "unique": true }]
+      },
+      {
+        "name": "bookmark_tags",
+        "note": "Joins bookmarks and tags.",
+        "columns": [
+          { "name": "bookmark_id", "type": "bigint", "primary_key": true },
+          { "name": "tag_id", "type": "bigint", "primary_key": true }
+        ]
+      }
+    ],
+    "relationships": [
+      { "id": "bookmarks_user_id_fkey", "from": { "table": "bookmarks", "columns": ["user_id"] }, "to": { "table": "users", "columns": ["id"] }, "on_delete": "cascade" },
+      { "id": "tags_user_id_fkey", "from": { "table": "tags", "columns": ["user_id"] }, "to": { "table": "users", "columns": ["id"] }, "on_delete": "cascade" },
+      { "id": "bookmark_tags_bookmark_id_fkey", "from": { "table": "bookmark_tags", "columns": ["bookmark_id"] }, "to": { "table": "bookmarks", "columns": ["id"] }, "on_delete": "cascade" },
+      { "id": "bookmark_tags_tag_id_fkey", "from": { "table": "bookmark_tags", "columns": ["tag_id"] }, "to": { "table": "tags", "columns": ["id"] }, "on_delete": "cascade" }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "text": "Should saving the same URL twice update the bookmark, or be refused?",
+        "about": { "table": "bookmarks" },
+        "options": ["Update the existing bookmark", "Refuse the second one"],
+        "proposal": "Update the existing bookmark"
+      }
+    ]
+  }
+}

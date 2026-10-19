@@ -1,0 +1,24 @@
+{
+  "name": "pinrail-plugin-db-schema",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "watch": "vite build --watch"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "3.1.1",
+    "@xyflow/react": "12.12.0",
+    "lucide-react": "1.45.0",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5",
+    "typescript": "^5",
+    "vite": "^7"
+  },
+  "license": "Apache-2.0"
+}

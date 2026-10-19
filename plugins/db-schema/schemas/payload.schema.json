@@ -1,0 +1,345 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Database schema payload",
+  "description": "A database schema, or a change to one, for the person to review as a diagram. Give each table with its columns, keys and indexes, and each foreign key as a relationship. For a change to an existing schema, send the tables it touches and the tables they relate to, and mark what is added, removed or changed. Ask about the choices you are unsure of in questions, each with the choice you will make if the person does not answer.",
+  "type": "object",
+  "required": [
+    "tables"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "change": {
+      "enum": [
+        "added",
+        "removed",
+        "changed"
+      ],
+      "description": "For a change to an existing schema: what happens to this part. Leave it out for a part that stays as it is."
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 4000,
+      "description": "Why the part is designed this way, as Markdown"
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "description": "Column names, in key order"
+    },
+    "end": {
+      "type": "object",
+      "required": [
+        "table",
+        "columns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "table": {
+          "type": "string",
+          "minLength": 1
+        },
+        "columns": {
+          "$ref": "#/$defs/columns"
+        }
+      }
+    },
+    "action": {
+      "enum": [
+        "cascade",
+        "restrict",
+        "set null",
+        "set default",
+        "no action"
+      ]
+    }
+  },
+  "properties": {
+    "summary": {
+      "type": "string",
+      "maxLength": 20000,
+      "description": "What the schema is for and its main choices, as Markdown"
+    },
+    "dialect": {
+      "type": "string",
+      "description": "The database the schema is for, such as postgresql, mysql or sqlite. The column types are in its terms."
+    },
+    "tables": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "columns"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique among the tables. Include the namespace when there are several, such as billing.invoices."
+          },
+          "note": {
+            "$ref": "#/$defs/note"
+          },
+          "change": {
+            "$ref": "#/$defs/change"
+          },
+          "was": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "description": "For a renamed table: its old name"
+          },
+          "columns": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "type": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The column type, as the dialect writes it, such as bigint, text or numeric(12,2)"
+                },
+                "nullable": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Whether the column takes NULL. Columns are NOT NULL unless this is true."
+                },
+                "default": {
+                  "type": "string",
+                  "description": "The default, as an SQL expression, such as now() or 'draft'"
+                },
+                "primary_key": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Part of the primary key. Mark every column of a composite key."
+                },
+                "unique": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Unique on its own. Give a unique key on several columns as an index."
+                },
+                "note": {
+                  "$ref": "#/$defs/note"
+                },
+                "change": {
+                  "$ref": "#/$defs/change"
+                },
+                "was": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "description": "For a changed column: the values that change, as they were",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "nullable": {
+                      "type": "boolean"
+                    },
+                    "default": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "indexes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "columns"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "columns": {
+                  "$ref": "#/$defs/columns",
+                  "description": "The key: column names or expressions, in key order, such as lower(email) or created_at desc"
+                },
+                "include": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "The columns a covering index carries beside its key, as INCLUDE gives them"
+                },
+                "using": {
+                  "type": "string",
+                  "description": "The index method, such as gin, gist or hash, when it is not the dialect's default"
+                },
+                "unique": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "where": {
+                  "type": "string",
+                  "description": "The condition of a partial index, as SQL"
+                },
+                "note": {
+                  "$ref": "#/$defs/note"
+                },
+                "change": {
+                  "$ref": "#/$defs/change"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "description": "The foreign keys: from the referencing columns to the columns they reference.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "from",
+          "to"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique among the relationships, such as the constraint's name"
+          },
+          "from": {
+            "$ref": "#/$defs/end",
+            "description": "The referencing table and its foreign key columns"
+          },
+          "to": {
+            "$ref": "#/$defs/end",
+            "description": "The referenced table and its key columns"
+          },
+          "cardinality": {
+            "enum": [
+              "many-to-one",
+              "one-to-one"
+            ],
+            "default": "many-to-one",
+            "description": "How many rows of the referencing table one referenced row can have. A many-to-many relationship is a join table with two relationships."
+          },
+          "on_delete": {
+            "$ref": "#/$defs/action"
+          },
+          "on_update": {
+            "$ref": "#/$defs/action"
+          },
+          "note": {
+            "$ref": "#/$defs/note"
+          },
+          "change": {
+            "$ref": "#/$defs/change"
+          }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "description": "The choices you want the person to make.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "proposal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000,
+            "description": "The question, as Markdown"
+          },
+          "about": {
+            "description": "The part of the schema the question is about, which the diagram marks",
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "table"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "table": {
+                    "type": "string"
+                  },
+                  "column": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "relationship"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "relationship": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 2,
+            "description": "The answers to choose from, when there are a few. The person can always write their own."
+          },
+          "proposal": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What you will do if the person leaves the question unanswered. With options, one of them."
+          }
+        }
+      }
+    },
+    "sql": {
+      "type": "string",
+      "maxLength": 200000,
+      "description": "The DDL or the migration that creates the schema, shown beside the diagram. Keep it in step with the tables and relationships you send, because the person reviews both and approves the SQL you will run."
+    }
+  }
+}
