@@ -18,14 +18,15 @@ import {
   type Node,
   type NodeProps,
 } from "@xyflow/react";
-import { KeyRound, Link2, MessageSquare, CircleHelp } from "lucide-react";
+import { CircleHelp, History, KeyRound, Link2, MessageSquare } from "lucide-react";
 import { createContext, memo, useContext, useEffect, useMemo, useRef } from "react";
 import { CanvasControls } from "./Controls";
 import { layout, ROW, type LayoutOptions } from "./layout";
 import { keyOf, type Change, type Payload, type Relationship, type Table, type Target } from "./types";
 
 /** What a part carries on the diagram: its comments, and the agent's questions about it. */
-export type Marks = Map<string, { comments: number; changes: number; questions: number }>;
+/** `earlier`: the comments on it in the round this one revises */
+export type Marks = Map<string, { comments: number; changes: number; questions: number; earlier: number }>;
 
 type Shared = {
   selected: string | null;
@@ -42,10 +43,17 @@ type TableNodeType = Node<TableData, "table">;
 type RelationData = { rel: Relationship; nullable: boolean };
 type RelationEdgeType = Edge<RelationData, "relation">;
 
-function Mark({ mark }: { mark?: { comments: number; changes: number; questions: number } }) {
-  if (!mark || (!mark.comments && !mark.questions)) return null;
+type MarkCounts = { comments: number; changes: number; questions: number; earlier: number };
+
+function Mark({ mark }: { mark?: MarkCounts }) {
+  if (!mark || (!mark.comments && !mark.questions && !mark.earlier)) return null;
   return (
     <span className="erd-marks">
+      {mark.earlier > 0 && !mark.comments && (
+        <span className="erd-mark erd-mark-earlier" title="Commented on in the last round">
+          <History />
+        </span>
+      )}
       {mark.questions > 0 && (
         <span className="erd-mark erd-mark-question" title={`${mark.questions} question from the agent`}>
           <CircleHelp />
@@ -228,7 +236,7 @@ function RelationEdge(props: EdgeProps<RelationEdgeType>) {
         markerEnd={`url(#erd-${toShape}-${tone})`}
         interactionWidth={18}
       />
-      {(isSelected || mark?.comments || mark?.questions) && (
+      {(isSelected || mark?.comments || mark?.questions || mark?.earlier) && (
         <EdgeLabelRenderer>
           <button
             type="button"

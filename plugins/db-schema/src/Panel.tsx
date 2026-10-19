@@ -40,6 +40,8 @@ type Props = {
   readonly: boolean;
   selected: Target | null;
   comments: Comment[];
+  /** the person's comments in the round this one revises */
+  earlier: Comment[];
   answers: Answer[];
   apply: boolean;
   /** a key pressed to start a comment of this kind */
@@ -172,6 +174,7 @@ function Inspector({
   payload,
   selected,
   comments,
+  earlier,
   answers,
   edit,
   readonly,
@@ -181,6 +184,8 @@ function Inspector({
   const part = find(payload, selected);
   const key = keyOf(selected);
   const mine = comments.filter((c) => c.target && keyOf(c.target) === key);
+  const before = earlier.filter((c) => c.target && keyOf(c.target) === key);
+  const replyTo = (id: string) => payload.replies?.find((r) => r.id === id)?.text;
   const questions = (payload.questions ?? []).filter((q) => q.about && keyOf(q.about) === key);
 
   let kind: string;
@@ -298,6 +303,14 @@ function Inspector({
           <h4>{questions.length === 1 ? "Question from the agent" : "Questions from the agent"}</h4>
           {questions.map((q) => (
             <QuestionItem key={q.id} q={q} answers={answers} edit={edit} readonly={readonly} select={select} compact />
+          ))}
+        </>
+      )}
+      {before.length > 0 && (
+        <>
+          <h4>Last round</h4>
+          {before.map((c) => (
+            <EarlierItem key={c.id} c={c} reply={replyTo(c.id)} />
           ))}
         </>
       )}
@@ -428,6 +441,30 @@ function Composer({ target, edit, compose }: { target?: Target; edit: Edit; comp
       compose={compose}
       submit={(kind, text) => (edit.add(target, kind, text), true)}
     />
+  );
+}
+
+/** A comment from the last round, with the agent's reply to it. */
+function EarlierItem({ c, reply, select }: { c: Comment; reply?: string; select?: Props["select"] }) {
+  return (
+    <div className={`dbs-comment dbs-earlier dbs-comment-${c.kind}`}>
+      <div className="dbs-comment-head">
+        <span className={`dbs-kind dbs-kind-${c.kind}`}>{c.kind}</span>
+        {select &&
+          (c.target ? (
+            <button type="button" className="dbs-link" onClick={() => select(c.target!)}>
+              <code>{labelOf(c.target)}</code>
+            </button>
+          ) : (
+            <span className="pinrail-dim">Whole schema</span>
+          ))}
+      </div>
+      <p className="dbs-comment-text">{c.text}</p>
+      <div className="dbs-reply">
+        <span className="dbs-reply-who">Agent</span>
+        {reply ? <Md text={reply} /> : <p className="pinrail-faint">No reply.</p>}
+      </div>
+    </div>
   );
 }
 
@@ -573,7 +610,9 @@ export const firstTab = (payload: Payload): PanelTab =>
   payload.summary || !payload.questions?.length ? "about" : "questions";
 
 export function Panel(props: Props & { tab: PanelTab; setTab(tab: PanelTab): void; close(): void }) {
-  const { payload, selected, comments, answers, apply, compose, edit, readonly, select, tab, setTab, close } = props;
+  const { payload, selected, comments, earlier, answers, apply, compose, edit, readonly, select, tab, setTab, close } =
+    props;
+  const replyTo = (id: string) => payload.replies?.find((r) => r.id === id)?.text;
   const questions = payload.questions ?? [];
   const answered = questions.filter((q) => answers.some((a) => a.id === q.id && (a.choice || a.text?.trim()))).length;
   const shown: PanelTab = tab === "part" && !selected ? firstTab(payload) : tab;
@@ -632,33 +671,44 @@ export function Panel(props: Props & { tab: PanelTab; setTab(tab: PanelTab): voi
           questions.map((q) => (
             <QuestionItem key={q.id} q={q} answers={answers} edit={edit} readonly={readonly} select={select} />
           ))}
-        {shown === "comments" &&
-          (comments.length === 0 ? (
-            <p className="pinrail-faint dbs-hint">
-              {readonly
-                ? "No comments."
-                : "No comments yet. Click a table, a column or a line in the diagram to comment on it."}
-            </p>
-          ) : (
-            <>
-              {comments.map((c) => (
-                <CommentItem key={c.id} c={c} edit={edit} readonly={readonly} select={select} />
-              ))}
-              {!readonly && comments.some((c) => c.kind === "change") && (
-                <label className="dbs-apply">
-                  <input type="checkbox" checked={apply} onChange={(e) => edit.apply(e.target.checked)} />
-                  <span>
-                    Apply my changes without another review
-                    <span className="pinrail-faint">
-                      {apply
-                        ? "The agent applies the changes and goes on."
-                        : "The agent makes the changes and sends the schema back for review."}
+        {shown === "comments" && (
+          <>
+            {comments.length === 0 ? (
+              <p className="pinrail-faint dbs-hint">
+                {readonly
+                  ? "No comments."
+                  : "No comments yet. Click a table, a column or a line in the diagram to comment on it."}
+              </p>
+            ) : (
+              <>
+                {comments.map((c) => (
+                  <CommentItem key={c.id} c={c} edit={edit} readonly={readonly} select={select} />
+                ))}
+                {!readonly && comments.some((c) => c.kind === "change") && (
+                  <label className="dbs-apply">
+                    <input type="checkbox" checked={apply} onChange={(e) => edit.apply(e.target.checked)} />
+                    <span>
+                      Apply my changes without another review
+                      <span className="pinrail-faint">
+                        {apply
+                          ? "The agent applies the changes and goes on."
+                          : "The agent makes the changes and sends the schema back for review."}
+                      </span>
                     </span>
-                  </span>
-                </label>
-              )}
-            </>
-          ))}
+                  </label>
+                )}
+              </>
+            )}
+            {earlier.length > 0 && (
+              <>
+                <h4 className="dbs-about-head">Last round</h4>
+                {earlier.map((c) => (
+                  <EarlierItem key={c.id} c={c} reply={replyTo(c.id)} select={select} />
+                ))}
+              </>
+            )}
+          </>
+        )}
         {shown === "about" && (
           <>
             {payload.dialect && (
@@ -670,6 +720,16 @@ export function Panel(props: Props & { tab: PanelTab; setTab(tab: PanelTab): voi
               <Md text={payload.summary} />
             ) : (
               <p className="pinrail-faint">The agent sent no summary.</p>
+            )}
+            {earlier.some((c) => !c.target) && (
+              <>
+                <h4 className="dbs-about-head">Last round, on the whole schema</h4>
+                {earlier
+                  .filter((c) => !c.target)
+                  .map((c) => (
+                    <EarlierItem key={c.id} c={c} reply={replyTo(c.id)} />
+                  ))}
+              </>
             )}
             <h4 className="dbs-about-head">Comments on the whole schema</h4>
             {schemaComments.map((c) => (

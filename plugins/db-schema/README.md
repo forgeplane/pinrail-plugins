@@ -44,7 +44,9 @@ Columns are NOT NULL unless they are marked `nullable`. A change to an
 existing schema marks each table, column, index or relationship as `added`,
 `removed` or `changed`, and `was` holds the values a change replaces. Every
 question carries a `proposal`, which is what the agent does if the person
-leaves it unanswered.
+leaves it unanswered. A new version, sent with `--revises`, gives the agent's
+reply to each of the last round's comments in `replies`, and the view shows
+each reply under its comment.
 
 ## What the person does
 

@@ -219,3 +219,20 @@ test("an index shows its key, its covering columns and its condition", async ({ 
   await expect(index).toContainText("partial");
   await expect(plugin.frame.locator(".dbs-index", { hasText: "tasks_title_search" })).toContainText("gin");
 });
+
+test("a new version shows the last round's comments, each with the agent's reply", async ({ page }) => {
+  const plugin = await mountPlugin(page, dir, {
+    review: fixture(path.join(dir, "fixtures", "workspaces-r2.json")),
+    previous: fixture(path.join(dir, "fixtures", "workspaces.decided.json")),
+    settings: defaults,
+  });
+  await plugin.frame.getByRole("button", { name: "Column memberships.role" }).click();
+  const earlier = plugin.frame.locator(".dbs-earlier");
+  await expect(earlier).toHaveCount(1);
+  await expect(earlier).toContainText("Use an enum.");
+  await expect(earlier).toContainText("membership_role");
+
+  await plugin.frame.getByRole("tab", { name: /Comments/ }).click();
+  await expect(plugin.frame.locator(".dbs-earlier")).toHaveCount(3);
+  await expect(plugin.frame.getByRole("tab", { name: /Comments 0/ })).toBeVisible();
+});

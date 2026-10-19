@@ -16,7 +16,7 @@
 {%- if data.verdict == "approve" -%}
 Approved.{% if changes %} Make the changes below, then apply the schema without another review.{% else %} Apply the schema.{% endif %}
 {%- else -%}
-Changes requested. Make the changes below and send the new version for review.
+Changes requested. Make the changes below and send the new version for review with `--revises`, with a reply to each comment in its `replies`.
 {%- endif %}
 {%- if asked %} Answer the questions below first.{% endif %}
 {%- if changes %}

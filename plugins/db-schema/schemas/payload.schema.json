@@ -63,6 +63,31 @@
       "maxLength": 20000,
       "description": "What the schema is for and its main choices, as Markdown"
     },
+    "replies": {
+      "type": "array",
+      "description": "For a new version, sent with --revises: your reply to each of the person's comments on the last round, such as what you changed or the answer to their question.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The comment's id, as the last round's decision gives it"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000,
+            "description": "Your reply, as Markdown"
+          }
+        }
+      }
+    },
     "dialect": {
       "type": "string",
       "description": "The database the schema is for, such as postgresql, mysql or sqlite. The column types are in its terms."

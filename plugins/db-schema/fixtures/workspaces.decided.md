@@ -3,7 +3,7 @@
 db-schema · acme/tasks · workspaces
 Decided by alice at 2026-10-19 09:00
 
-Changes requested. Make the changes below and send the new version for review. Answer the questions below first.
+Changes requested. Make the changes below and send the new version for review with `--revises`, with a reply to each comment in its `replies`. Answer the questions below first.
 
 ## Changes
 

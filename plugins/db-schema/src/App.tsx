@@ -57,6 +57,12 @@ export function App({ plugin, init }: { plugin: Plugin<Payload, Decision>; init:
   const { review, readonly } = init;
   const payload = review.payload;
   const decided = review.decision?.data;
+  // the round this one revises: the person's comments then, which the
+  // agent's replies answer
+  const earlier = useMemo(() => {
+    const data = (init.previous?.decision?.data ?? null) as Decision | null;
+    return Array.isArray(data?.comments) ? data.comments : [];
+  }, [init.previous]);
 
   const [draft, setDraft] = useState<Draft>(() =>
     readonly && decided
@@ -194,7 +200,7 @@ export function App({ plugin, init }: { plugin: Plugin<Payload, Decision>; init:
   const marks = useMemo<Marks>(() => {
     const m: Marks = new Map();
     const at = (key: string) => {
-      if (!m.has(key)) m.set(key, { comments: 0, changes: 0, questions: 0 });
+      if (!m.has(key)) m.set(key, { comments: 0, changes: 0, questions: 0, earlier: 0 });
       return m.get(key)!;
     };
     for (const c of draft.comments) {
@@ -204,8 +210,9 @@ export function App({ plugin, init }: { plugin: Plugin<Payload, Decision>; init:
       if (c.kind === "change") e.changes++;
     }
     for (const q of payload.questions ?? []) if (q.about) at(keyOf(q.about)).questions++;
+    for (const c of earlier) if (c.target) at(keyOf(c.target)).earlier++;
     return m;
-  }, [draft.comments, payload]);
+  }, [draft.comments, payload, earlier]);
 
   const edit = useMemo(
     () => ({
@@ -350,6 +357,7 @@ export function App({ plugin, init }: { plugin: Plugin<Payload, Decision>; init:
             readonly={readonly}
             selected={selected ? targetOf(selected) : null}
             comments={draft.comments}
+            earlier={earlier}
             answers={draft.answers}
             apply={draft.apply}
             compose={compose}

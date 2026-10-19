@@ -59,8 +59,12 @@ export type Question = {
   proposal: string;
 };
 
+/** the agent's reply to a comment of the round this one revises */
+export type Reply = { id: string; text: string };
+
 export type Payload = {
   summary?: string;
+  replies?: Reply[];
   dialect?: string;
   tables: Table[];
   relationships?: Relationship[];

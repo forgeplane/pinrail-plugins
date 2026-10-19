@@ -1006,3 +1006,31 @@ details.dbs-section > summary h3 {
 .dbs-box-cancel:focus-visible {
   outline: 2px solid var(--pinrail-accent);
 }
+
+/* the last round: the person's comment, and the agent's reply under it */
+.dbs-earlier {
+  opacity: 0.95;
+}
+.dbs-earlier .dbs-comment-text {
+  color: var(--pinrail-dim);
+}
+.dbs-reply {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--pinrail-bg-hover);
+}
+.dbs-reply-who {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pinrail-faint);
+}
+.dbs-reply .dbs-md > :first-child,
+.dbs-reply p {
+  margin: 2px 0 0;
+}
+.erd-mark-earlier {
+  color: var(--pinrail-faint);
+}
