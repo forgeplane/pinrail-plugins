@@ -22,6 +22,18 @@ asks for changes.
   needs changes) and its comments. A click on a frame's name or on a
   comment brings the frame into view.
 
+## Installing
+
+The view needs no build. From a checkout of this repository:
+
+```sh
+pinrail plugins install ./plugins/canvas
+```
+
+Run the same command again to upgrade. While you work on the plugin,
+`pinrail plugins install ./plugins/canvas --link` serves the folder instead of
+copying it.
+
 ## Payload
 
 ```json

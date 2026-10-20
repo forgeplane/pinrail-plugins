@@ -46,6 +46,18 @@ the video goes to its moment, the dialog shows its words, its area is back on
 the frame, and a stretch shows its two limits to drag. Each comment can be
 changed or removed until the review is handed over.
 
+## Installing
+
+The view needs no build. From a checkout of this repository:
+
+```sh
+pinrail plugins install ./plugins/video
+```
+
+Run the same command again to upgrade. While you work on the plugin,
+`pinrail plugins install ./plugins/video --link` serves the folder instead of
+copying it.
+
 ## Asking
 
 ```sh

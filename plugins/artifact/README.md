@@ -15,6 +15,23 @@ changes*) unless the reviewer sets it. Viewport presets show the page at
 desktop, tablet and phone widths. A later round shows the previous round's
 comments beside the new page.
 
+## Installing
+
+The view is a React app, and its build is not checked in.
+Build it before you install it, because Pinrail installs a plugin's folder
+as it is and runs nothing. From a checkout of this repository:
+
+```sh
+cd plugins/artifact
+npm ci
+npm run build
+pinrail plugins install .
+```
+
+Run `npm run build` and the install command again to upgrade. While you work
+on the plugin, `pinrail plugins install . --link` serves the folder instead
+of copying it.
+
 ## Payload
 
 ```json
@@ -74,9 +91,6 @@ npm run build      # view/index.html and view/assets/
 npm run watch      # rebuild on change, with the folder linked (below)
 npm test           # the plugin's own tests under the SDK harness
 ```
-
-Build it before you install it: Pinrail installs a plugin as it is and
-runs nothing, and only the bundle enters the app's store.
 
 ## Trying it
 

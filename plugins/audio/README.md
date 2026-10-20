@@ -22,6 +22,18 @@ Each take gets a verdict, **favourite**, **keep** or **drop**, with a note.
 There is one favourite at most, and a take you commented on or cut counts as
 kept unless you say otherwise.
 
+## Installing
+
+The view needs no build. From a checkout of this repository:
+
+```sh
+pinrail plugins install ./plugins/audio
+```
+
+Run the same command again to upgrade. While you work on the plugin,
+`pinrail plugins install ./plugins/audio --link` serves the folder instead of
+copying it.
+
 ## Asking
 
 ```sh

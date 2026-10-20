@@ -9,8 +9,21 @@ move them, and then approves or rejects the trade, with an optional note.
 
 ![The Trade approval plugin, showing its sample review](screenshot.png)
 
+## Installing
+
+The view needs no build. From a checkout of this repository:
+
 ```sh
-pinrail plugins install ./plugins/trade --link
+pinrail plugins install ./plugins/trade
+```
+
+Run the same command again to upgrade. While you work on the plugin,
+`pinrail plugins install ./plugins/trade --link` serves the folder instead of
+copying it.
+
+## Asking
+
+```sh
 pinrail submit trade --sample
 pinrail submit trade --title "Buy gold on the pullback" --data payload.json --wait
 ```

@@ -14,6 +14,18 @@ actually live, in the brand's own colours, light and dark:
 For each mark you say **favourite**, **keep** or **drop**, with a note. There
 is one favourite at most: choosing another moves the old one to *keep*.
 
+## Installing
+
+The view needs no build. From a checkout of this repository:
+
+```sh
+pinrail plugins install ./plugins/logo
+```
+
+Run the same command again to upgrade. While you work on the plugin,
+`pinrail plugins install ./plugins/logo --link` serves the folder instead of
+copying it.
+
 ## Asking
 
 ```sh

@@ -7,6 +7,23 @@ questions. The agent then applies the schema, or sends a new version.
 
 ![The Database schema review plugin, showing its sample review](screenshot.png)
 
+## Installing
+
+The view is a React app, and its build is not checked in.
+Build it before you install it, because Pinrail installs a plugin's folder
+as it is and runs nothing. From a checkout of this repository:
+
+```sh
+cd plugins/db-schema
+npm ci
+npm run build
+pinrail plugins install .
+```
+
+Run `npm run build` and the install command again to upgrade. While you work
+on the plugin, `pinrail plugins install . --link` serves the folder instead
+of copying it.
+
 ## Payload
 
 ```json

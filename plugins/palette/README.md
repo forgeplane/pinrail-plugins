@@ -24,6 +24,18 @@ colour or picked: the screen and the ratios change as you type, and the
 pop-over shows each pair the token is in, before and after. New values show on
 the screen until you switch them off, to compare with the palette as sent.
 
+## Installing
+
+The view needs no build. From a checkout of this repository:
+
+```sh
+pinrail plugins install ./plugins/palette
+```
+
+Run the same command again to upgrade. While you work on the plugin,
+`pinrail plugins install ./plugins/palette --link` serves the folder instead of
+copying it.
+
 ## Asking
 
 ```sh

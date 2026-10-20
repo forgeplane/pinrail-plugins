@@ -8,6 +8,18 @@ here knows what a mail server is.
 
 ![The Draft emails plugin, showing its sample review](screenshot.png)
 
+## Installing
+
+The view needs no build. From a checkout of this repository:
+
+```sh
+pinrail plugins install ./plugins/email
+```
+
+Run the same command again to upgrade. While you work on the plugin,
+`pinrail plugins install ./plugins/email --link` serves the folder instead of
+copying it.
+
 ## Payload
 
 ```json

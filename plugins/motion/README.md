@@ -24,6 +24,23 @@ note. There is one favourite at most: choosing another moves the old one to
 a change over a stretch, mark it with `i` and `o`, or shift-drag across the
 timeline, and press `c`. A comment keeps its variant on the shortlist.
 
+## Installing
+
+The view bundles lottie-web, and the bundle is not checked in.
+Build it before you install it, because Pinrail installs a plugin's folder
+as it is and runs nothing. From a checkout of this repository:
+
+```sh
+cd plugins/motion
+npm ci
+npm run build
+pinrail plugins install .
+```
+
+Run `npm run build` and the install command again to upgrade. While you work
+on the plugin, `pinrail plugins install . --link` serves the folder instead
+of copying it.
+
 ## Asking
 
 ```sh
